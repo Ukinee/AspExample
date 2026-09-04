@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Application/" />
+  <Folder Name="/Application/Common/" />
+  <Folder Name="/Application/Frameworks/">
+    <Project Path="Application/Frameworks/Ukinee.Common.Identifiers/Ukinee.Common.Identifiers.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.DbAccess/Ukinee.DbAccess.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Common/Ukinee.Infrastructure.Common.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Json/Ukinee.Infrastructure.Json.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Options/Ukinee.Infrastructure.Options.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR/Ukinee.Infrastructure.SignalR.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Validation/Ukinee.Infrastructure.Validation.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users/Ukinee.Users.csproj" />
+  </Folder>
+  <Folder Name="/Application/Frameworks/Ddd/">
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.DependencyInjection/Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External.Api/Ukinee.Infrastructure.Ddd.External.Api.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External/Ukinee.Infrastructure.Ddd.External.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.EfCore/Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.InMemory/Ukinee.Infrastructure.Ddd.Local.InMemory.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local/Ukinee.Infrastructure.Ddd.Local.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Common/Ukinee.Infrastructure.Ddd.Common.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Synchronization/Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
+  </Folder>
+  <Project Path="AspExample/AspExample.csproj" />
+</Solution>

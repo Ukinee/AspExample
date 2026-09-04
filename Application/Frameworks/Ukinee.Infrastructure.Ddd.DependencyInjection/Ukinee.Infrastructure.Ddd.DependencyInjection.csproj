@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latestmajor</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ukinee.Infrastructure.Common\Ukinee.Infrastructure.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.External.Api\Ukinee.Infrastructure.Ddd.External.Api.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Local.EfCore\Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Local.InMemory\Ukinee.Infrastructure.Ddd.Local.InMemory.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Json\Ukinee.Infrastructure.Json.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR\Ukinee.Infrastructure.SignalR.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Validation\Ukinee.Infrastructure.Validation.csproj" />
+    </ItemGroup>
+
+</Project>
