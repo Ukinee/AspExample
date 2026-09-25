@@ -1,84 +1,67 @@
 using MediatR;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Users.Domain;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 
-public enum DomainEventAction
-{
-    Created,
-    Updated,
-    Removed,
-}
+public sealed record UpdateResult<TEntity>(TEntity Current, TEntity? Previous);
 
-public sealed class DomainEvent<TIdentifier, TEntity> : INotification
+public record DomainEvent<TIdentifier, TEntity> : INotification
 where TEntity : IEntity<TIdentifier>
 {
     public required DateTimeOffset OccurredAt { get; init; }
     public required UserContext UserContext { get; init; }
-    public required DomainEventAction Action { get; init; }
-    public required IReadOnlyCollection<TEntity>? CreatedEntities { get; init; }
-    public required IReadOnlyCollection<TEntity>? DeletedEntities { get; init; }
-    public required IReadOnlyCollection<UpdateInfo<TEntity>>? UpdateInfos { get; init; }
 }
 
-public record UpdateInfo<TEntity>
+public record CreatedDomainEvent<TIdentifier, TEntity> : DomainEvent<TIdentifier, TEntity>
+where TEntity : IEntity<TIdentifier>
 {
-    public UpdateInfo(TEntity updateResult, UpdateLock mode, Func<TEntity, TEntity> updateFactory)
-    {
-        UpdateResult = updateResult;
-        Mode = mode;
-        UpdateFactory = updateFactory;
-    }
-
-    public TEntity UpdateResult { get; }
-    public UpdateLock Mode { get; }
-    public Func<TEntity, TEntity> UpdateFactory { get; }
+    public required IReadOnlyCollection<TEntity> Entities { get; init; }
 }
 
-public abstract class DomainEvent
+public record UpdatedDomainEvent<TIdentifier, TEntity> : DomainEvent<TIdentifier, TEntity>
+where TEntity : IEntity<TIdentifier>
+{
+    public required IReadOnlyCollection<UpdateResult<TEntity>> Updates { get; init; }
+}
+
+public record DeletedDomainEvent<TIdentifier, TEntity> : DomainEvent<TIdentifier, TEntity>
+where TEntity : IEntity<TIdentifier>
+{
+    public required IReadOnlyCollection<TIdentifier> Identifiers { get; init; }
+}
+
+public static class DomainEvent
 {
     public static DomainEvent<TIdentifier, TEntity> Created<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<TEntity> entities)
     where TEntity : IEntity<TIdentifier> =>
-        new DomainEvent<TIdentifier, TEntity> {
+        new CreatedDomainEvent<TIdentifier, TEntity> {
             UserContext = context,
-            UpdateInfos = null,
             OccurredAt = DateTimeOffset.UtcNow,
-            Action = DomainEventAction.Created,
-            CreatedEntities = entities,
-            DeletedEntities = null,
+            Entities = entities,
         };
 
-    public static DomainEvent<TIdentifier, TEntity> Updated<TIdentifier, TEntity>(UserContext context, TEntity updateResult, UpdateLock mode, Func<TEntity, TEntity> updateFactory)
+    public static DomainEvent<TIdentifier, TEntity> Updated<TIdentifier, TEntity>(UserContext context, TEntity updateResult, TEntity previous)
+    where TEntity : IEntity<TIdentifier>
+    {
+        var info = new UpdateResult<TEntity>(updateResult, previous);
+
+        return Updated<TIdentifier, TEntity>(context, [info]);
+    }
+
+    public static DomainEvent<TIdentifier, TEntity> Updated<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<UpdateResult<TEntity>> updates)
     where TEntity : IEntity<TIdentifier> =>
-        new DomainEvent<TIdentifier, TEntity> {
+        new UpdatedDomainEvent<TIdentifier, TEntity> {
             UserContext = context,
             OccurredAt = DateTimeOffset.UtcNow,
-            Action = DomainEventAction.Updated,
-            UpdateInfos = [new UpdateInfo<TEntity>(updateResult, mode, updateFactory)],
-            CreatedEntities = null,
-            DeletedEntities = null,
+            Updates = updates,
         };
 
-    public static DomainEvent<TIdentifier, TEntity> Updated<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<UpdateInfo<TEntity>> updates)
+    public static DomainEvent<TIdentifier, TEntity> Removed<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<TIdentifier> identifiers)
     where TEntity : IEntity<TIdentifier> =>
-        new DomainEvent<TIdentifier, TEntity> {
+        new DeletedDomainEvent<TIdentifier, TEntity> {
             UserContext = context,
             OccurredAt = DateTimeOffset.UtcNow,
-            Action = DomainEventAction.Updated,
-            UpdateInfos = updates,
-            CreatedEntities = null,
-            DeletedEntities = null,
-        };
-
-    public static DomainEvent<TIdentifier, TEntity> Removed<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<TEntity> entities)
-    where TEntity : IEntity<TIdentifier> =>
-        new DomainEvent<TIdentifier, TEntity> {
-            UserContext = context,
-            OccurredAt = DateTimeOffset.UtcNow,
-            Action = DomainEventAction.Removed,
-            UpdateInfos = null,
-            CreatedEntities = null,
-            DeletedEntities = entities,
+            Identifiers = identifiers,
         };
 }

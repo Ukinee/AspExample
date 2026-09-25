@@ -1,5 +1,5 @@
-﻿using Common.Infrastructure.Contracts;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
+using Ukinee.Infrastructure.Common.Contracts;
 using Ukinee.Infrastructure.Common.Models;
 
 namespace Ukinee.Infrastructure.Common.Services;

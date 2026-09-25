@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Mapster.DependencyInjection" Version="10.0.12" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.DependencyInjection\Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
+      <ProjectReference Include="..\Examples.Client.Domain.Models\Examples.Client.Domain.Models.csproj" />
+      <ProjectReference Include="..\Examples.Client.Infrastructure\Examples.Client.Infrastructure.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Models\Examples.Common.Domain.Models.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Presentation\Examples.Common.Domain.Presentation.csproj" />
+    </ItemGroup>
+
+</Project>

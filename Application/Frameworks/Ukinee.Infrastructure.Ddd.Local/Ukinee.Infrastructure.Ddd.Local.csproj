@@ -8,10 +8,18 @@
 
     <ItemGroup>
       <PackageReference Include="Ardalis.Specification" Version="9.3.1" />
+      <PackageReference Include="LinqKit" Version="1.3.11" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Ukinee.DbAccess\Ukinee.DbAccess.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Validation\Ukinee.Infrastructure.Validation.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="AccessValidation\Domain\" />
+      <Folder Include="Extensions\" />
     </ItemGroup>
 
 </Project>

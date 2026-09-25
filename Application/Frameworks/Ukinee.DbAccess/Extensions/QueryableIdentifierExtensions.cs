@@ -25,6 +25,23 @@ namespace Ukinee.DbAccess.Extensions
             return query.Where(e => e.Identifier.Equals(identifier));
         }
 
+        public static ISpecificationBuilder<TEntity> WhereIdEquals<TEntity, TIdentifier>(
+            this ISpecificationBuilder<TEntity> query,
+            TIdentifier identifier
+        )
+        where TEntity : class, IEntity<TIdentifier>
+        where TIdentifier : struct
+        {
+            if (typeof(TIdentifier).IsAssignableTo(typeof(IComplexIdentifier<TIdentifier>)))
+            {
+                var lambda = IdentifierExpressionCache<TEntity, TIdentifier>.CreateFilter(identifier);
+
+                return query.Where(lambda);
+            }
+
+            return query.Where(e => e.Identifier.Equals(identifier));
+        }
+
         public static IQueryable<TEntity> WhereIdIn<TEntity, TIdentifier>(
             this IQueryable<TEntity> query,
             IEnumerable<TIdentifier> identifiers

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.Local.EfCore\Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Models\Examples.Common.Domain.Models.csproj" />
+      <ProjectReference Include="..\Examples.Server.Domain.Models\Examples.Server.Domain.Models.csproj" />
+    </ItemGroup>
+
+</Project>

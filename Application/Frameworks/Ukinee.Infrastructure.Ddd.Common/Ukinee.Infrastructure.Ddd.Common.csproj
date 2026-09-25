@@ -9,12 +9,18 @@
 
     <ItemGroup>
       <PackageReference Include="Ardalis.Specification" Version="9.3.1" />
+      <PackageReference Include="LinqKit.Core" Version="1.2.11" />
       <PackageReference Include="MediatR" Version="14.2.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ukinee.Users\Ukinee.Users.csproj" />
+      <ProjectReference Include="..\Ukinee.Users.Common\Ukinee.Users.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="MediatR\UseCases\" />
     </ItemGroup>
 
 </Project>

@@ -3,7 +3,8 @@ using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local;
 
@@ -21,7 +22,7 @@ public static class ISpecificationReaderExtensions
         {
             var result = await reader.FindAsync(userContext, specification, cancellationToken);
 
-            if (result is null or ISpecificationForSoftDelete<TEntity> { IsDeleted: true })
+            if (result is null or IEntityWithSoftDelete<TEntity> { IsDeleted: true })
                 throw new EntityNotFoundException<TIdentifier, TEntity>();
 
             return result;

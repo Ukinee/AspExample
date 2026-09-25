@@ -1,5 +1,6 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 

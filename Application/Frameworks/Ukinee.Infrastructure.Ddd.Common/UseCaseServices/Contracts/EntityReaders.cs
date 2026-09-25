@@ -1,5 +1,6 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 
@@ -8,8 +9,8 @@ where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
     public Task<TEntity?> FindByIdAsync(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken);
-    public IAsyncEnumerable<TEntity> FindManyByIdAsync(UserContext userContext, IEnumerable<TIdentifier> identifiers, CancellationToken cancellationToken);
-    public Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IEnumerable<TIdentifier> identifiers, CancellationToken cancellationToken);
+    public IAsyncEnumerable<TEntity> FindManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
+    public Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
 }
 
 public interface IEntityReader<in TIdentifier, out TEntity>

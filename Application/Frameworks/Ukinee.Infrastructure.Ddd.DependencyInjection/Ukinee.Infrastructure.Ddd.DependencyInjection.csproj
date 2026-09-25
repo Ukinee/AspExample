@@ -13,7 +13,8 @@
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Local.EfCore\Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Local.InMemory\Ukinee.Infrastructure.Ddd.Local.InMemory.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Json\Ukinee.Infrastructure.Json.csproj" />
-      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR\Ukinee.Infrastructure.SignalR.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR.Client\Ukinee.Infrastructure.SignalR.Client.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR.Server\Ukinee.Infrastructure.SignalR.Server.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Validation\Ukinee.Infrastructure.Validation.csproj" />
     </ItemGroup>
 

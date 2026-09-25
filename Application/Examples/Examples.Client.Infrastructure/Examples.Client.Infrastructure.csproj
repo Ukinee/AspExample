@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Common\Ukinee.Infrastructure.Common.csproj" />
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.External.Api\Ukinee.Infrastructure.Ddd.External.Api.csproj" />
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.Synchronization\Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Models\Examples.Common.Domain.Models.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Presentation\Examples.Common.Domain.Presentation.csproj" />
+    </ItemGroup>
+
+</Project>

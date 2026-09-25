@@ -6,18 +6,19 @@ namespace Ukinee.Infrastructure.Validation.Services;
 
 public class ValidationServiceBase<T> : IValidationService<T>
 {
-    private readonly IReadOnlyList<ValidationRule<T>> _modelRules;
-    private readonly IReadOnlyList<PropertyValidationInfo> _propertyRules;
+    private readonly List<ValidationRule<T>> _modelRules = [];
+    private readonly List<PropertyValidationInfo> _propertyRules = [];
 
-    protected ValidationServiceBase(
-        IReadOnlyList<ValidationRule<T>> modelRules,
-        IReadOnlyList<PropertyValidationInfo> propertyRules
-    )
+    protected void AddValidationRule(ValidationRule<T> rule)
     {
-        _modelRules = modelRules ?? new List<ValidationRule<T>>();
-        _propertyRules = propertyRules ?? new List<PropertyValidationInfo>();
+        _modelRules.Add(rule);
     }
 
+    public void AddPropertyValidationRule<TPropertyType>(Expression<Func<T, TPropertyType>> propertySelector, ValidationRule<TPropertyType> rule)
+    {
+        _propertyRules.Add(new PropertyValidationInfo<TPropertyType>(propertySelector, rule));
+    }
+    
     public ValidationResult Validate(T value)
     {
         var status = ValidationStatus.Valid;
@@ -49,11 +50,6 @@ public class ValidationServiceBase<T> : IValidationService<T>
             return ValidationResult.CreateValid();
 
         return ValidationResult.CreateInvalid(messages);
-    }
-
-    protected static PropertyValidationInfo Rule<TPropertyType>(Expression<Func<T, TPropertyType>> propertySelector, ValidationRule<TPropertyType> rule)
-    {
-        return new PropertyValidationInfo<TPropertyType>(propertySelector, rule);
     }
 
     protected class PropertyValidationInfo<TPropertyType> : PropertyValidationInfo

@@ -2,7 +2,7 @@
 
 public interface IOrderedHostedService
 {
-    public int Weight { get; }
+    public int OrderByPriority { get; }
     
     public Task StartAsync(CancellationToken cancellationToken);
 

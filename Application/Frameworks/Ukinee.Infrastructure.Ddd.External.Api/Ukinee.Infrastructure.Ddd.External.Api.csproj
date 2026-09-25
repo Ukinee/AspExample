@@ -8,9 +8,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.External.Api.Domain\Ukinee.Infrastructure.Ddd.External.Api.Domain.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Synchronization\Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.External\Ukinee.Infrastructure.Ddd.External.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Json\Ukinee.Infrastructure.Json.csproj" />
+      <ProjectReference Include="..\Ukinee.Users.Domain.Models\Ukinee.Users.Domain.Models.csproj" />
     </ItemGroup>
 
     <ItemGroup>

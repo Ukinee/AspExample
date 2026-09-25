@@ -1,5 +1,7 @@
 using Ardalis.Specification;
-using Ukinee.Users.Domain;
+using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
 

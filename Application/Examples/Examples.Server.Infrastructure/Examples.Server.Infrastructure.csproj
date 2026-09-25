@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.Local\Ukinee.Infrastructure.Ddd.Local.csproj" />
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.SignalR.Server\Ukinee.Infrastructure.SignalR.Server.csproj" />
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Validation\Ukinee.Infrastructure.Validation.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Models\Examples.Common.Domain.Models.csproj" />
+      <ProjectReference Include="..\Examples.Common.Domain.Presentation\Examples.Common.Domain.Presentation.csproj" />
+      <ProjectReference Include="..\Examples.Server.Domain.Models\Examples.Server.Domain.Models.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.IO.Hashing" Version="10.0.12" />
+    </ItemGroup>
+
+</Project>

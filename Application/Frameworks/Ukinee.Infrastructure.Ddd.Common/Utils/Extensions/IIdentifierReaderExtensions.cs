@@ -2,7 +2,8 @@
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.Utils.Extensions;
 
@@ -14,39 +15,36 @@ public static class IIdentifierReaderExtensions
     {
         public async Task<TEntity> GetByIdAsync(
             UserContext userContext,
-            TIdentifier identifier, 
+            TIdentifier identifier,
             CancellationToken cancellationToken
         )
         {
             var result = await reader.FindByIdAsync(userContext, identifier, cancellationToken);
 
-            if (result is null or ISpecificationForSoftDelete<TEntity> { IsDeleted: true })
+            if (result is null or IEntityWithSoftDelete<TEntity> { IsDeleted: true })
                 throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
 
             return result;
         }
-        
+
         public async Task<Dictionary<TIdentifier, TEntity>> FindManyByIdStrictAsync(
             UserContext userContext,
-            IEnumerable<TIdentifier> identifiers,
+            IReadOnlyCollection<TIdentifier> identifiers,
             CancellationToken cancellationToken
         )
         {
-            var idList = identifiers.AsCollection();
-
             var response = await reader
-                .FindManyByIdAsync(userContext, idList, cancellationToken)
+                .FindManyByIdAsync(userContext, identifiers, cancellationToken)
                 .ToDictionaryAsync(e => e.Identifier, cancellationToken: cancellationToken);
 
-            var missingIds = idList.Except(response.Keys).AsCollection();
+            if (response.Count != identifiers.Count)
+            {
+                var missingIds = identifiers.Except(response.Keys).AsCollection();
 
-            if (missingIds.Count != 0)
                 throw new EntityNotFoundException<TIdentifier, TEntity>(missingIds);
+            }
 
             return response;
         }
-
-
     }
 }
-

@@ -1,4 +1,4 @@
-﻿namespace Common.Infrastructure.Contracts;
+﻿namespace Ukinee.Infrastructure.Common.Contracts;
 
 public interface IApplicationPathProviderService
 {

@@ -2,6 +2,15 @@
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.Utils;
 
+public static class EndpointsNames
+{
+    public static string Update<TEntity, TPayload>()
+    where TEntity : IEntity
+    {
+        return $"Update{typeof(TEntity).Name}Using{typeof(TPayload).Name}";
+    }
+}
+
 public static class RelationalPathUtils
 {
     public static string Find<TEntity>(string template)
@@ -49,19 +58,13 @@ public static class RelationalPathUtils
     public static string Update<TEntity, TPayload>(string template)
     where TEntity : IEntity
     {
-        return $"{typeof(TEntity).Name}/apply{typeof(TPayload).Name}/{template}";
+        return $"{typeof(TEntity).Name}/updateWith{typeof(TPayload).Name}/{template}";
     }
-    
+
     public static string UpdateMany<TEntity, TPayload>()
     where TEntity : IEntity
     {
-        return $"{typeof(TEntity).Name}/applyMany{typeof(TPayload).Name}";
-    }
-    
-    public static string UpdateEndpointName<TEntity, TPayload>()
-    where TEntity : IEntity
-    {
-        return $"Update{typeof(TEntity).Name}Using{typeof(TPayload).Name}";
+        return $"{typeof(TEntity).Name}/updateManyWith{typeof(TPayload).Name}";
     }
 
     public static string Delete<TEntity>(string template)
@@ -74,5 +77,11 @@ public static class RelationalPathUtils
     where TEntity : IEntity
     {
         return $"{typeof(TEntity).Name}/deleteMany";
+    }
+
+    public static string EffectMany<TEntity, TPayload>()
+    where TEntity : IEntity
+    {
+        return $"{typeof(TEntity).Name}/effectMany/{typeof(TPayload).Name}";
     }
 }

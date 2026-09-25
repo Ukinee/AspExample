@@ -1,4 +1,5 @@
-﻿using Ukinee.Users.Domain;
+﻿using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local;
 

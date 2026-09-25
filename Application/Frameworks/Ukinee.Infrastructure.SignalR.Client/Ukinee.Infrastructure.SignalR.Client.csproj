@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MediatR" Version="14.2.0" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.12" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Synchronization\Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR.Common\Ukinee.Infrastructure.SignalR.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Users.Infrastructure\Ukinee.Users.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

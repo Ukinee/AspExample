@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latestmajor</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR.Common\Ukinee.Infrastructure.SignalR.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Users.Domain.Models\Ukinee.Users.Domain.Models.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Mapster" Version="10.0.12" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+
+</Project>

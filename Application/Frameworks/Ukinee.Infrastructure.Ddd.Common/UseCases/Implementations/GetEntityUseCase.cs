@@ -2,14 +2,15 @@
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.Utils.Extensions;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCases;
 
 public class GetEntityUseCase<TIdentifier, TEntity>(
     IEntityReader<TIdentifier, TEntity> entityReader,
     IIdentifierReader<TIdentifier, TEntity> identifierReader
-) : IGetEntityUseCase<TIdentifier, TEntity>
+) : IGetEntityUseCase<TIdentifier, TEntity>, IGetAllEntityUseCase<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {
@@ -29,12 +30,12 @@ where TIdentifier : struct
         return await Execute(userContext, identifier.Value, cancellationToken);
     }
 
-    public IAsyncEnumerable<TEntity> ExecuteSoft(UserContext userContext, IEnumerable<TIdentifier> identifiers, CancellationToken cancellationToken) =>
+    public IAsyncEnumerable<TEntity> ExecuteSoft(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken) =>
         IdentifierReader.FindManyByIdAsync(userContext, identifiers, cancellationToken);
 
     public async Task<Dictionary<TIdentifier, TEntity>> ExecuteStrict(
         UserContext userContext,
-        IEnumerable<TIdentifier> identifiers,
+        IReadOnlyCollection<TIdentifier> identifiers,
         CancellationToken ct
     )
     {

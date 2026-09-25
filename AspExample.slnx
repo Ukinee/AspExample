@@ -1,18 +1,37 @@
 <Solution>
   <Folder Name="/Application/" />
-  <Folder Name="/Application/Common/" />
+  <Folder Name="/Application/Examples/" />
+  <Folder Name="/Application/Examples/Client/">
+    <Project Path="Application/Examples/Examples.Client.Domain.Models/Examples.Client.Domain.Models.csproj" />
+    <Project Path="Application/Examples/Examples.Client.Infrastructure/Examples.Client.Infrastructure.csproj" />
+    <Project Path="Application/Examples/Examples.Client.Startup/Examples.Client.Startup.csproj" />
+  </Folder>
+  <Folder Name="/Application/Examples/Common/">
+    <Project Path="Application/Examples/Examples.Common.Domain.Models/Examples.Common.Domain.Models.csproj" />
+    <Project Path="Application/Examples/Examples.Common.Domain.Presentation/Examples.Common.Domain.Presentation.csproj" />
+    <Project Path="Application/Examples/Examples.Common.Startup/Examples.Common.Startup.csproj" />
+  </Folder>
+  <Folder Name="/Application/Examples/Server/">
+    <Project Path="Application/Examples/Examples.Server.Databases/Examples.Server.Databases.csproj" />
+    <Project Path="Application/Examples/Examples.Server.Domain.Models/Examples.Server.Domain.Models.csproj" />
+    <Project Path="Application/Examples/Examples.Server.Infrastructure/Examples.Server.Infrastructure.csproj" />
+    <Project Path="Application/Examples/Examples.Server.Startup/Examples.Server.Startup.csproj" />
+  </Folder>
   <Folder Name="/Application/Frameworks/">
+    <Project Path="Application/Frameworks/Ukinee.Common.Identifiers.SourceGenerators/Ukinee.Common.Identifiers.SourceGenerators.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Common.Identifiers/Ukinee.Common.Identifiers.csproj" />
     <Project Path="Application/Frameworks/Ukinee.DbAccess/Ukinee.DbAccess.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Common/Ukinee.Infrastructure.Common.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Json/Ukinee.Infrastructure.Json.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Options/Ukinee.Infrastructure.Options.csproj" />
-    <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR/Ukinee.Infrastructure.SignalR.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Client/Ukinee.Infrastructure.SignalR.Client.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Common/Ukinee.Infrastructure.SignalR.Common.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Server/Ukinee.Infrastructure.SignalR.Server.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Validation/Ukinee.Infrastructure.Validation.csproj" />
-    <Project Path="Application/Frameworks/Ukinee.Users/Ukinee.Users.csproj" />
   </Folder>
   <Folder Name="/Application/Frameworks/Ddd/">
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.DependencyInjection/Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External.Api.Domain/Ukinee.Infrastructure.Ddd.External.Api.Domain.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External.Api/Ukinee.Infrastructure.Ddd.External.Api.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External/Ukinee.Infrastructure.Ddd.External.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.EfCore/Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
@@ -20,6 +39,17 @@
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local/Ukinee.Infrastructure.Ddd.Local.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Common/Ukinee.Infrastructure.Ddd.Common.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Synchronization/Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
+  </Folder>
+  <Folder Name="/Application/Frameworks/Users/">
+    <Project Path="Application/Frameworks/Ukinee.Users.Common/Ukinee.Users.Common.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users.Databases/Ukinee.Users.Databases.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users.Infrastructure/Ukinee.Users.Infrastructure.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users.Startup/Ukinee.Users.Startup.csproj" />
+  </Folder>
+  <Folder Name="/Application/Frameworks/Users/Domain/">
+    <Project Path="Application/Frameworks/Ukinee.Users.Domain.Models/Ukinee.Users.Domain.Models.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users.Domain.Presentation/Ukinee.Users.Domain.Presentation.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Users.Domain.UseCases/Ukinee.Users.Domain.UseCases.csproj" />
   </Folder>
   <Project Path="AspExample/AspExample.csproj" />
 </Solution>

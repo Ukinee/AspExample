@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ardalis.Specification;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.Utils;
 
 namespace Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
 
@@ -20,20 +21,10 @@ public static class SpecificationExtensions
         {
             return predicate == null ? specification : specification.Where(predicate);
         }
-        
+
         public ISpecificationBuilder<TEntity> Exists()
         {
-            if (!typeof(TEntity).IsAssignableTo(typeof(ISpecificationForSoftDelete<TEntity>)))
-            {
-                return specification;
-            }
-            
-            var parameter = Expression.Parameter(typeof(TEntity), "x");
-            var property = Expression.Property(parameter, nameof(ISpecificationForSoftDelete<>.DeletedAt));
-            var condition = Expression.Equal(property, Expression.Constant(default(DateTimeOffset)));
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(condition, parameter);
-
-            return specification.Where(lambda);
+            return specification.Where(DddExpressionFactory.Exists<TEntity>());
         }
     }
 }

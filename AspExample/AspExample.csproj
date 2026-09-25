@@ -9,10 +9,22 @@
     <ItemGroup>
         <PackageReference Include="Mapster.DependencyInjection" Version="10.0.12" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+        <PackageReference Include="System.IO.Hashing" Version="10.0.12" />
     </ItemGroup>
 
     <ItemGroup>
+
+      <ProjectReference Include="..\Application\Examples\Examples.Client.Startup\Examples.Client.Startup.csproj" />
+
+      <ProjectReference Include="..\Application\Examples\Examples.Common.Domain.Models\Examples.Common.Domain.Models.csproj" />
+
+      <ProjectReference Include="..\Application\Examples\Examples.Common.Startup\Examples.Common.Startup.csproj" />
+
+      <ProjectReference Include="..\Application\Examples\Examples.Server.Startup\Examples.Server.Startup.csproj" />
       <ProjectReference Include="..\Application\Frameworks\Ukinee.Infrastructure.Ddd.DependencyInjection\Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
+      <ProjectReference Include="..\Application\Frameworks\Ukinee.Users.Startup\Ukinee.Users.Startup.csproj" />
     </ItemGroup>
 
 </Project>

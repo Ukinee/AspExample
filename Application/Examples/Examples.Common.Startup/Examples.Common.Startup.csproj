@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Mapster.DependencyInjection" Version="10.0.12" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+      <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Frameworks\Ukinee.Infrastructure.Ddd.DependencyInjection\Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
+      <ProjectReference Include="..\Examples.Client.Infrastructure\Examples.Client.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

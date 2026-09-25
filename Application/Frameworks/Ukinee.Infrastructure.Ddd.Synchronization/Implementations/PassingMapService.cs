@@ -1,4 +1,5 @@
-﻿using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
+﻿using MapsterMapper;
+using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.Synchronization.Implementations;
 

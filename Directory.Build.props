@@ -1,0 +1,6 @@
+<Project>
+
+    <PropertyGroup>
+        <SourceGeneratorsPath>$(MSBuildThisFileDirectory)Application\Frameworks\Ukinee.Common.Identifiers.SourceGenerators\</SourceGeneratorsPath>
+    </PropertyGroup>
+</Project>

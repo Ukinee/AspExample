@@ -1,4 +1,4 @@
-﻿namespace Common.Infrastructure.Services;
+﻿namespace Ukinee.Infrastructure.Common.Utils;
 
 public class PathHelper
 {

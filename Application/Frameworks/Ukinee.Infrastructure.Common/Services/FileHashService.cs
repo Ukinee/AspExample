@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
-using Common.Infrastructure.Contracts;
+using Ukinee.Infrastructure.Common.Contracts;
 
-namespace Common.Infrastructure.Services;
+namespace Ukinee.Infrastructure.Common.Services;
 
 public class FileHashService : IFileHashService
 {

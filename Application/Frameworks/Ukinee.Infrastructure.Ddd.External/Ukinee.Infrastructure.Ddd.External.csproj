@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
-      <ProjectReference Include="..\Ukinee.Users\Ukinee.Users.csproj" />
     </ItemGroup>
 
 </Project>

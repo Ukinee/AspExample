@@ -2,7 +2,8 @@
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 using Ukinee.Infrastructure.Ddd.External.Contracts;
-using Ukinee.Users.Domain;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 

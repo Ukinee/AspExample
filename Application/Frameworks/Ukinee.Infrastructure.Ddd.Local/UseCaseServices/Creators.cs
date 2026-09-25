@@ -2,14 +2,16 @@
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
-using Ukinee.Infrastructure.Ddd.Local.AccessValidation_Rethink.Contracts;
+using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
+using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Extensions;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Users.Domain;
+using Ukinee.Infrastructure.Validation.Domain.Contracts;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
 public class TrackedEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>(
-    IIdentifierEntityAccessValidator<TIdentifier, TEntity> identifierEntityAccessValidator,
     IIdentifierReader<TIdentifier, TEntity> reader,
     IEntityCreator<TCreatePayload, TEntity> creator
 ) : IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>
@@ -18,8 +20,6 @@ where TIdentifier : notnull
 {
     public async Task<TEntity> GetOrCreateAsync(UserContext userContext, TIdentifier identifier, TCreatePayload payload, CancellationToken cancellationToken)
     {
-        identifierEntityAccessValidator.EnsureHasAccess(userContext, identifier);
-
         var existing = await reader.FindByIdAsync(userContext, identifier, cancellationToken);
 
         if (existing != null)
@@ -47,7 +47,8 @@ where TIdentifier : notnull
 
 public abstract class TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IIdentifierEntityAccessValidator<TIdentifier, TEntity> identifierEntityAccessValidator,
+    IValidationService<TCreatePayload> validationService,
+    IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : IEntityCreator<TCreatePayload, TEntity>
 where TIdentifier : notnull
@@ -62,15 +63,18 @@ where TEntity : class, IEntity<TIdentifier>
 
     public async Task<IReadOnlyCollection<TEntity>> CreateAsync(UserContext userContext, IReadOnlyCollection<TCreatePayload> payloads, CancellationToken cancellationToken)
     {
-        var result = new List<TEntity>(payloads.Count);
+        foreach (var payload in payloads)
+            validationService.Validate(payload).EnsureValid();
+
+        List<TEntity> result = new List<TEntity>(payloads.Count);
 
         foreach (var payload in payloads)
             result.Add(await CreateInternal(userContext, payload, cancellationToken));
 
-        identifierEntityAccessValidator.EnsureHasAccess(userContext, result);
+        accessProvider.EnsureAccess(userContext, result);
 
         await repository.AddRange(result);
-        await publisher.PublishCreatedEvent<TIdentifier, TEntity>(userContext, result);
+        await publisher.PublishCreatedEvent<TIdentifier, TEntity>(userContext, result, cancellationToken);
 
         return result;
     }
@@ -80,10 +84,11 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityCreateFactory<TCreatePayload, TEntity> factory,
+    IValidationService<TCreatePayload> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IIdentifierEntityAccessValidator<TIdentifier, TEntity> identifierEntityAccessValidator,
+    IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, identifierEntityAccessValidator, publisher)
+) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
@@ -95,10 +100,11 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityAsyncCreateFactory<TCreatePayload, TEntity> factory,
+    IValidationService<TCreatePayload> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IIdentifierEntityAccessValidator<TIdentifier, TEntity> identifierEntityAccessValidator,
+    IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, identifierEntityAccessValidator, publisher)
+) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

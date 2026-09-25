@@ -1,64 +1,63 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 
+
 public static class PayloadHelper
 {
-    public static List<ServiceDescriptor> GetSingletonDescriptors(Type type, IReadOnlyCollection<Type> ignoredInterfaces)
+    public static IEnumerable<ServiceDescriptor> Singleton<TInterface, TImplementation>()
+    where TInterface : class
+    where TImplementation : class, TInterface
     {
-        var typeDescriptor = ServiceDescriptor.Singleton(type, type);
-
-        return SingletonDescriptors(type, typeDescriptor, ignoredInterfaces);
+        yield return ServiceDescriptor.Singleton<TImplementation, TImplementation>();
+        yield return ServiceDescriptor.Singleton<TInterface, TImplementation>(sc => sc.GetRequiredService<TImplementation>());
     }
-    
-    public static List<ServiceDescriptor> GetSingletonDescriptors(IEnumerable<Type> types, IReadOnlyCollection<Type> ignoredInterfaces)
-    {
-        var result = new List<ServiceDescriptor>();
 
-        foreach (var type in types)
+    public static void AddFiltered(
+        IServiceCollection services,
+        RegistrationPolicy policy,
+        IEnumerable<ServiceDescriptor> descriptors
+    )
+    {
+        foreach (var descriptor in descriptors)
         {
-            result.AddRange(GetSingletonDescriptors(type, ignoredInterfaces));
-        }
-        
-        return result;
-    }
+            var serviceType = descriptor.ServiceType;
 
-    public static List<ServiceDescriptor> GetSingletonDescriptors(object instance, IReadOnlyCollection<Type> ignoredInterfaces)
-    {
-        var type = instance.GetType();
-        var typeDescriptor = ServiceDescriptor.Singleton(type, instance);
-
-        return SingletonDescriptors(type, typeDescriptor, ignoredInterfaces);
-    }
-
-    private static List<ServiceDescriptor> SingletonDescriptors(Type type, ServiceDescriptor typeDescriptor, IReadOnlyCollection<Type> ignoredInterfaces)
-    {
-        List<ServiceDescriptor> result = [typeDescriptor];
-
-        var interfaces = type.GetInterfaces();
-
-        foreach (var @interface in interfaces)
-        {
-            if (IsIgnored(ignoredInterfaces, @interface))
+            if (policy.IsIgnored(serviceType))
                 continue;
 
-            var descriptor = ServiceDescriptor.Singleton(@interface, sp => sp.GetRequiredService(type));
-            result.Add(descriptor);
+            if (serviceType == descriptor.ImplementationType)
+            {
+                if (!services.Any(d => d.ServiceType == serviceType))
+                    services.Add(descriptor);
+
+                continue;
+            }
+
+            if (policy.AllowsMultiple(serviceType))
+            {
+                services.Add(descriptor);
+
+                continue;
+            }
+
+            var existing = services.FirstOrDefault(d => d.ServiceType == serviceType);
+
+            if (existing is not null)
+            {
+                throw new InvalidOperationException(
+                    $"Service '{serviceType}' is registered more than once.\n" +
+                    $"  existing: {Describe(existing)}\n" +
+                    $"  new:      {Describe(descriptor)}"
+                );
+            }
+
+            services.Add(descriptor);
         }
-
-        return result;
     }
 
-    private static bool IsIgnored(IReadOnlyCollection<Type> ignoredInterfaces, Type interfaceType)
-    {
-        if (ignoredInterfaces.Contains(interfaceType))
-            return true;
-
-        if (!interfaceType.IsGenericType)
-            return false;
-
-        var genericDefinition = interfaceType.GetGenericTypeDefinition();
-
-        return ignoredInterfaces.Contains(genericDefinition);
-    }
+    private static string Describe(ServiceDescriptor d) =>
+        $"{d.ServiceType.Name} -> " + (d.ImplementationType?.Name ?? (d.ImplementationFactory is not null ? "<factory>" : "<instance>"));
 }

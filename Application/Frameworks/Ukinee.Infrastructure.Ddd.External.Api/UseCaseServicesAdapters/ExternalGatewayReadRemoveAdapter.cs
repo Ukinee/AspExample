@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
-using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 using Ukinee.Infrastructure.Ddd.External.Contracts;
-using Ukinee.Infrastructure.Ddd.Local.AccessValidation_Rethink.Exceptions;
-using Ukinee.Users.Domain;
+using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Exceptions;
+using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
+using Ukinee.Users;
+using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 
@@ -35,7 +36,7 @@ where TEntity : class, IEntity<TIdentifier>
         return await mapService.Map(response);
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyByIdAsync(UserContext userContext, IEnumerable<TIdentifier> identifiers, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TEntity> FindManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var responseStream = externalGateway.FindManyByIdAsync(userContext, identifiers, cancellationToken);
 
@@ -45,18 +46,16 @@ where TEntity : class, IEntity<TIdentifier>
         }
     }
 
-    public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IEnumerable<TIdentifier> identifiers, CancellationToken cancellationToken)
+    public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken)
     {
-        var identifiersCollection = identifiers as ICollection<TIdentifier> ?? identifiers.ToList();
-
-        var result = await FindManyByIdAsync(userContext, identifiersCollection, cancellationToken)
+        var result = await FindManyByIdAsync(userContext, identifiers, cancellationToken)
             .ToDictionaryAsync(x => x.Identifier, cancellationToken: cancellationToken);
 
-        if (result.Count != identifiersCollection.Count)
+        if (result.Count != identifiers.Count)
         {
-            var missing = identifiersCollection.Except(result.Keys);
+            var missing = identifiers.Except(result.Keys);
 
-            throw new EntityNotFoundOrNotExistsException<TIdentifier, TEntity>(missing, [], userContext);
+            throw new EntityNotFoundOrDeniedException<TIdentifier, TEntity>(missing, [], userContext);
         }
 
         return result;

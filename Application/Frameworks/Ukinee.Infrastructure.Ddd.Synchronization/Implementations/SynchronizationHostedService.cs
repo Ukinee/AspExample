@@ -5,7 +5,7 @@ namespace Ukinee.Infrastructure.Ddd.Synchronization.Implementations;
 
 public class SynchronizationHostedService<TEntity>(ISynchronizationService<TEntity> syncService) : IOrderedHostedService
 {
-    public int Weight => syncService.Weight;
+    public int OrderByPriority => syncService.Weight;
     
     public async Task StartAsync(CancellationToken cancellationToken)
     {
