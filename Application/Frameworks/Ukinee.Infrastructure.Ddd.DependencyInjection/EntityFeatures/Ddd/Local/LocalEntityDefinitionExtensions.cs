@@ -35,7 +35,7 @@ where TEntity : class, IEntity<TIdentifier>
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryDictionaryRepository<TIdentifier, TEntity>>();
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity, TTag>>();
 
         ProxyHelper.RegisterTrackedReaders(builder);
 
@@ -59,7 +59,7 @@ where TEntity : class, IEntity<TIdentifier>
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryDictionaryRepository<TIdentifier, TEntity>>();
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity, TTag>>();
         ProxyHelper.RegisterTrackedReaders(builder);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder);
@@ -97,31 +97,6 @@ where TEntity : class, IEntity<TIdentifier>
 
         return definition;
     }
-
-    public ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> RegisterWithStartupDbSynchronizationWriteBehindAndInMemoryRepository<TWeight>(
-        Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
-    )
-    where TWeight : ISynchronizationOrderByPriority, allows ref struct
-    {
-        var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
-
-        builder.SetRepository<InMemoryDictionaryRepository<TIdentifier, TEntity>>();
-        ProxyHelper.RegisterTrackedReaders(builder);
-
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>();
-
-        definition.Services.Add(CommonProxyHelper.RegisterStartupSynchronization<TIdentifier, TEntity, TWeight, DbService<TIdentifier, TEntity, TTag>>);
-        definition.Services.Add(CommonProxyHelper.RegisterServerNotificationHandler<TIdentifier, TEntity, HonestDatabasePersistenceReceiver<TIdentifier, TEntity, TTag>>);
-
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder);
-
-        dddConfigurator?.Invoke(tackedBuilder);
-        definition.Features.Add(tackedBuilder.Feature);
-
-        return definition;
-    }
 }
 
 public class DeletableDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
@@ -142,33 +117,6 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
 
         builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>();
         builder.SetEntityRemover<DeletableTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>();
-
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder);
-
-        dddConfigurator?.Invoke(tackedBuilder);
-        definition.Features.Add(tackedBuilder.Feature);
-
-        return definition;
-    }
-
-    public ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> RegisterWithStartupDbSynchronizationWriteBehindAndInMemoryRepository<TWeight>(
-        Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
-    )
-    where TWeight : ISynchronizationOrderByPriority, allows ref struct
-    {
-        var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
-
-        builder.SetRepository<InMemoryDictionaryRepository<TIdentifier, TEntity>>();
-        builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>();
-
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetEntityRemover<DeletableTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>();
-
-        definition.Services.Add(CommonProxyHelper.RegisterStartupSynchronization<TIdentifier, TEntity, TWeight, DbService<TIdentifier, TEntity, TTag>>);
-        definition.Services.Add(CommonProxyHelper.RegisterServerNotificationHandler<TIdentifier, TEntity, DeletableDatabasePersistenceReceiver<TIdentifier, TEntity, TTag>>);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder);
 

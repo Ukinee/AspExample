@@ -13,7 +13,6 @@ public class UserDatabaseService(IUserFactory userFactory, UserDbContext userDbC
         var user = userFactory.Create(credentials);
 
         await userDbContext.Users.AddAsync(user, cancellationToken);
-        await userDbContext.SaveChangesAsync(cancellationToken);
 
         return user;
     }
@@ -28,7 +27,6 @@ public class UserDatabaseService(IUserFactory userFactory, UserDbContext userDbC
         var updatedUser = userFactory.UpdateHash(user, credentials);
 
         userDbContext.Users.Update(updatedUser);
-        await userDbContext.SaveChangesAsync(cancellationToken);
 
         return updatedUser;
     }

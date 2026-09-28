@@ -4,7 +4,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 
-public sealed record UpdateResult<TEntity>(TEntity Current, TEntity? Previous);
+public sealed record UpdateResult<TEntity>(TEntity Updated, TEntity? Old);
 
 public record DomainEvent<TIdentifier, TEntity> : INotification
 where TEntity : IEntity<TIdentifier>

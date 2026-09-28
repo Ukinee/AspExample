@@ -18,7 +18,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
 public class TrackedReader<TIdentifier, TEntity>(
     ITrackedRepository<TIdentifier, TEntity> repository,
-    IEntityReadAccessExpressionProvider<TIdentifier, TEntity> identifierEntityAccessValidator
+    IEntityReadAccessExpressionProvider<TIdentifier, TEntity> accessValidator
 ) : ITrackedReader<TIdentifier, TEntity>
 where TIdentifier : struct
 where TEntity : class, IEntity<TIdentifier>
@@ -103,7 +103,7 @@ where TEntity : class, IEntity<TIdentifier>
 
     private async Task<Expression<Func<TEntity, bool>>> CreateFilter(UserContext userContext)
     {
-        var access = await identifierEntityAccessValidator.GetReadExpression(userContext);
+        var access = await accessValidator.GetReadExpression(userContext);
         var exists = DddExpressionFactory.Exists<TEntity>();
         
         var filter = DddExpressionUtils.And(exists, access);

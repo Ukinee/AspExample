@@ -43,7 +43,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         await publisher.PublishUpdatedEvent<TIdentifier, TEntity>(userContext, [result], cancellationToken);
 
-        return result.Current;
+        return result.Updated;
     }
 }
 
@@ -81,7 +81,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         await publisher.PublishUpdatedEvent<TIdentifier, TEntity>(userContext, [result], cancellationToken);
 
-        return result.Current;
+        return result.Updated;
     }
 
     public async Task<IReadOnlyCollection<TEntity>> UpdateAsync(
@@ -112,7 +112,7 @@ where TEntity : class, IEntity<TIdentifier>
         if (results.Count != identifiers.Length)
         {
             var missing = identifiers
-                .Except(results.Select(r => r.Current.Identifier))
+                .Except(results.Select(r => r.Updated.Identifier))
                 .ToArray();
 
             throw new EntityNotFoundException<TIdentifier, TEntity>(missing);
@@ -120,6 +120,6 @@ where TEntity : class, IEntity<TIdentifier>
 
         await publisher.PublishUpdatedEvent<TIdentifier, TEntity>(userContext, results, cancellationToken);
 
-        return results.Select(r => r.Current).ToArray();
+        return results.Select(r => r.Updated).ToArray();
     }
 }

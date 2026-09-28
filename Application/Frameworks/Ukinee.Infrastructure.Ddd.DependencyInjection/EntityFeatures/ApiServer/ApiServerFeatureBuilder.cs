@@ -380,8 +380,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         RelationalPathUtils.Delete<TEntity>(TParams.RouteTemplate),
                         async (
                             [AsParameters] TParams routeParams,
-                            IGetEntityUseCase<TIdentifier, TEntity> useCase,
-                            IRemoveEntityUseCase<TEntity> removeUseCase,
+                            IRemoveEntityUseCase<TIdentifier, TEntity> removeUseCase,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
                         ) =>
@@ -389,8 +388,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                             var userContext = userContextProvider.GetActiveUserContext();
                             var id = _idFactory(routeParams, userContext);
 
-                            var entity = await useCase.Execute(userContext, id, ct);
-                            await removeUseCase.Execute(userContext, entity, ct);
+                            await removeUseCase.Execute(userContext, id, ct);
 
                             return TypedResults.NoContent();
                         }

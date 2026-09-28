@@ -7,7 +7,6 @@ using Ukinee.Infrastructure.Ddd.Local;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Services;
 using Ukinee.Infrastructure.Validation.Services;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Examples.Server.Infrastructure.DomainServices;
@@ -28,7 +27,7 @@ public class CreateReviewRequestValidator : ValidationServiceBase<CreateReviewRe
     public CreateReviewRequestValidator() { }
 }
 
-public class SubscribeToReviewsRequestGroupResolver : RouteResolverBase<ServerExampleTag, Review, SubscribeToReviewsRequest>
+public class SubscribeToReviewsRequestGroupResolver : RouteResolverBase<ServerExampleTag, ReviewIdentifier, Review, SubscribeToReviewsRequest>
 {
     public SubscribeToReviewsRequestGroupResolver() { }
 }

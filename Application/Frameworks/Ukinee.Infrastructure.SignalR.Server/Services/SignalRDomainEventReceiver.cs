@@ -12,7 +12,7 @@ where TEntity : IEntity<TIdentifier>
         sink.NotifyCreation(entities);
 
     protected override Task OnUpdated(IReadOnlyCollection<UpdateResult<TEntity>> updates, CancellationToken cancellationToken) =>
-        sink.NotifyUpdate(updates.Select(d => d.Current).ToList());
+        sink.NotifyUpdate(updates.Select(d => d.Updated).ToList());
 
     protected override Task OnRemoved(IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken) =>
         sink.NotifyRemoval(identifiers);

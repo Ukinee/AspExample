@@ -32,7 +32,7 @@ where TEntity : class, IEntity<TIdentifier>
             result.Add(externalEntity);
         }
 
-        await trackedRepository.AddRange(result);
+        await trackedRepository.AddRange(result, cancellationToken);
 
         logger.LogInformation("Data for {Type} synchronized.", typeof(TEntity));
     }

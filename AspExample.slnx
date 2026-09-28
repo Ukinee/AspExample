@@ -39,6 +39,7 @@
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local/Ukinee.Infrastructure.Ddd.Local.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Common/Ukinee.Infrastructure.Ddd.Common.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Synchronization/Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests/Ukinee.Infrastructure.Ddd.Tests.csproj" />
   </Folder>
   <Folder Name="/Application/Frameworks/Users/">
     <Project Path="Application/Frameworks/Ukinee.Users.Common/Ukinee.Users.Common.csproj" />

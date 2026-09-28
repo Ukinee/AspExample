@@ -73,7 +73,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         accessProvider.EnsureAccess(userContext, result);
 
-        await repository.AddRange(result);
+        await repository.AddRange(result, cancellationToken);
         await publisher.PublishCreatedEvent<TIdentifier, TEntity>(userContext, result, cancellationToken);
 
         return result;

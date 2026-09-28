@@ -6,7 +6,6 @@ using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 
 namespace Ukinee.Infrastructure.Ddd.Local.Repositories;
 
-
 public interface ITrackedRepository<in TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 where TIdentifier : notnull
@@ -21,7 +20,10 @@ public interface IEditableTrackedRepository<TIdentifier, TEntity> : ITrackedRepo
 where TEntity : IEntity<TIdentifier>
 where TIdentifier : notnull
 {
-    public Task AddRange(IReadOnlyCollection<TEntity> entities);
+    public Task AddRange(
+        IReadOnlyCollection<TEntity> entities,
+        CancellationToken cancellationToken
+    );
 
     Task<UpdateResult<TEntity>> UpdateByIdAsync(
         TIdentifier identifier,
@@ -39,5 +41,9 @@ where TIdentifier : notnull
         CancellationToken cancellationToken
     );
 
-    public Task<IReadOnlyCollection<TEntity>> RemoveRange(IEnumerable<TIdentifier> identifier, Expression<Func<TEntity, bool>> filter);
+    public Task<IReadOnlyCollection<TEntity>> RemoveRange(
+        IReadOnlyCollection<TIdentifier> identifier,
+        Expression<Func<TEntity, bool>> filter,
+        CancellationToken cancellationToken
+    );
 }

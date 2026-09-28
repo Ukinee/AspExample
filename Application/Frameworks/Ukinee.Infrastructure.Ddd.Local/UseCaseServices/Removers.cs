@@ -43,7 +43,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         var access = await accessProvider.GetDeleteExpression(userContext);
 
-        var removed = await repository.RemoveRange(identifiers, access);
+        var removed = await repository.RemoveRange(identifiers, access, cancellationToken);
 
         if (removed.Count != identifiers.Count)
             throw new EntityNotFoundException<TIdentifier, TEntity>(identifiers);

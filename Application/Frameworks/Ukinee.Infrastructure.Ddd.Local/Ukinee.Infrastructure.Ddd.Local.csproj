@@ -19,7 +19,7 @@
 
     <ItemGroup>
       <Folder Include="AccessValidation\Domain\" />
-      <Folder Include="Extensions\" />
+      <Folder Include="UnitOfWork\" />
     </ItemGroup>
 
 </Project>
