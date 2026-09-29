@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Domain;

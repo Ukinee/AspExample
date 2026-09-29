@@ -20,15 +20,15 @@ where TEntity : class, IEntity<TIdentifier>
         Feature = feature;
 
         IEnumerable<ServiceDescriptor> registererDescriptors = [
-            ..PayloadHelper.Singleton<IHubConnectionRegisterer<THubTag>, HubConnectionRegisterer<THubTag, TIdentifier, TEntity, TViewModel>>(),
+            ServiceDescriptor.Singleton<IHubConnectionRegisterer<THubTag>, HubConnectionRegisterer<THubTag, TIdentifier, TEntity, TViewModel>>(),
         ];
 
         feature.HubConnectionRegisterer.AddRange(registererDescriptors);
 
         IEnumerable<ServiceDescriptor> cacheDescriptors = [
-            .. PayloadHelper.Singleton<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, VoidingLocalCacheRequestHandler<TIdentifier, TEntity>>(),
         ];
 
         feature.CacheRequestHandlers.AddRange(cacheDescriptors);
@@ -39,9 +39,9 @@ where TEntity : class, IEntity<TIdentifier>
         Feature.CacheRequestHandlers.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            .. PayloadHelper.Singleton<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
         ];
 
         Feature.CacheRequestHandlers.AddRange(descriptors);

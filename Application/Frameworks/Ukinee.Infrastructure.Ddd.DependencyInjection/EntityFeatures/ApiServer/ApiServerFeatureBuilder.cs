@@ -380,7 +380,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         RelationalPathUtils.Delete<TEntity>(TParams.RouteTemplate),
                         async (
                             [AsParameters] TParams routeParams,
-                            IRemoveEntityUseCase<TIdentifier, TEntity> removeUseCase,
+                            [FromServices] IRemoveEntityUseCase<TIdentifier, TEntity> removeUseCase,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
                         ) =>

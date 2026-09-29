@@ -1,13 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 
-
 public static class PayloadHelper
 {
-    public static IEnumerable<ServiceDescriptor> Singleton<TInterface, TImplementation>()
+    public static IEnumerable<ServiceDescriptor> Singleton2<TInterface, TImplementation>()
     where TInterface : class
     where TImplementation : class, TInterface
     {
@@ -60,4 +58,12 @@ public static class PayloadHelper
 
     private static string Describe(ServiceDescriptor d) =>
         $"{d.ServiceType.Name} -> " + (d.ImplementationType?.Name ?? (d.ImplementationFactory is not null ? "<factory>" : "<instance>"));
+
+    public static IEnumerable<ServiceDescriptor> Service<TInterface, TImplementation>(ServiceLifetime serviceLifetime)
+    where TInterface : class
+    where TImplementation : class, TInterface
+    {
+        yield return ServiceDescriptor.Describe(typeof(TImplementation), typeof(TImplementation), serviceLifetime);
+        yield return ServiceDescriptor.Describe(typeof(TInterface), sp => sp.GetRequiredService<TImplementation>(), serviceLifetime);
+    }
 }

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.SignalR.Server.Services;
@@ -10,12 +10,16 @@ namespace Ukinee.Infrastructure.SignalR.Server.Services;
 public sealed class HubService<TIdentifier, TEntity, TRequest>(
     ILogger<HubService<TIdentifier, TEntity, TRequest>> logger,
     IRouteResolver<TIdentifier, TEntity, TRequest> routeResolver,
-    ISignalRAccessValidator<TRequest> signalRAccessValidator
+    IServiceScopeFactory scopeFactory
 ) : IHubService<TRequest>
 where TEntity : IEntity<TIdentifier>
 {
     public async Task Subscribe(Hub hub, UserContext userContext, TRequest request)
     {
+        using var scope = scopeFactory.CreateScope();
+
+        var signalRAccessValidator = scope.ServiceProvider.GetRequiredService<ISignalRAccessValidator<TRequest>>();
+
         if (!await signalRAccessValidator.ValidateAccess(request, userContext))
         {
             throw new HubException("Forbidden: You don't have access to this resource.");

@@ -50,7 +50,7 @@ where TIdentifier : notnull
 
 public abstract class TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
+    IValidator<IEnumerable<TCreatePayload>> validationService,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : IEntityCreator<TCreatePayload, TEntity>
@@ -90,9 +90,9 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityCreateFactory<TCreatePayload, TEntity> factory,
-    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
+    IValidator<IEnumerable<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
+    IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull
@@ -106,9 +106,9 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityAsyncCreateFactory<TCreatePayload, TEntity> factory,
-    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
+    IValidator<IEnumerable<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
+    IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull

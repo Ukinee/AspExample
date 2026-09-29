@@ -3,6 +3,7 @@ using Examples.Client.Startup;
 using Examples.Common.Startup;
 using Examples.Server.Infrastructure.Services;
 using Examples.Server.Startup;
+using Ukinee.Infrastructure.Ddd.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 using Ukinee.Users.Domain;
@@ -112,6 +113,7 @@ public static class Program
         builder
             .Services
             .SetupUsers(builder.Configuration, userOwnerConfig)
+            .SetupUnitOfWork()
             .SetupServerExample<ExampleServerHub>(registrationPolicy, serverOptions);
     }
 }

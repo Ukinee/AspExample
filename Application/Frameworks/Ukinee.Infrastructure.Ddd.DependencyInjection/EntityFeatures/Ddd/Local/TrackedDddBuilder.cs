@@ -18,11 +18,13 @@ where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {
     private DddBuilder<TIdentifier, TEntity> _builder;
+    private readonly ServiceLifetime _serviceLifetime;
     private readonly bool _throwOnTransaction;
 
-    public TrackedDddBuilder(DddBuilder<TIdentifier, TEntity> builder, bool throwOnTransaction)
+    public TrackedDddBuilder(DddBuilder<TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime, bool throwOnTransaction)
     {
         _builder = builder;
+        _serviceLifetime = serviceLifetime;
         _throwOnTransaction = throwOnTransaction;
     }
 
@@ -32,7 +34,8 @@ where TIdentifier : struct
         AuthorizationPolicy<TIdentifier, TEntity> policy
     )
     {
-        _builder.Feature.AccessValidator.AddRange(AuthorizationHelper.Build(policy));
+        var serviceDescriptors = AuthorizationHelper.Build(policy);
+        _builder.Feature.AccessValidator.AddRange(serviceDescriptors);
 
         return this;
     }
@@ -69,10 +72,10 @@ where TIdentifier : struct
         return this;
     }
 
-    public TrackedDddBuilder<TTag, TIdentifier, TEntity> WithRepository<TRepository>()
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> WithRepository<TRepository>(ServiceLifetime lifetime = ServiceLifetime.Scoped)
     where TRepository : class, IEditableTrackedRepository<TIdentifier, TEntity>
     {
-        _builder.SetRepository<TRepository>();
+        _builder.SetRepository<TRepository>(lifetime);
 
         return this;
     }
@@ -82,12 +85,13 @@ where TIdentifier : struct
     where TFactory : class, IEntityAsyncCreateFactory<TCreatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Singleton<IEntityAsyncCreateFactory<TCreatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidator<IEnumerable<TCreatePayload>>, TValidator>(),
+            ..PayloadHelper.Service<IEntityAsyncCreateFactory<TCreatePayload, TEntity>, TFactory>(_serviceLifetime),
+            ..PayloadHelper.Service<IValidator<IEnumerable<TCreatePayload>>, TValidator>(_serviceLifetime),
         ];
 
         _builder
             .SetEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
+                _serviceLifetime,
                 extensions,
                 _throwOnTransaction
             );
@@ -100,11 +104,12 @@ where TIdentifier : struct
     where TFactory : class, IEntityCreateFactory<TCreatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Singleton<IEntityCreateFactory<TCreatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidator<IEnumerable<TCreatePayload>>, TValidator>(),
+            ..PayloadHelper.Service<IEntityCreateFactory<TCreatePayload, TEntity>, TFactory>(_serviceLifetime),
+            ..PayloadHelper.Service<IValidator<IEnumerable<TCreatePayload>>, TValidator>(_serviceLifetime),
         ];
 
         _builder.SetEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
+            _serviceLifetime,
             extensions,
             _throwOnTransaction
         );
@@ -117,13 +122,13 @@ where TIdentifier : struct
     where TFactory : class, IEntityUpdateFactory<TUpdatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Singleton<IEntityUpdateFactory<TUpdatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidator<IEnumerable<TUpdatePayload>>, TValidator>(),
+            ..PayloadHelper.Service<IEntityUpdateFactory<TUpdatePayload, TEntity>, TFactory>(_serviceLifetime),
+            ..PayloadHelper.Service<IValidator<IEnumerable<TUpdatePayload>>, TValidator>(_serviceLifetime),
         ];
 
         _builder
             .AddPayloadEntityUpdateFeature<TrackedPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions, _throwOnTransaction);
+                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(_serviceLifetime, extensions, _throwOnTransaction);
 
         return this;
     }
@@ -131,7 +136,7 @@ where TIdentifier : struct
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddRequestHandlerNoValidation<THandler, TPayload, TResponse>()
     where THandler : class, IRequestHandler<PayloadRequest<TPayload, TResponse>, IReadOnlyCollection<TResponse>>
     {
-        _builder.AddRequestHandlerFeature<THandler, TPayload, TResponse>([]);
+        _builder.AddRequestHandlerFeature<THandler, TPayload, TResponse>(_serviceLifetime, []);
 
         return this;
     }
@@ -142,7 +147,7 @@ where TIdentifier : struct
             TrackedEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>,
             TCreatePayload,
             GetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>
-        >([]);
+        >(_serviceLifetime, []);
 
         return this;
     }

@@ -42,15 +42,15 @@ where TParams : IRouteParams<TParams, TIdentifier>
     public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> SetCreateUseCase<TCreatePayload>()
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Singleton<
+            ..PayloadHelper.Service<
                 IExternalGatewayCreator<TIdentifier, TCreatePayload, TResponse>,
                 ExternalGatewayCreator<TTag, TParams, TIdentifier, TCreatePayload, TEntity, TResponse>
-            >()
+            >(ServiceLifetime.Singleton),
         ];
 
         _builder
             .SetEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
-                CreateEntityUseCase<TCreatePayload, TEntity>>(extensions, true);
+                CreateEntityUseCase<TCreatePayload, TEntity>>(ServiceLifetime.Singleton, extensions, true);
 
         return this;
     }
@@ -58,14 +58,14 @@ where TParams : IRouteParams<TParams, TIdentifier>
     public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> AddUpdateUseCase<TUpdatePayload>()
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Singleton<
+            ..PayloadHelper.Service<
                 IExternalGatewayUpdater<TIdentifier, TUpdatePayload, TResponse>,
-                ExternalGatewayUpdater<TTag, TParams, TIdentifier, TUpdatePayload, TEntity, TResponse>>()
+                ExternalGatewayUpdater<TTag, TParams, TIdentifier, TUpdatePayload, TEntity, TResponse>>(ServiceLifetime.Singleton),
         ];
 
         _builder
             .AddPayloadEntityUpdateFeature<ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions, true);
+                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(ServiceLifetime.Singleton, extensions, true);
 
         return this;
     }
@@ -76,7 +76,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
             ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>,
             TCreatePayload,
             GetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>
-        >([]);
+        >(ServiceLifetime.Singleton, []);
 
         return this;
     }

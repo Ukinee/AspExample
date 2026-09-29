@@ -32,8 +32,15 @@ public class DddAccessExpressionUtils
     )
     where TEntity : IEntity<TIdentifier>
     {
-        var propertyName = DddExpressionUtils.GetPropertyName(userIdentifierAccessor);
+        try
+        {
+            var propertyName = DddExpressionUtils.GetPropertyName(userIdentifierAccessor);
 
-        return context => UserGuidInIdentifierExpression<TEntity>(propertyName, context);
+            return context => UserGuidInIdentifierExpression<TEntity>(propertyName, context);
+        }
+        catch (Exception e)
+        {
+            throw new AggregateException($"Error in {typeof(TEntity)} {nameof(CreateOwnerUserGuidInIdentifierExpressionFactory)}", e);
+        }
     }
 }

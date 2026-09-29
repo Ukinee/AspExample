@@ -20,6 +20,9 @@ public static class AuthorizationHelper
         yield return CreateUpdate(policy.UpdateLevel, policy);
         yield return CreateCreate(policy.CreateLevel, policy);
         yield return CreateDelete(policy.DeleteLevel, policy);
+
+        yield return ServiceDescriptor
+            .Singleton<IEntityAccessExpressionProvider<TIdentifier, TEntity>, AggregatingEntityAccessExpressionProvider<TIdentifier, TEntity>>();
     }
 
     private static ServiceDescriptor CreateDelete<TIdentifier, TEntity>(AccessLevel accessLevel, AuthorizationPolicy<TIdentifier, TEntity> policy)
@@ -94,7 +97,9 @@ public static class AuthorizationHelper
             case AccessLevel.Owner:
                 ThrowIfIdentifierExpressionIsNull(operation, policy);
 
-                return DddAccessExpressionUtils.CreateOwnerUserGuidInIdentifierExpressionFactory<TIdentifier, TEntity>(policy.OwnerUserIdentifierInEntityIdentifierAccessor!);
+                return DddAccessExpressionUtils.CreateOwnerUserGuidInIdentifierExpressionFactory<TIdentifier, TEntity>(
+                    policy.OwnerUserIdentifierInEntityIdentifierAccessor!
+                );
 
             default: throw new ArgumentOutOfRangeException(nameof(level), level, null);
         }

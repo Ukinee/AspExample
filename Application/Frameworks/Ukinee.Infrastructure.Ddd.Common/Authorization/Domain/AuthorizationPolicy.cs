@@ -66,7 +66,7 @@ public static class AuthorizationPolicy
     public static AuthorizationPolicy<TIdentifier, TEntity> OwnerOnly<TIdentifier, TEntity>(Expression<Func<TIdentifier, Guid>> identifierUserGuid)
     where TEntity : IEntity<TIdentifier> =>
         new AuthorizationPolicy<TIdentifier, TEntity> {
-            CreateLevel = AccessLevel.Owner,
+            CreateLevel = AccessLevel.LoggedIn,
             ReadLevel = AccessLevel.Owner,
             UpdateLevel = AccessLevel.Owner,
             DeleteLevel = AccessLevel.Owner,
@@ -76,7 +76,7 @@ public static class AuthorizationPolicy
     public static AuthorizationPolicy<TIdentifier, TEntity> GuestReadAndOwnerEdit<TIdentifier, TEntity>(Expression<Func<TIdentifier, Guid>> identifierUserGuid)
     where TEntity : IEntity<TIdentifier> =>
         new AuthorizationPolicy<TIdentifier, TEntity> {
-            CreateLevel = AccessLevel.Owner,
+            CreateLevel = AccessLevel.LoggedIn,
             ReadLevel = AccessLevel.Guest,
             UpdateLevel = AccessLevel.Owner,
             DeleteLevel = AccessLevel.Owner,
@@ -86,7 +86,7 @@ public static class AuthorizationPolicy
     public static AuthorizationPolicy<TIdentifier, TEntity> LoggedInReadAndOwnerEdit<TIdentifier, TEntity>(Expression<Func<TIdentifier, Guid>> identifierUserGuid)
     where TEntity : IEntity<TIdentifier> =>
         new AuthorizationPolicy<TIdentifier, TEntity> {
-            CreateLevel = AccessLevel.Owner,
+            CreateLevel = AccessLevel.LoggedIn,
             ReadLevel = AccessLevel.LoggedIn,
             UpdateLevel = AccessLevel.Owner,
             DeleteLevel = AccessLevel.Owner,

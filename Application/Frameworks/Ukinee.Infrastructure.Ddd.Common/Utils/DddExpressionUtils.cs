@@ -21,6 +21,11 @@ public static class DddExpressionUtils
 
     public static string GetPropertyName(Expression expression)
     {
+        if (expression is LambdaExpression lambda)
+        {
+            return GetPropertyName(lambda.Body);
+        }
+        
         if (expression is ParameterExpression parameterExpression)
         {
             return parameterExpression.Name!;

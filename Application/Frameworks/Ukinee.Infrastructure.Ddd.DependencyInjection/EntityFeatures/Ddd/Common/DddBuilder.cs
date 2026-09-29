@@ -23,14 +23,14 @@ where TIdentifier : struct
         Feature = feature;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetRepository<TImplementation>()
+    internal DddBuilder<TIdentifier, TEntity> SetRepository<TImplementation>(ServiceLifetime serviceLifetime)
     where TImplementation : class, IEditableTrackedRepository<TIdentifier, TEntity>
     {
         Feature.Repository.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IEditableTrackedRepository<TIdentifier, TEntity>, TImplementation>(),
-            ..PayloadHelper.Singleton<ITrackedRepository<TIdentifier, TEntity>, TImplementation>(),
+            ..PayloadHelper.Service<IEditableTrackedRepository<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<ITrackedRepository<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.Repository.AddRange(descriptors);
@@ -38,7 +38,8 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetEntityCreateFeature<TImplementation, TPayload, TUseCase>(
+    internal DddBuilder<TIdentifier, TEntity> SetEntityCreateFeature<TImplementation, TPayload, TUseCase>(
+        ServiceLifetime serviceLifetime,
         IEnumerable<ServiceDescriptor> extensions,
         bool throwOnTransaction
     )
@@ -48,8 +49,8 @@ where TIdentifier : struct
         Feature.EntityCreator.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IEntityCreator<TPayload, TEntity>, TImplementation>(),
-            ..PayloadHelper.Singleton<ICreateEntityUseCase<TPayload, TEntity>, TUseCase>(),
+            ..PayloadHelper.Service<IEntityCreator<TPayload, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<ICreateEntityUseCase<TPayload, TEntity>, TUseCase>(serviceLifetime),
             ..extensions,
         ];
 
@@ -64,6 +65,7 @@ where TIdentifier : struct
     }
 
     internal DddBuilder<TIdentifier, TEntity> AddPayloadEntityUpdateFeature<TImplementation, TUpdatePayload, TUseCase>(
+        ServiceLifetime serviceLifetime,
         IEnumerable<ServiceDescriptor> extensions,
         bool throwOnTransaction
     )
@@ -71,8 +73,8 @@ where TIdentifier : struct
     where TUseCase : class, IUpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TImplementation>(),
-            ..PayloadHelper.Singleton<IUpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>, TUseCase>(),
+            ..PayloadHelper.Service<IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IUpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>, TUseCase>(serviceLifetime),
             ..extensions,
         ];
 
@@ -89,11 +91,14 @@ where TIdentifier : struct
         return this;
     }
 
-    internal DddBuilder<TIdentifier, TEntity> AddRequestHandlerFeature<THandler, TPayload, TResponse>(IEnumerable<ServiceDescriptor> extensions)
+    internal DddBuilder<TIdentifier, TEntity> AddRequestHandlerFeature<THandler, TPayload, TResponse>(
+        ServiceLifetime serviceLifetime,
+        IEnumerable<ServiceDescriptor> extensions
+    )
     where THandler : class, IRequestHandler<PayloadRequest<TPayload, TResponse>, IReadOnlyCollection<TResponse>>
     {
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IRequestHandler<PayloadRequest<TPayload, TResponse>, IReadOnlyCollection<TResponse>>, THandler>(), ..extensions,
+            ..PayloadHelper.Service<IRequestHandler<PayloadRequest<TPayload, TResponse>, IReadOnlyCollection<TResponse>>, THandler>(serviceLifetime), ..extensions,
         ];
 
         Feature.CustomRequestHandlers.AddRange(descriptors);
@@ -101,18 +106,22 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetDeltaEntityUpdater<TImplementation, TUseCase>(bool throwOnTransaction)
+    internal DddBuilder<TIdentifier, TEntity> SetDeltaEntityUpdater<TImplementation, TUseCase>(
+        ServiceLifetime serviceLifetime,
+        bool throwOnTransaction
+    )
     where TImplementation : class, IDeltaEntityUpdater<TEntity>
     where TUseCase : class, IDeltaUpdateEntityUseCase<TEntity>
     {
         Feature.DeltaEntityUpdater.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IDeltaUpdateEntityUseCase<TEntity>, TUseCase>(), ..PayloadHelper.Singleton<IDeltaEntityUpdater<TEntity>, TImplementation>(),
+            ..PayloadHelper.Service<IDeltaUpdateEntityUseCase<TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IDeltaEntityUpdater<TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.DeltaEntityUpdater.AddRange(descriptors);
-        
+
         if (throwOnTransaction)
         {
             ServiceDescriptorDecorators.Decorate<IDeltaEntityUpdater<TEntity>, TransactionThrowingDeltaEntityUpdater<TEntity>>(Feature.DeltaEntityUpdater);
@@ -121,18 +130,19 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetEntityRemover<TImplementation, TUseCase>(bool throwOnTransaction)
+    internal DddBuilder<TIdentifier, TEntity> SetEntityRemover<TImplementation, TUseCase>(ServiceLifetime serviceLifetime, bool throwOnTransaction)
     where TImplementation : class, IEntityRemover<TIdentifier, TEntity>
     where TUseCase : class, IRemoveEntityUseCase<TEntity>
     {
         Feature.EntityRemover.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IRemoveEntityUseCase<TEntity>, TUseCase>(), ..PayloadHelper.Singleton<IEntityRemover<TIdentifier, TEntity>, TImplementation>(),
+            ..PayloadHelper.Service<IRemoveEntityUseCase<TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IEntityRemover<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.EntityRemover.AddRange(descriptors);
-        
+
         if (throwOnTransaction)
         {
             ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemover<TIdentifier, TEntity>>(Feature.EntityRemover);
@@ -141,15 +151,15 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetIdentifierReader<TImplementation, TUseCase>()
+    internal DddBuilder<TIdentifier, TEntity> SetIdentifierReader<TImplementation, TUseCase>(ServiceLifetime serviceLifetime)
     where TImplementation : class, IIdentifierReader<TIdentifier, TEntity>
     where TUseCase : class, IGetEntityUseCase<TIdentifier, TEntity>
     {
         Feature.IdentifierReader.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IGetEntityUseCase<TIdentifier, TEntity>, TUseCase>(),
-            ..PayloadHelper.Singleton<IIdentifierReader<TIdentifier, TEntity>, TImplementation>(),
+            ..PayloadHelper.Service<IGetEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IIdentifierReader<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.IdentifierReader.AddRange(descriptors);
@@ -157,15 +167,15 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetEntityReader<TImplementation, TUseCase>()
+    internal DddBuilder<TIdentifier, TEntity> SetEntityReader<TImplementation, TUseCase>(ServiceLifetime serviceLifetime)
     where TImplementation : class, IEntityReader<TIdentifier, TEntity>
     where TUseCase : class, IGetAllEntityUseCase<TIdentifier, TEntity>
     {
         Feature.EntityReader.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IGetAllEntityUseCase<TIdentifier, TEntity>, TUseCase>(),
-            ..PayloadHelper.Singleton<IEntityReader<TIdentifier, TEntity>, TImplementation>(),
+            ..PayloadHelper.Service<IGetAllEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IEntityReader<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.EntityReader.AddRange(descriptors);
@@ -173,27 +183,30 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetSpecificationReader<TImplementation>()
+    internal DddBuilder<TIdentifier, TEntity> SetSpecificationReader<TImplementation>(ServiceLifetime serviceLifetime)
     where TImplementation : class, ISpecificationReader<TIdentifier, TEntity>
     {
         Feature.SpecificationReader.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<ISpecificationReader<TIdentifier, TEntity>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Service<ISpecificationReader<TIdentifier, TEntity>, TImplementation>(serviceLifetime),];
 
         Feature.SpecificationReader.AddRange(descriptors);
 
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> AddGetOrCreateFeature<TImplementation, TCreatePayload, TUseCase>(IEnumerable<ServiceDescriptor> extensions)
+    internal DddBuilder<TIdentifier, TEntity> AddGetOrCreateFeature<TImplementation, TCreatePayload, TUseCase>(
+        ServiceLifetime serviceLifetime,
+        IEnumerable<ServiceDescriptor> extensions
+    )
     where TImplementation : class, IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>
     where TUseCase : class, IGetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>
     {
         Feature.GetOrCreate.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Singleton<IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>, TImplementation>(),
-            ..PayloadHelper.Singleton<IGetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>, TUseCase>(),
+            ..PayloadHelper.Service<IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IGetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>, TUseCase>(serviceLifetime),
             ..extensions
         ];
 

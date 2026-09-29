@@ -1,4 +1,5 @@
-﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCases;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
@@ -14,13 +15,13 @@ namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local
 
 file class ProxyHelper
 {
-    public static void RegisterTrackedReaders<TIdentifier, TEntity>(DddBuilder<TIdentifier, TEntity> builder)
+    public static void RegisterTrackedReaders<TIdentifier, TEntity>(DddBuilder<TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime)
     where TEntity : class, IEntity<TIdentifier>
     where TIdentifier : struct, IEquatable<TIdentifier>
     {
-        builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>();
+        builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>(serviceLifetime);
     }
 }
 
@@ -32,18 +33,24 @@ where TEntity : class, IEntity<TIdentifier>
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
+        var serviceLifetime = ServiceLifetime.Singleton;
         var throwOnTransaction = true;
+
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>();
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
 
-        ProxyHelper.RegisterTrackedReaders(builder);
+        ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
+        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+            serviceLifetime,
+            throwOnTransaction
+        );
 
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, throwOnTransaction);
+        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+
+        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
         dddConfigurator?.Invoke(tackedBuilder);
         definition.Features.Add(tackedBuilder.Feature);
@@ -57,14 +64,16 @@ where TEntity : class, IEntity<TIdentifier>
     where TWeight : ISynchronizationOrderByPriority, allows ref struct
     where TDataSource : class, ISynchronizationDataSource<TEntity>
     {
+        var serviceLifetime = ServiceLifetime.Singleton;
         var throwOnTransaction = true;
+
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>();
-        ProxyHelper.RegisterTrackedReaders(builder);
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
+        ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, throwOnTransaction);
+        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
         dddConfigurator?.Invoke(tackedBuilder);
         definition.Features.Add(tackedBuilder.Feature);
@@ -83,17 +92,23 @@ where TEntity : class, IEntity<TIdentifier>
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
+        var serviceLifetime = ServiceLifetime.Scoped;
         var throwOnTransaction = false;
+
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>();
-        ProxyHelper.RegisterTrackedReaders(builder);
+        builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>(serviceLifetime);
+        ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
+        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+            serviceLifetime,
+            throwOnTransaction
+        );
 
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, throwOnTransaction);
+        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+
+        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
         dddConfigurator?.Invoke(tackedBuilder);
         definition.Features.Add(tackedBuilder.Feature);
@@ -110,19 +125,25 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
+        var serviceLifetime = ServiceLifetime.Scoped;
         var throwOnTransaction = false;
+
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>();
-        builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>();
+        builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>(serviceLifetime);
+        builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>(serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
-        builder.SetEntityRemover<DeletableTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(throwOnTransaction);
+        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+            serviceLifetime,
+            throwOnTransaction
+        );
 
-        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, throwOnTransaction);
+        builder.SetEntityRemover<DeletableTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+
+        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
         dddConfigurator?.Invoke(tackedBuilder);
         definition.Features.Add(tackedBuilder.Feature);

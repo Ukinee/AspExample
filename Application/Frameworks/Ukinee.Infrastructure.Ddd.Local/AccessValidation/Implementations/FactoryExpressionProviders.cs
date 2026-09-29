@@ -1,10 +1,38 @@
 ﻿using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
-using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Utils;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.AccessValidation.Implementations;
+
+public class AggregatingEntityAccessExpressionProvider<TIdentifier, TEntity>(
+    IEntityReadAccessExpressionProvider<TIdentifier, TEntity> readAccessExpression,
+    IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> updateAccessExpression,
+    IEntityDeleteAccessExpressionProvider<TIdentifier, TEntity> deleteAccessExpression,
+    IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> createAccessExpression
+) : IEntityAccessExpressionProvider<TIdentifier, TEntity>
+where TEntity : IEntity<TIdentifier>
+{
+    public Task<Expression<Func<TEntity, bool>>> GetCreateExpression(UserContext userContext)
+    {
+        return createAccessExpression.GetCreateExpression(userContext);
+    }
+
+    public Task<Expression<Func<TEntity, bool>>> GetReadExpression(UserContext userContext)
+    {
+        return readAccessExpression.GetReadExpression(userContext);
+    }
+
+    public Task<Expression<Func<TEntity, bool>>> GetUpdateExpression(UserContext userContext)
+    {
+        return updateAccessExpression.GetUpdateExpression(userContext);
+    }
+
+    public Task<Expression<Func<TEntity, bool>>> GetDeleteExpression(UserContext userContext)
+    {
+        return deleteAccessExpression.GetDeleteExpression(userContext);
+    }
+}
 
 public class FactoryReadEntityAccessExpressionProvider<TIdentifier, TEntity>(Func<UserContext, Expression<Func<TEntity, bool>>> factory)
     : IEntityReadAccessExpressionProvider<TIdentifier, TEntity>

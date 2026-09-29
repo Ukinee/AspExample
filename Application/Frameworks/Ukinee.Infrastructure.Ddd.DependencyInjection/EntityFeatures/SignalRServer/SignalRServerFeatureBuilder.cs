@@ -32,7 +32,7 @@ where THub : Hub
     {
         Feature.RouteResolver.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<IRouteResolver<TIdentifier, TEntity, TRequest>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton2<IRouteResolver<TIdentifier, TEntity, TRequest>, TImplementation>(),];
 
         Feature.RouteResolver.AddRange(descriptors);
 
@@ -44,7 +44,7 @@ where THub : Hub
     {
         Feature.AccessValidator.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<ISignalRAccessValidator<TRequest>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Service<ISignalRAccessValidator<TRequest>, TImplementation>(ServiceLifetime.Scoped),];
 
         Feature.AccessValidator.AddRange(descriptors);
 
@@ -56,7 +56,7 @@ where THub : Hub
     {
         Feature.Sink.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<ISignalRSink<TIdentifier, TEntity>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton2<ISignalRSink<TIdentifier, TEntity>, TImplementation>(),];
 
         Feature.Sink.AddRange(descriptors);
     }
