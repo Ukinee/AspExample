@@ -34,7 +34,7 @@ public class UnitOfWorkFactory(IMediator mediator) : IUnitOfWorkFactory, IUnitOf
         }
         catch
         {
-            foreach (var part in unitOfWork.Parts.Reverse())
+            foreach (var part in unitOfWork.Parts.OrderByDescending(p => p.IsImportant))
             {
                 try
                 {

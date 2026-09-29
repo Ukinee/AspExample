@@ -14,20 +14,20 @@ using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 
 namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 
-public class InMemoryRepository<TIdentifier, TEntity, TTag>(
+public class InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>(
     IUnitOfWorkProvider unitOfWorkProvider,
     InMemoryStore<TIdentifier, TEntity> store
 ) : IEditableTrackedRepository<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
-    private InMemoryChangeTracker<TIdentifier, TEntity>? _changeTracker;
+    protected InMemoryChangeTracker<TIdentifier, TEntity>? ChangeTracker;
 
     public async Task AddRange(IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken)
     {
         EnsureUnitOfWork();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
         {
             store.AddRange(entities);
 
@@ -39,13 +39,13 @@ where TIdentifier : notnull
             if (store.Exists(entity.Identifier))
                 throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
 
-            var entry = _changeTracker.Entry(entity);
+            var entry = ChangeTracker.Entry(entity);
 
             if (entry.EntityState is not (InMemoryEntityState.Detached or InMemoryEntityState.Deleted))
                 throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
         }
 
-        _changeTracker.AddRange(entities);
+        ChangeTracker.AddRange(entities);
     }
 
     public async Task<UpdateResult<TEntity>> UpdateByIdAsync(
@@ -60,14 +60,14 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
             return store.UpdateById(identifier, compliedFilter, update);
 
         var entity = GetEntity(compliedFilter, identifier);
 
         var updated = update(entity);
 
-        _changeTracker.UpdateRange([updated]);
+        ChangeTracker.UpdateRange([updated]);
 
         return new UpdateResult<TEntity>(updated, entity);
     }
@@ -84,7 +84,7 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
             return store.UpdateManyById(identifiers, compliedFilter, update);
 
         var result = new List<UpdateResult<TEntity>>();
@@ -97,7 +97,7 @@ where TIdentifier : notnull
             result.Add(new UpdateResult<TEntity>(updated, entity));
         }
 
-        _changeTracker.UpdateRange(result.Select(e => e.Updated));
+        ChangeTracker.UpdateRange(result.Select(e => e.Updated));
 
         return result;
     }
@@ -112,12 +112,12 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
             return store.RemoveRange(identifiers, compliedFilter);
 
         var result = identifiers.Select(identifier => GetEntity(compliedFilter, identifier)).ToList();
 
-        _changeTracker.RemoveRange(result.Select(e => e.Identifier));
+        ChangeTracker.RemoveRange(result.Select(e => e.Identifier));
 
         return result;
     }
@@ -127,10 +127,10 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
             return store.FindById(identifier, compliedFilter);
 
-        var entry = _changeTracker.Entry(identifier);
+        var entry = ChangeTracker.Entry(identifier);
 
         if (entry.EntityState is InMemoryEntityState.Deleted)
             return null;
@@ -145,7 +145,7 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
             return store.Find(specification, compliedFilter);
 
         return await FindManyAsync(specification, filter, cancellationToken).FirstOrDefaultAsync(cancellationToken);
@@ -159,7 +159,7 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
         {
             await foreach (var entity in store.FindMany(specification, compliedFilter).WithCancellation(cancellationToken))
                 yield return entity;
@@ -167,7 +167,7 @@ where TIdentifier : notnull
             yield break;
         }
 
-        var trackedEntities = _changeTracker
+        var trackedEntities = ChangeTracker
             .GetExisting()
             .Select(entry => entry.Entity!)
             .Where(compliedFilter)
@@ -191,7 +191,7 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (_changeTracker == null)
+        if (ChangeTracker == null)
         {
             await foreach (var entity in store.FindManyById(identifiers, compliedFilter).WithCancellation(cancellationToken))
             {
@@ -203,7 +203,7 @@ where TIdentifier : notnull
 
         foreach (var identifier in identifiers)
         {
-            var entry = _changeTracker.Entry(identifier);
+            var entry = ChangeTracker.Entry(identifier);
 
             switch (entry.EntityState)
             {
@@ -230,10 +230,9 @@ where TIdentifier : notnull
 #endregion
 
 #region ChangeTracker
-    //todo: cache filter
     private TEntity GetEntity(Func<TEntity, bool> filter, TIdentifier identifier)
     {
-        var entry = _changeTracker!.Entry(identifier);
+        var entry = ChangeTracker!.Entry(identifier);
 
         if (entry.EntityState is InMemoryEntityState.Deleted)
             throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
@@ -246,13 +245,13 @@ where TIdentifier : notnull
         return entity;
     }
 
-    private void EnsureUnitOfWork()
+    protected virtual void EnsureUnitOfWork()
     {
         var uow = unitOfWorkProvider.Current;
 
         if (uow == null)
         {
-            Debug.Assert(_changeTracker == null, "_changeTracker != null", $"Must be null because {nameof(unitOfWorkProvider)} does not contain transaction.");
+            Debug.Assert(ChangeTracker == null, "_changeTracker != null", $"Must be null because {nameof(unitOfWorkProvider)} does not contain transaction.");
 
             return;
         }
@@ -264,9 +263,9 @@ where TIdentifier : notnull
         if (uow.HasAsPart(ownerType))
             return;
 
-        _changeTracker = new InMemoryChangeTracker<TIdentifier, TEntity>();
+        ChangeTracker = new InMemoryChangeTracker<TIdentifier, TEntity>();
 
-        var part = new InMemoryUnitOfWorkPart<TIdentifier, TEntity>(ownerType, store, _changeTracker, () => _changeTracker = null);
+        var part = new InMemoryUnitOfWorkPart<TIdentifier, TEntity>(ownerType, store, ChangeTracker, () => ChangeTracker = null);
 
         uow.RegisterPart(part);
     }

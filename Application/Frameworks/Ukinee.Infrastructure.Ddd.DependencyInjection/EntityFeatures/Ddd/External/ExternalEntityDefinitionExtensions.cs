@@ -71,7 +71,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity, TTag>>();
+        builder.SetRepository<InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>>();
         builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
         builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
         builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>();

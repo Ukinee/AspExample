@@ -35,7 +35,7 @@ where TEntity : class, IEntity<TIdentifier>
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity, TTag>>();
+        builder.SetRepository<InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>>();
 
         ProxyHelper.RegisterTrackedReaders(builder);
 
@@ -59,7 +59,7 @@ where TEntity : class, IEntity<TIdentifier>
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity, TTag>>();
+        builder.SetRepository<InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>>();
         ProxyHelper.RegisterTrackedReaders(builder);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder);
