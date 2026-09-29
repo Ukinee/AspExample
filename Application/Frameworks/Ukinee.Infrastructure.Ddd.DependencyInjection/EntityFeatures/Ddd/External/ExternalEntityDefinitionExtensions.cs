@@ -71,7 +71,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
 
-        builder.SetRepository<InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>>();
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>();
         builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
         builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>();
         builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>();
@@ -98,7 +98,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         builder.SetEntityReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>();
         builder.SetIdentifierReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>();
-        builder.SetEntityRemover<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, RemoveEntityUseCase<TIdentifier, TEntity>>();
+        builder.SetEntityRemover<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, RemoveEntityUseCase<TIdentifier, TEntity>>(true);
 
         var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>(builder, true);
         factory.Invoke(remoteBuilder);

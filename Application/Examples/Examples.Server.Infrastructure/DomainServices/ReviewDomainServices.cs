@@ -2,11 +2,11 @@
 using Examples.Common.Domain.Models.Identifiers;
 using Examples.Common.Domain.Presentation.Requests;
 using Examples.Server.Domain.Models;
+using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Local;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Services;
-using Ukinee.Infrastructure.Validation.Services;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Examples.Server.Infrastructure.DomainServices;
@@ -22,7 +22,7 @@ public class ReviewFactory : IEntityCreateFactory<CreateReviewRequest, Review>
     }
 }
 
-public class CreateReviewRequestValidator : ValidationServiceBase<CreateReviewRequest>
+public class CreateReviewRequestValidator : AbstractValidator<IEnumerable<CreateReviewRequest>>
 {
     public CreateReviewRequestValidator() { }
 }

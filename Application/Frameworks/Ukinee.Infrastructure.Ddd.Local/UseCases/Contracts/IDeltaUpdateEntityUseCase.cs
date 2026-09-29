@@ -8,5 +8,5 @@ namespace Ukinee.Infrastructure.Ddd.Local.UseCases.Contracts;
 public interface IDeltaUpdateEntityUseCase<TEntity>
 where TEntity : class, IEntity
 {
-    public Task<TEntity> Execute(UserContext userContext, TEntity entity, UpdateLock mode, Func<TEntity, TEntity> updateFactory);
+    public Task<TEntity> Execute(UserContext userContext, TEntity entity,  Func<TEntity, TEntity> updateFactory);
 }

@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
@@ -9,7 +10,6 @@ using Ukinee.Infrastructure.Ddd.Local;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
-using Ukinee.Infrastructure.Validation.Domain.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;
 
@@ -18,10 +18,12 @@ where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {
     private DddBuilder<TIdentifier, TEntity> _builder;
+    private readonly bool _throwOnTransaction;
 
-    public TrackedDddBuilder(DddBuilder<TIdentifier, TEntity> builder)
+    public TrackedDddBuilder(DddBuilder<TIdentifier, TEntity> builder, bool throwOnTransaction)
     {
         _builder = builder;
+        _throwOnTransaction = throwOnTransaction;
     }
 
     internal DddFeature<TIdentifier, TEntity> Feature => _builder.Feature;
@@ -76,50 +78,52 @@ where TIdentifier : struct
     }
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAsyncCreateUseCase<TCreatePayload, TValidator, TFactory>()
-    where TValidator : class, IValidationService<TCreatePayload>
+    where TValidator : class, IValidator<IEnumerable<TCreatePayload>>
     where TFactory : class, IEntityAsyncCreateFactory<TCreatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Singleton<IEntityAsyncCreateFactory<TCreatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidationService<TCreatePayload>, TValidator>(),
+            ..PayloadHelper.Singleton<IValidator<IEnumerable<TCreatePayload>>, TValidator>(),
         ];
 
         _builder
             .SetEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
-                extensions
+                extensions,
+                _throwOnTransaction
             );
 
         return this;
     }
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetCreateUseCase<TCreatePayload, TValidator, TFactory>()
-    where TValidator : class, IValidationService<TCreatePayload>
+    where TValidator : class, IValidator<IEnumerable<TCreatePayload>>
     where TFactory : class, IEntityCreateFactory<TCreatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Singleton<IEntityCreateFactory<TCreatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidationService<TCreatePayload>, TValidator>(),
+            ..PayloadHelper.Singleton<IValidator<IEnumerable<TCreatePayload>>, TValidator>(),
         ];
 
         _builder.SetEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
-            extensions
+            extensions,
+            _throwOnTransaction
         );
 
         return this;
     }
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddUpdateUseCase<TUpdatePayload, TValidator, TFactory>()
-    where TValidator : class, IValidationService<TUpdatePayload>
+    where TValidator : class, IValidator<IEnumerable<TUpdatePayload>>
     where TFactory : class, IEntityUpdateFactory<TUpdatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Singleton<IEntityUpdateFactory<TUpdatePayload, TEntity>, TFactory>(),
-            ..PayloadHelper.Singleton<IValidationService<TUpdatePayload>, TValidator>(),
+            ..PayloadHelper.Singleton<IValidator<IEnumerable<TUpdatePayload>>, TValidator>(),
         ];
 
         _builder
             .AddPayloadEntityUpdateFeature<TrackedPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions);
+                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions, _throwOnTransaction);
 
         return this;
     }

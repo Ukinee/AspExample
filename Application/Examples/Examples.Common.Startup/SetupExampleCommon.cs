@@ -2,17 +2,17 @@
 using System.Text.Json.Serialization;
 using Mapster;
 using MapsterMapper;
+using MediatR;
 using MediatR.NotificationPublishers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Ukinee.Infrastructure.Common.Contracts;
 using Ukinee.Infrastructure.Common.Services;
 using Ukinee.Infrastructure.Ddd.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.External.Api.Domain.ValueObjects;
+using Ukinee.Infrastructure.Ddd.Local.MediatR;
 using Ukinee.Infrastructure.Json.Extensions.ServiceCollections;
 using Ukinee.Infrastructure.Json.Services;
 
@@ -42,7 +42,7 @@ public static class SetupExampleCommon
 
         serviceCollection.AddSingleton<IFileHashService, FileHashService>();
         serviceCollection.AddSingleton<IApplicationPathProviderService, ApplicationPathProviderService>();
-        
+
         serviceCollection.AddSingleton<TimeProvider>(_ => TimeProvider.System);
 
         serviceCollection.AddJsonProvider<ExternalGatewayTag>(options =>
@@ -105,5 +105,7 @@ public static class SetupExampleCommon
                     builder.RegisterServicesFromAssemblies(assembly);
             }
         );
+
+        serviceCollection.Decorate<IMediator, TransactionMediatorDecorator>();
     }
 }

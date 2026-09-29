@@ -8,10 +8,11 @@ using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Implementations;
+using Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.TestBases;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Features.Repositories;
@@ -25,7 +26,7 @@ public class InMemoryTransactionsTests : LocationsTestBase
         };
 
         services.AddSingleton<InMemoryStore<LocationIdentifier, Location>>();
-        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, InMemoryRepositoryLocations<LocationIdentifier, Location, ServerExampleTag>>();
+        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, TransactedInMemoryRepository<LocationIdentifier, Location, ServerExampleTag>>();
 
         services.SetupCommonServices(config);
 
@@ -172,7 +173,6 @@ public class InMemoryTransactionsTests : LocationsTestBase
         {
             await repository.UpdateByIdAsync(
                 Identifier1,
-                UpdateLock.Delta,
                 True,
                 old => old with { IsAvailableForPublicRead = targetValue },
                 CancellationToken
@@ -199,7 +199,6 @@ public class InMemoryTransactionsTests : LocationsTestBase
         {
             await repository.UpdateByIdAsync(
                 Identifier1,
-                UpdateLock.Delta,
                 True,
                 old => old with { IsAvailableForPublicRead = targetValue },
                 CancellationToken
@@ -254,7 +253,6 @@ public class InMemoryTransactionsTests : LocationsTestBase
 
             await repository.UpdateByIdAsync(
                 Identifier1,
-                UpdateLock.Delta,
                 True,
                 old => old with { IsAvailableForPublicRead = targetValue },
                 CancellationToken
@@ -287,7 +285,6 @@ public class InMemoryTransactionsTests : LocationsTestBase
 
             await repository.UpdateByIdAsync(
                 Identifier1,
-                UpdateLock.Delta,
                 True,
                 old => old with { IsAvailableForPublicRead = !old.IsAvailableForPublicRead },
                 CancellationToken

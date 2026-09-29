@@ -1,4 +1,4 @@
-﻿using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
+﻿using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks;
 

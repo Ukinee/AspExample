@@ -9,10 +9,10 @@ using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.UnitOfWork;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
@@ -81,7 +81,6 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
 
         public async Task<UpdateResult<TEntity>> UpdateByIdAsync(
             TIdentifier identifier,
-            UpdateLock mode,
             Expression<Func<TEntity, bool>> filter,
             Func<TEntity, TEntity> updateFactory,
             CancellationToken cancellationToken
@@ -103,7 +102,6 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
 
         public async Task<IReadOnlyList<UpdateResult<TEntity>>> UpdateManyByIdAsync(
             IReadOnlyCollection<TIdentifier> identifiers,
-            UpdateLock mode,
             Expression<Func<TEntity, bool>> filter,
             Func<TIdentifier, TEntity, TEntity> update,
             CancellationToken cancellationToken

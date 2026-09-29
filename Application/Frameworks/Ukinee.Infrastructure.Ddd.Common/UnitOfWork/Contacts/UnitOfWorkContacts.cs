@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
+namespace Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 
 public interface IUnitOfWorkFactory
 {

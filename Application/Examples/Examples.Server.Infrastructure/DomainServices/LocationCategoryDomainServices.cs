@@ -1,9 +1,8 @@
 ﻿using Examples.Common.Domain.Models.Entities;
 using Examples.Common.Domain.Models.Identifiers;
 using Examples.Common.Domain.Presentation.Requests;
+using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
-using Ukinee.Infrastructure.Validation.Services;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Examples.Server.Infrastructure.DomainServices;
@@ -19,7 +18,7 @@ public class LocationCategoryFactory() : IEntityCreateFactory<CreateLocationCate
     }
 }
 
-public class CreateLocationCategoryRequestValidator : ValidationServiceBase<CreateLocationCategoryRequest>
+public class CreateLocationCategoryRequestValidator : AbstractValidator<IEnumerable<CreateLocationCategoryRequest>>
 {
     public CreateLocationCategoryRequestValidator()
     {

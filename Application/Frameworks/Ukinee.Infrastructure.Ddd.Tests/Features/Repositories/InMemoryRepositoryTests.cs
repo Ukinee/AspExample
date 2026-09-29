@@ -5,13 +5,12 @@ using Examples.Common.Startup;
 using Examples.Server.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
-using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.Common;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.Factories;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.TestBases;
@@ -27,7 +26,8 @@ public class InMemoryRepositoryTests : LocationsTestBase
         };
 
         services.AddSingleton<InMemoryStore<LocationIdentifier, Location>>();
-        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, InMemoryRepositoryLocations<LocationIdentifier, Location, ServerExampleTag>>();
+        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, InMemoryRepository<LocationIdentifier, Location>>();
+        // services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, TransactedInMemoryRepository<LocationIdentifier, Location, ServerExampleTag>>();
 
         services.SetupCommonServices(config);
 
@@ -204,7 +204,7 @@ public class InMemoryRepositoryTests : LocationsTestBase
             {
                 var repository = Repository;
 
-                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier1, UpdateLock.Delta, True, old => old, CancellationToken);
+                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier1, True, old => old, CancellationToken);
 
                 Assert.ThrowsAsync<EntityNotFoundException<LocationIdentifier, Location>>(testDelegate);
             }
@@ -223,7 +223,7 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 await repository.AddRange([Example1, Example3], CancellationToken);
 
-                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier2, UpdateLock.Delta, True, old => old, CancellationToken);
+                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier2, True, old => old, CancellationToken);
 
                 Assert.ThrowsAsync<EntityNotFoundException<LocationIdentifier, Location>>(testDelegate);
             }
@@ -242,7 +242,7 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 await repository.AddRange([Example1, Example3], CancellationToken);
 
-                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier1, UpdateLock.Delta, False, old => old, CancellationToken);
+                AsyncTestDelegate testDelegate = () => repository.UpdateByIdAsync(Identifier1, False, old => old, CancellationToken);
 
                 Assert.ThrowsAsync<EntityNotFoundException<LocationIdentifier, Location>>(testDelegate);
             }
@@ -265,7 +265,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 var result = await repository.UpdateByIdAsync(
                     Identifier1,
-                    UpdateLock.Delta,
                     True,
                     old => old with {
                         IsAvailableForPublicRead = targetValue,
@@ -300,7 +299,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 await repository.UpdateByIdAsync(
                     entity.Identifier,
-                    UpdateLock.Delta,
                     True,
                     (old) => old with { IsAvailableForPublicRead = targetValue },
                     CancellationToken
@@ -657,7 +655,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 var results = await repository.UpdateManyByIdAsync(
                     [Identifier1, Identifier3],
-                    UpdateLock.Delta,
                     True,
                     (_, old) => old with { IsAvailableForPublicRead = targetValue },
                     CancellationToken
@@ -692,7 +689,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 AsyncTestDelegate testDelegate = () => repository.UpdateManyByIdAsync(
                     [Identifier1],
-                    UpdateLock.Delta,
                     True,
                     (_, old) => old,
                     CancellationToken
@@ -717,7 +713,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 AsyncTestDelegate testDelegate = () => repository.UpdateManyByIdAsync(
                     [Identifier1, Identifier2],
-                    UpdateLock.Delta,
                     True,
                     (_, old) => old,
                     ct
@@ -742,7 +737,6 @@ public class InMemoryRepositoryTests : LocationsTestBase
 
                 AsyncTestDelegate testDelegate = () => repository.UpdateManyByIdAsync(
                     [Identifier1, Identifier3],
-                    UpdateLock.Delta,
                     False,
                     (_, old) => old,
                     ct

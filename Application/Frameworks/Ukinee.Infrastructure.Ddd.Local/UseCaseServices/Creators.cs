@@ -1,12 +1,11 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Extensions;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Validation.Domain.Contracts;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
@@ -28,7 +27,11 @@ where TIdentifier : notnull
         return await creator.CreateAsync(userContext, payload, cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> GetOrCreateAsync(UserContext userContext, IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TCreatePayload>> payloads, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TEntity>> GetOrCreateAsync(
+        UserContext userContext,
+        IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TCreatePayload>> payloads,
+        CancellationToken cancellationToken
+    )
     {
         var payloadsDict = payloads.ToDictionary(p => p.Identifier, p => p.Payload);
 
@@ -47,7 +50,7 @@ where TIdentifier : notnull
 
 public abstract class TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
-    IValidationService<TCreatePayload> validationService,
+    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : IEntityCreator<TCreatePayload, TEntity>
@@ -61,10 +64,13 @@ where TEntity : class, IEntity<TIdentifier>
         return result.Single();
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> CreateAsync(UserContext userContext, IReadOnlyCollection<TCreatePayload> payloads, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TEntity>> CreateAsync(
+        UserContext userContext,
+        IReadOnlyCollection<TCreatePayload> payloads,
+        CancellationToken cancellationToken
+    )
     {
-        foreach (var payload in payloads)
-            validationService.Validate(payload).EnsureValid();
+        await validationService.ValidateAndThrowAsync(payloads, cancellationToken);
 
         List<TEntity> result = new List<TEntity>(payloads.Count);
 
@@ -84,7 +90,7 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityCreateFactory<TCreatePayload, TEntity> factory,
-    IValidationService<TCreatePayload> validationService,
+    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
@@ -100,7 +106,7 @@ where TEntity : class, IEntity<TIdentifier>
 
 public class AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
     IEntityAsyncCreateFactory<TCreatePayload, TEntity> factory,
-    IValidationService<TCreatePayload> validationService,
+    IValidator<IReadOnlyCollection<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher

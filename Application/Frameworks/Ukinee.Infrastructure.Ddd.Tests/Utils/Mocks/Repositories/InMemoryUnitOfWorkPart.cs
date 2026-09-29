@@ -1,9 +1,9 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 
-namespace Ukinee.Infrastructure.Ddd.Local.InMemory.UnitOfWork;
+namespace Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks.Repositories;
 
 public class InMemoryUnitOfWorkPart<TIdentifier, TEntity>(
     Type ownerType,

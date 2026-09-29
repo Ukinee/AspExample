@@ -1,9 +1,8 @@
 ﻿using Examples.Common.Domain.Models.Entities;
 using Examples.Common.Domain.Models.Identifiers;
 using Examples.Common.Domain.Presentation.Requests;
+using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
-using Ukinee.Infrastructure.Validation.Services;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Examples.Server.Infrastructure.DomainServices;
@@ -29,12 +28,12 @@ public class EventFactory :
     }
 }
 
-public class CreateEventRequestValidator : ValidationServiceBase<CreateEventRequest>
+public class CreateEventRequestValidator : AbstractValidator<IEnumerable<CreateEventRequest>>
 {
     public CreateEventRequestValidator() { }
 }
 
-public class UpdateEventDateRequestValidator : ValidationServiceBase<UpdateEventDateRequest>
+public class UpdateEventDateRequestValidator : AbstractValidator<IEnumerable<UpdateEventDateRequest>>
 {
     public UpdateEventDateRequestValidator() { }
 }

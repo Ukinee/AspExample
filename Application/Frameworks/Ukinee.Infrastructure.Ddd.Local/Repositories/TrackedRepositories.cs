@@ -27,7 +27,6 @@ where TIdentifier : notnull
 
     Task<UpdateResult<TEntity>> UpdateByIdAsync(
         TIdentifier identifier,
-        UpdateLock mode,
         Expression<Func<TEntity, bool>> filter,
         Func<TEntity, TEntity> update,
         CancellationToken cancellationToken
@@ -35,14 +34,13 @@ where TIdentifier : notnull
 
     Task<IReadOnlyList<UpdateResult<TEntity>>> UpdateManyByIdAsync(
         IReadOnlyCollection<TIdentifier> identifiers,
-        UpdateLock mode,
         Expression<Func<TEntity, bool>> filter,
         Func<TIdentifier, TEntity, TEntity> update,
         CancellationToken cancellationToken
     );
 
     public Task<IReadOnlyCollection<TEntity>> RemoveRange(
-        IReadOnlyCollection<TIdentifier> identifier,
+        IReadOnlyCollection<TIdentifier> identifiers,
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken
     );

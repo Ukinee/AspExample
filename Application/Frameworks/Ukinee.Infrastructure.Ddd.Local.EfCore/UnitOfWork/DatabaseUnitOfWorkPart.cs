@@ -1,7 +1,7 @@
 ﻿using System.Data.Entity;
 using Microsoft.EntityFrameworkCore.Storage;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 
 namespace Ukinee.Infrastructure.Ddd.Local.EfCore.UnitOfWork;
 

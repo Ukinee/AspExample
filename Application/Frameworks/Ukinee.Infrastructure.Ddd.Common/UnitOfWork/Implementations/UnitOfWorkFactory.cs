@@ -1,8 +1,8 @@
 ﻿using MediatR;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Domain;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Domain;
 
-namespace Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Implementations;
+namespace Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 
 public class UnitOfWorkFactory(IMediator mediator) : IUnitOfWorkFactory, IUnitOfWorkProvider
 {

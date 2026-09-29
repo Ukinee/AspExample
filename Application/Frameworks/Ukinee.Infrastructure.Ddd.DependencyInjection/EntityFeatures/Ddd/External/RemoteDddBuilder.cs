@@ -5,6 +5,7 @@ using Ukinee.Infrastructure.Ddd.Common.LocalCache.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Implementations;
 using Ukinee.Infrastructure.Ddd.Common.UseCases;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 using Ukinee.Infrastructure.Ddd.External.Api.Domain;
@@ -49,7 +50,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
         _builder
             .SetEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
-                CreateEntityUseCase<TCreatePayload, TEntity>>(extensions);
+                CreateEntityUseCase<TCreatePayload, TEntity>>(extensions, true);
 
         return this;
     }
@@ -64,7 +65,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
         _builder
             .AddPayloadEntityUpdateFeature<ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions);
+                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(extensions, true);
 
         return this;
     }
@@ -96,15 +97,8 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
         Feature.IdentifierReader.AddRange(descriptors);
 
-        ServiceDescriptorDecorators.Decorate<IIdentifierReader<TIdentifier, TEntity>>(
-            Feature.IdentifierReader,
-            innerType => typeof(CachingIdentifierReader<,,>).MakeGenericType(typeof(TIdentifier), typeof(TEntity), innerType)
-        );
-
-        ServiceDescriptorDecorators.Decorate<IEntityReader<TIdentifier, TEntity>>(
-            Feature.EntityReader,
-            innerType => typeof(CachingEntityReader<,,>).MakeGenericType(typeof(TIdentifier), typeof(TEntity), innerType)
-        );
+        ServiceDescriptorDecorators.Decorate<IIdentifierReader<TIdentifier, TEntity>, CachingIdentifierReader<TIdentifier, TEntity>>(Feature.IdentifierReader);
+        ServiceDescriptorDecorators.Decorate<IEntityReader<TIdentifier, TEntity>, CachingEntityReader<TIdentifier, TEntity>>(Feature.EntityReader);
 
         return this;
     }

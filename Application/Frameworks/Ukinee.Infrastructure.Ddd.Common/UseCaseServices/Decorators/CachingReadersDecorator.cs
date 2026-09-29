@@ -4,15 +4,14 @@ using Ukinee.Infrastructure.Ddd.Common.LocalCache.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Users.Common.ValueObjects;
 
-namespace Ukinee.Infrastructure.Ddd.Common.LocalCache.Implementations;
+namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 
-public class CachingEntityReader<TIdentifier, TEntity, TInner>(
+public class CachingEntityReader<TIdentifier, TEntity>(
     IEntityCache<TIdentifier, TEntity> cache,
-    TInner inner
+    IEntityReader<TIdentifier, TEntity> inner
 ) : IEntityReader<TIdentifier, TEntity>
 where TIdentifier : struct
 where TEntity : class, IEntity<TIdentifier>
-where TInner : class, IEntityReader<TIdentifier, TEntity>
 {
     public async IAsyncEnumerable<TEntity> GetAllAsync(UserContext userContext, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -31,13 +30,12 @@ where TInner : class, IEntityReader<TIdentifier, TEntity>
     }
 }
 
-public class CachingIdentifierReader<TIdentifier, TEntity, TInner>(
+public class CachingIdentifierReader<TIdentifier, TEntity>(
     IEntityCache<TIdentifier, TEntity> cache,
-    TInner inner
+    IIdentifierReader<TIdentifier, TEntity> inner
 ) : IIdentifierReader<TIdentifier, TEntity>
 where TIdentifier : struct
 where TEntity : class, IEntity<TIdentifier>
-where TInner : class, IIdentifierReader<TIdentifier, TEntity>
 {
     public async Task<TEntity?> FindByIdAsync(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken)
     {

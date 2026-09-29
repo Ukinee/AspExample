@@ -5,12 +5,13 @@ using Examples.Server.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.Factories;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks;
+using Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.TestBases;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Features.Repositories;
@@ -27,10 +28,10 @@ public class UnitOfWorkTests : LocationsTestBase
         };
 
         services.AddSingleton<InMemoryStore<LocationIdentifier, Location>>();
-        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, InMemoryRepositoryLocations<LocationIdentifier, Location, ServerExampleTag>>();
+        services.AddScoped<IEditableTrackedRepository<LocationIdentifier, Location>, TransactedInMemoryRepository<LocationIdentifier, Location, ServerExampleTag>>();
 
         services.AddSingleton<InMemoryStore<ReviewIdentifier, Review>>();
-        services.AddScoped<IEditableTrackedRepository<ReviewIdentifier, Review>, InMemoryRepositoryLocations<ReviewIdentifier, Review, ServerExampleTag>>();
+        services.AddScoped<IEditableTrackedRepository<ReviewIdentifier, Review>, TransactedInMemoryRepository<ReviewIdentifier, Review, ServerExampleTag>>();
 
         services.SetupCommonServices(config);
 
@@ -202,7 +203,6 @@ public class UnitOfWorkTests : LocationsTestBase
 
             await locationRepo.UpdateByIdAsync(
                 Example1.Identifier,
-                UpdateLock.Delta,
                 _ => true,
                 old => old with { IsAvailableForPublicRead = targetLocationValue },
                 CancellationToken

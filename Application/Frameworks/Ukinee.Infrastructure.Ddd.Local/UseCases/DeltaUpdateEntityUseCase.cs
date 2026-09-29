@@ -12,6 +12,6 @@ public class DeltaUpdateEntityUseCase<TIdentifier, TEntity>(IDeltaEntityUpdater<
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
-    public Task<TEntity> Execute(UserContext userContext, TEntity entity, UpdateLock mode, Func<TEntity, TEntity> updateFactory) =>
-        updater.Update(userContext, entity, mode, updateFactory, CancellationToken.None);
+    public Task<TEntity> Execute(UserContext userContext, TEntity entity,  Func<TEntity, TEntity> updateFactory) =>
+        updater.Update(userContext, entity, updateFactory, CancellationToken.None);
 }

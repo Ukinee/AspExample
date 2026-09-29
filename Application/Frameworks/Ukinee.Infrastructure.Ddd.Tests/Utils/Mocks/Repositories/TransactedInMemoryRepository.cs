@@ -3,18 +3,17 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Ardalis.Specification;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
-using Ukinee.Infrastructure.Ddd.Local.InMemory.UnitOfWork;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
+namespace Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks.Repositories;
 
-public class InMemoryRepositoryLocations<TIdentifier, TEntity, TTag>(
+public class TransactedInMemoryRepository<TIdentifier, TEntity, TTag>(
     IUnitOfWorkProvider unitOfWorkProvider,
     InMemoryStore<TIdentifier, TEntity> store
 ) : IEditableTrackedRepository<TIdentifier, TEntity>
@@ -50,7 +49,6 @@ where TIdentifier : notnull
 
     public async Task<UpdateResult<TEntity>> UpdateByIdAsync(
         TIdentifier identifier,
-        UpdateLock mode,
         Expression<Func<TEntity, bool>> filter,
         Func<TEntity, TEntity> update,
         CancellationToken cancellationToken
@@ -74,7 +72,6 @@ where TIdentifier : notnull
 
     public async Task<IReadOnlyList<UpdateResult<TEntity>>> UpdateManyByIdAsync(
         IReadOnlyCollection<TIdentifier> identifiers,
-        UpdateLock mode,
         Expression<Func<TEntity, bool>> filter,
         Func<TIdentifier, TEntity, TEntity> update,
         CancellationToken cancellationToken

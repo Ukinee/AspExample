@@ -88,7 +88,6 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
 
         var removed = await repository.UpdateManyByIdAsync(
             identifiers,
-            UpdateLock.Delta,
             access,
             (_, old) => old.Delete(now),
             cancellationToken

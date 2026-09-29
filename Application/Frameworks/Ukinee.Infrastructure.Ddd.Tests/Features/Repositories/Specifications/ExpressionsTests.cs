@@ -4,10 +4,11 @@ using Examples.Server.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Ukinee.DbAccess.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks;
+using Ukinee.Infrastructure.Ddd.Tests.Utils.Mocks.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Utils.TestBases;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.Specifications;
@@ -17,7 +18,7 @@ public class ExpressionsTests : ReviewTestBase
     protected override void ConfigureTestServices(IServiceCollection services)
     {
         services.AddSingleton<InMemoryStore<ReviewIdentifier, Review>>();
-        services.AddSingleton<IEditableTrackedRepository<ReviewIdentifier, Review>, InMemoryRepositoryLocations<ReviewIdentifier, Review, ServerExampleTag>>();
+        services.AddSingleton<IEditableTrackedRepository<ReviewIdentifier, Review>, TransactedInMemoryRepository<ReviewIdentifier, Review, ServerExampleTag>>();
 
         services.AddSingleton<UnitOfWorkFactoryMock>();
         services.AddSingleton<IUnitOfWorkProvider>(sp => sp.GetRequiredService<UnitOfWorkFactoryMock>());

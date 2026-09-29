@@ -3,10 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
+using Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Decorators;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
 
@@ -36,7 +38,10 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetEntityCreateFeature<TImplementation, TPayload, TUseCase>(IEnumerable<ServiceDescriptor> extensions)
+    public DddBuilder<TIdentifier, TEntity> SetEntityCreateFeature<TImplementation, TPayload, TUseCase>(
+        IEnumerable<ServiceDescriptor> extensions,
+        bool throwOnTransaction
+    )
     where TImplementation : class, IEntityCreator<TPayload, TEntity>
     where TUseCase : class, ICreateEntityUseCase<TPayload, TEntity>
     {
@@ -50,10 +55,18 @@ where TIdentifier : struct
 
         Feature.EntityCreator.AddRange(descriptors);
 
+        if (throwOnTransaction)
+        {
+            ServiceDescriptorDecorators.Decorate<IEntityCreator<TPayload, TEntity>, TransactionThrowingEntityCreator<TPayload, TEntity>>(Feature.EntityCreator);
+        }
+
         return this;
     }
 
-    internal DddBuilder<TIdentifier, TEntity> AddPayloadEntityUpdateFeature<TImplementation, TUpdatePayload, TUseCase>(IEnumerable<ServiceDescriptor> extensions)
+    internal DddBuilder<TIdentifier, TEntity> AddPayloadEntityUpdateFeature<TImplementation, TUpdatePayload, TUseCase>(
+        IEnumerable<ServiceDescriptor> extensions,
+        bool throwOnTransaction
+    )
     where TImplementation : class, IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>
     where TUseCase : class, IUpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>
     {
@@ -64,6 +77,14 @@ where TIdentifier : struct
         ];
 
         Feature.PayloadEntityUpdaters.AddRange(descriptors);
+
+        if (throwOnTransaction)
+        {
+            ServiceDescriptorDecorators
+                .Decorate<IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TransactionThrowingEntityUpdater<TIdentifier, TEntity, TUpdatePayload>>(
+                    Feature.PayloadEntityUpdaters
+                );
+        }
 
         return this;
     }
@@ -80,7 +101,7 @@ where TIdentifier : struct
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetDeltaEntityUpdater<TImplementation, TUseCase>()
+    public DddBuilder<TIdentifier, TEntity> SetDeltaEntityUpdater<TImplementation, TUseCase>(bool throwOnTransaction)
     where TImplementation : class, IDeltaEntityUpdater<TEntity>
     where TUseCase : class, IDeltaUpdateEntityUseCase<TEntity>
     {
@@ -91,11 +112,16 @@ where TIdentifier : struct
         ];
 
         Feature.DeltaEntityUpdater.AddRange(descriptors);
+        
+        if (throwOnTransaction)
+        {
+            ServiceDescriptorDecorators.Decorate<IDeltaEntityUpdater<TEntity>, TransactionThrowingDeltaEntityUpdater<TEntity>>(Feature.DeltaEntityUpdater);
+        }
 
         return this;
     }
 
-    public DddBuilder<TIdentifier, TEntity> SetEntityRemover<TImplementation, TUseCase>()
+    public DddBuilder<TIdentifier, TEntity> SetEntityRemover<TImplementation, TUseCase>(bool throwOnTransaction)
     where TImplementation : class, IEntityRemover<TIdentifier, TEntity>
     where TUseCase : class, IRemoveEntityUseCase<TEntity>
     {
@@ -106,6 +132,11 @@ where TIdentifier : struct
         ];
 
         Feature.EntityRemover.AddRange(descriptors);
+        
+        if (throwOnTransaction)
+        {
+            ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemover<TIdentifier, TEntity>>(Feature.EntityRemover);
+        }
 
         return this;
     }

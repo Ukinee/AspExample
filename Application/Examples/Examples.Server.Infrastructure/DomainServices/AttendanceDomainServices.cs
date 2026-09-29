@@ -1,8 +1,8 @@
 ﻿using Examples.Common.Domain.Models.Entities;
 using Examples.Common.Domain.Models.Identifiers;
 using Examples.Common.Domain.Presentation.Requests;
+using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
-using Ukinee.Infrastructure.Validation.Services;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Examples.Server.Infrastructure.DomainServices;
@@ -27,12 +27,12 @@ public class AttendanceFactory :
     }
 }
 
-public class CreateAttendanceRequestValidator : ValidationServiceBase<CreateAttendanceRequest>
+public class CreateAttendanceRequestValidator : AbstractValidator<IEnumerable<CreateAttendanceRequest>>
 {
     public CreateAttendanceRequestValidator() { }
 }
 
-public class UpdateAttendanceProbabilityRequestValidator : ValidationServiceBase<UpdateAttendanceProbabilityRequest>
+public class UpdateAttendanceProbabilityRequestValidator : AbstractValidator<IEnumerable<UpdateAttendanceProbabilityRequest>>
 {
     public UpdateAttendanceProbabilityRequestValidator() { }
 }

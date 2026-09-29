@@ -1,7 +1,7 @@
 ﻿using MediatR;
-using Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 
-namespace Ukinee.Infrastructure.Ddd.Local.UnitOfWork.Domain;
+namespace Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Domain;
 
 internal sealed class AmbientUnitOfWork : IEditableUnitOfWork
 {

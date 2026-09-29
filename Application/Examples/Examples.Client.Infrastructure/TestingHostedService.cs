@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Ukinee.Infrastructure.Common.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Implementations;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 using Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 
@@ -13,7 +14,7 @@ namespace Examples.Client.Infrastructure;
 public class TestingHostedService(
     ILogger<TestingHostedService> logger,
     IIdentifierReader<ReviewIdentifier, Review> reader,
-    CachingIdentifierReader<ReviewIdentifier, Review, ExternalGatewayAdapter<ReviewIdentifier, Review, ReviewResponse>> cachingReader
+    CachingIdentifierReader<ReviewIdentifier, Review> cachingReader
 ) : IOrderedHostedService
 {
     public int OrderByPriority => SynchronizationOrderByPriority999.Value;

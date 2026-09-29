@@ -27,7 +27,6 @@
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Client/Ukinee.Infrastructure.SignalR.Client.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Common/Ukinee.Infrastructure.SignalR.Common.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.SignalR.Server/Ukinee.Infrastructure.SignalR.Server.csproj" />
-    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Validation/Ukinee.Infrastructure.Validation.csproj" />
   </Folder>
   <Folder Name="/Application/Frameworks/Ddd/">
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.DependencyInjection/Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
