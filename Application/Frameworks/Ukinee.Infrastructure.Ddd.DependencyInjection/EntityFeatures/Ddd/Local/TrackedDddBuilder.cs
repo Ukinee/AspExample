@@ -31,10 +31,10 @@ where TIdentifier : struct
     internal DddFeature<TIdentifier, TEntity> Feature => _builder.Feature;
 
     TrackedDddBuilder<TTag, TIdentifier, TEntity> ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>.SetAccessPolicy(
-        AuthorizationPolicy<TIdentifier, TEntity> policy
+        AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition
     )
     {
-        var serviceDescriptors = AuthorizationHelper.Build(policy);
+        var serviceDescriptors = AuthorizationHelper.GetDescriptors(policyDefinition);
         _builder.Feature.AccessValidator.AddRange(serviceDescriptors);
 
         return this;
@@ -157,7 +157,7 @@ public interface ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, 
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {
-    public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAccessPolicy(AuthorizationPolicy<TIdentifier, TEntity> policy);
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAccessPolicy(AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition);
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAccessExpressionProvider<TImplementation>(Func<IServiceProvider, TImplementation> factory)
     where TImplementation : class, IEntityAccessExpressionProvider<TIdentifier, TEntity>;

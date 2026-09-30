@@ -7,6 +7,8 @@ namespace Ukinee.Infrastructure.Ddd.Common.Utils;
 
 public static class DddExpressionFactory
 {
+    public const string ExpressionParameterName = "entity";
+
     /// <summary>
     /// TEntity MUST contain expressionParameterName similar to TId expressionParameterName. This is achieved with [HasIdentifierAttribute]
     /// </summary>
@@ -26,21 +28,38 @@ public static class DddExpressionFactory
         return Expression.Lambda<Func<TEntity, bool>>(equality, parameter);
     }
 
-    public static Expression<Func<TEntity, bool>> PublicRead<TEntity>()
-    where TEntity : IEntityWithPublicRead<TEntity>
-    {
-        return ent => ent.IsAvailableForPublicRead;
-    }
+    public static Expression<Func<TEntity, bool>> UserGuidInIdentifierExpression<TEntity>(string guidPropertyName, UserContext userContext) =>
+        UserIdentifierRule<TEntity>(ExpressionParameterName, guidPropertyName, userContext);
 
-    public static Expression<Func<TEntity, bool>> Exists<TEntity>()
-    {
-        return SoftDeleteFilter<TEntity>.Filter;
-    }
+    public static Expression<Func<TEntity, bool>> AdminExpression<TEntity>(UserContext userContext) =>
+        _ => userContext.IsAdmin && userContext.IsAuthenticated;
+
+    public static Expression<Func<TEntity, bool>> LoggedInExpression<TEntity>(UserContext userContext) =>
+        _ => userContext.IsAuthenticated;
+
+    public static Expression<Func<TEntity, bool>> GuestExpression<TEntity>(UserContext userContext) =>
+        _ => true;
+
+    public static bool IsPublicRead<TEntity>() =>
+        PublicReadFilter<TEntity>.Applies;
+
+    public static Expression<Func<TEntity, bool>> PublicRead<TEntity>() =>
+        PublicReadFilter<TEntity>.Filter;
+
+    public static bool IsSoftDelete<TEntity>() =>
+        SoftDeleteFilter<TEntity>.Applies;
+
+    public static Expression<Func<TEntity, bool>> Exists<TEntity>() =>
+        SoftDeleteFilter<TEntity>.Filter;
 }
 
 internal static class SoftDeleteFilter<TEntity>
 {
-    public static readonly bool Applies = typeof(IEntityWithSoftDelete<TEntity>).IsAssignableFrom(typeof(TEntity));
+    public static readonly bool Applies = typeof(TEntity)
+        .GetInterfaces()
+        .Any(i => i.IsGenericType
+                  && i.GetGenericTypeDefinition() == typeof(IEntityWithSoftDelete<>)
+        );
 
     public static Expression<Func<TEntity, bool>> Filter => field ??= Applies ? CreateFilter() : _ => true;
 
@@ -49,6 +68,39 @@ internal static class SoftDeleteFilter<TEntity>
         var p = Expression.Parameter(typeof(TEntity), "x");
         var prop = Expression.Property(p, nameof(IEntityWithSoftDelete<>.DeletedAt));
         var body = Expression.Equal(prop, Expression.Constant(null, typeof(DateTimeOffset?)));
+
+        return Expression.Lambda<Func<TEntity, bool>>(body, p);
+    }
+}
+
+internal static class PublicReadFilter<TEntity>
+{
+    public static readonly bool Applies = typeof(TEntity)
+        .GetInterfaces()
+        .Any(i => i.IsGenericType
+                  && i.GetGenericTypeDefinition() == typeof(IEntityWithPublicRead<>)
+        );
+
+    public static Expression<Func<TEntity, bool>> Filter {
+        get
+        {
+            if (!Applies)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot build public-read filter for {typeof(TEntity)}: " +
+                    $"it does not implement {typeof(IEntityWithPublicRead<TEntity>).Name}."
+                );
+            }
+
+            return field ??= CreateFilter();
+        }
+    }
+
+    private static Expression<Func<TEntity, bool>> CreateFilter()
+    {
+        var p = Expression.Parameter(typeof(TEntity), "x");
+        var prop = Expression.Property(p, nameof(IEntityWithPublicRead<>.IsAvailableForPublicRead));
+        var body = Expression.Equal(prop, Expression.Constant(true));
 
         return Expression.Lambda<Func<TEntity, bool>>(body, p);
     }

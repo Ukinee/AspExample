@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Users.Common.ValueObjects;
@@ -34,42 +35,42 @@ where TEntity : IEntity<TIdentifier>
     }
 }
 
-public class FactoryReadEntityAccessExpressionProvider<TIdentifier, TEntity>(Func<UserContext, Expression<Func<TEntity, bool>>> factory)
+public class PolicyReadEntityAccessExpressionProvider<TIdentifier, TEntity>(AuthorizationPolicy<TIdentifier, TEntity> policyDefinition)
     : IEntityReadAccessExpressionProvider<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     public async Task<Expression<Func<TEntity, bool>>> GetReadExpression(UserContext userContext)
     {
-        return factory(userContext);
+        return policyDefinition.ReadFactory.Invoke(userContext);
     }
 }
 
-public class FactoryUpdateEntityAccessExpressionProvider<TIdentifier, TEntity>(Func<UserContext, Expression<Func<TEntity, bool>>> factory)
+public class PolicyUpdateEntityAccessExpressionProvider<TIdentifier, TEntity>(AuthorizationPolicy<TIdentifier, TEntity> policyDefinition)
     : IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     public async Task<Expression<Func<TEntity, bool>>> GetUpdateExpression(UserContext userContext)
     {
-        return factory(userContext);
+        return policyDefinition.UpdateFactory.Invoke(userContext);
     }
 }
 
-public class FactoryDeleteEntityAccessExpressionProvider<TIdentifier, TEntity>(Func<UserContext, Expression<Func<TEntity, bool>>> factory)
+public class PolicyDeleteEntityAccessExpressionProvider<TIdentifier, TEntity>(AuthorizationPolicy<TIdentifier, TEntity> policyDefinition)
     : IEntityDeleteAccessExpressionProvider<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     public async Task<Expression<Func<TEntity, bool>>> GetDeleteExpression(UserContext userContext)
     {
-        return factory(userContext);
+        return policyDefinition.DeleteFactory.Invoke(userContext);
     }
 }
 
-public class FactoryCreateEntityAccessExpressionProvider<TIdentifier, TEntity>(Func<UserContext, Expression<Func<TEntity, bool>>> factory)
+public class PolicyCreateEntityAccessExpressionProvider<TIdentifier, TEntity>(AuthorizationPolicy<TIdentifier, TEntity> policyDefinition)
     : IEntityCreateAccessExpressionProvider<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     public async Task<Expression<Func<TEntity, bool>>> GetCreateExpression(UserContext userContext)
     {
-        return factory(userContext);
+        return policyDefinition.CreateFactory.Invoke(userContext);
     }
 }

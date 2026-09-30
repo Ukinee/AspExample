@@ -7,13 +7,13 @@ namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer
 
 public static class AuthorizationHelper
 {
-    public static void ApplyPolicy<TIdentifier, TEntity>(RouteHandlerBuilder endpoint, AuthorizationPolicy<TIdentifier, TEntity> policy, AuthorizedOperation operation)
+    public static void ApplyPolicy<TIdentifier, TEntity>(RouteHandlerBuilder endpoint, AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition, AuthorizedOperation operation)
     where TEntity : class, IEntity<TIdentifier>
     {
-        ApplyPolicy(endpoint, policy, policy.OperationFor(operation));
+        ApplyPolicy(endpoint, policyDefinition, policyDefinition.AccessLevelFor(operation));
     }
 
-    public static void ApplyPolicy<TIdentifier, TEntity>(RouteHandlerBuilder endpoint, AuthorizationPolicy<TIdentifier, TEntity> policy, AccessLevel accessLevel)
+    public static void ApplyPolicy<TIdentifier, TEntity>(RouteHandlerBuilder endpoint, AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition, AccessLevel accessLevel)
     where TEntity : class, IEntity<TIdentifier>
     {
         switch (accessLevel)

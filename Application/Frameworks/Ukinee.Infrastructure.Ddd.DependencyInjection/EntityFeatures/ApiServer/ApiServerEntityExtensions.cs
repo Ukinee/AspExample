@@ -16,7 +16,7 @@ where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity
     public TDefinition Register<TParams, TResponse>(
         string baseRoute,
         Func<TParams, UserContext, TIdentifier> idFactory,
-        AuthorizationPolicy<TIdentifier, TEntity> policy,
+        AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
         Action<ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse>> apiServerConfigurator
     )
     where TParams : struct, IRouteParams<TParams, TIdentifier>
@@ -26,7 +26,7 @@ where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity
             Tag = $"{typeof(TEntity).Name}Tag",
         };
 
-        var builder = new ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse>(idFactory, policy, feature);
+        var builder = new ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse>(idFactory, policyDefinition, feature);
 
         apiServerConfigurator.Invoke(builder);
 

@@ -21,17 +21,17 @@ where TEntity : class, IEntity<TIdentifier>
 where TParams : struct, IRouteParams<TParams, TIdentifier>
 {
     private readonly Func<TParams, UserContext, TIdentifier> _idFactory;
-    private readonly AuthorizationPolicy<TIdentifier, TEntity> _policy;
+    private readonly AuthorizationPolicyDefinition<TIdentifier, TEntity> _policyDefinition;
     internal readonly ApiServerDefinition Feature;
 
     public ApiServerFeatureBuilder(
         Func<TParams, UserContext, TIdentifier> idFactory,
-        AuthorizationPolicy<TIdentifier, TEntity> policy,
+        AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
         ApiServerDefinition feature
     )
     {
         _idFactory = idFactory;
-        _policy = policy;
+        _policyDefinition = policyDefinition;
         Feature = feature;
     }
 
@@ -120,7 +120,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"GetAll{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Read);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -153,7 +153,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"FindMany{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Read);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -187,7 +187,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"GetSpecific{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Read);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -223,7 +223,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName(EndpointsNames.Update<TEntity, TUpdatePayload>());
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Update);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
 
                 builder?.Invoke(endpoint);
             }
@@ -257,7 +257,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"Create{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Create);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -291,7 +291,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"CreateMany{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Create);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -328,7 +328,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"EnsureExists{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Create);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -362,7 +362,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"EnsureExistsMany{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Create);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -395,7 +395,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"Delete{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Delete);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
 
                 builder?.Invoke(endpoint);
             }
@@ -428,7 +428,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"DeleteRange{typeof(TEntity).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, AuthorizedOperation.Delete);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
 
                 builder?.Invoke(endpoint);
             }
@@ -468,7 +468,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"Execute{typeof(TPayload).Name}In{typeof(TEntity).Name}Context");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, accessLevel);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, accessLevel);
 
                 builder?.Invoke(endpoint);
             }
@@ -511,7 +511,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"Execute{typeof(TPayload).Name}In{typeof(TEntity).Name}ContextAndGet{typeof(TEndpointResponse).Name}");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policy, accessLevel);
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, accessLevel);
 
                 builder?.Invoke(endpoint);
             }

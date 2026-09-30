@@ -64,6 +64,11 @@
     &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.InMemoryTransactionsTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.UnitOfWorkTests.Dispose_AfterCommit_DoesNotRollback&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.UnitOfWorkTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Authorization.AuthorizationPolicyTests.GuestRead_PublicRead_AllUsersMustHaveAccess&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Authorization.AuthorizationPolicyTests.GuestRead_PrivateRead_OnlyOwnerMustHaveAccess&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Authorization.AuthorizationPolicyTests.OwnerEdit_Delete_OnlyOwnerMustHaveAccess&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Authorization.AuthorizationPolicyTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::028F44E1-4CC2-B303-D36B-C7B3646B83E3::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Authorization.AuthorizationPolicyDefinitionTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

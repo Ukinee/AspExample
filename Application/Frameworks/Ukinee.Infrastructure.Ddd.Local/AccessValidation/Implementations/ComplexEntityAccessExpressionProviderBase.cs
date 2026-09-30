@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.Utils;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Utils;
 using Ukinee.Users.Common.ValueObjects;
@@ -27,12 +28,12 @@ where TEntity : IEntity<TIdentifier>
         DddAccessExpressionUtils.UserGuidInIdentifierExpression<TEntity>(guidPropertyName, userContext);
 
     public static Expression<Func<TEntity, bool>> AdminExpression(UserContext userContext) =>
-        DddAccessExpressionUtils.AdminExpression<TEntity>(userContext);
+        DddExpressionFactory.AdminExpression<TEntity>(userContext);
 
     public static Expression<Func<TEntity, bool>> LoggedInExpression(UserContext userContext) =>
-        DddAccessExpressionUtils.LoggedInExpression<TEntity>(userContext);
+        DddExpressionFactory.LoggedInExpression<TEntity>(userContext);
 
     public static Expression<Func<TEntity, bool>> GuestExpression(UserContext userContext) =>
-        DddAccessExpressionUtils.GuestExpression<TEntity>(userContext);
+        DddExpressionFactory.GuestExpression<TEntity>(userContext);
 #endregion
 }

@@ -42,11 +42,11 @@ public static class SetupServerExampleExtension
         {
             RegisterGeneral(serviceCollection);
 
-            var eventPolicy = AuthorizationPolicy.GuestReadAndOwnerEdit<EventIdentifier, Event>(identifier => identifier.UserGuid);
-            var reviewPolicy = AuthorizationPolicy.GuestReadAndOwnerEdit<ReviewIdentifier, Review>(identifier => identifier.ReviewUserGuid);
-            var locationPolicy = AuthorizationPolicy.GuestReadAndAdministratorEdit<LocationIdentifier, Location>();
-            var locationCategoryPolicy = AuthorizationPolicy.GuestReadAndAdministratorEdit<LocationCategoryIdentifier, LocationCategory>();
-            var attendancePolicy = AuthorizationPolicy.OwnerOnly<AttendanceIdentifier, Attendance>(identifier => identifier.AttendeeUserGuid);
+            var eventPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<EventIdentifier, Event>(identifier => identifier.UserGuid);
+            var reviewPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<ReviewIdentifier, Review>(identifier => identifier.ReviewUserGuid);
+            var locationPolicy = AuthorizationPolicyDefinition.GuestReadAndAdministratorEdit<LocationIdentifier, Location>();
+            var locationCategoryPolicy = AuthorizationPolicyDefinition.GuestReadAndAdministratorEdit<LocationCategoryIdentifier, LocationCategory>();
+            var attendancePolicy = AuthorizationPolicyDefinition.OwnerOnly<AttendanceIdentifier, Attendance>(identifier => identifier.AttendeeUserGuid);
 
             serviceCollection
                 .RegisterModule<ServerExampleTag>()
