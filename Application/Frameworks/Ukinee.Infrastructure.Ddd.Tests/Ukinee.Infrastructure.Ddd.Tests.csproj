@@ -22,8 +22,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Integration\" />
-      <Folder Include="Systems\" />
+      <Folder Include="Integration\MediatRUnitOfWork\" />
+      <Folder Include="System\" />
       <Folder Include="Utils\Extensions\" />
     </ItemGroup>
 

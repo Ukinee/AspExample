@@ -14,3 +14,4 @@ public interface IEntity<out TIdentifier> : IEntity
         return Identifier!;
     }
 }
+

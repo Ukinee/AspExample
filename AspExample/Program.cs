@@ -100,6 +100,7 @@ public static class Program
             DatabaseOptionsSectionName = DatabaseOptionsSectionName,
             DatabaseOptionsFilePath = SecretOptionsPath,
             ApiBaseRoute = "api/v1",
+            IsTesting = false,
         };
 
         var userOwnerConfig = new UserConfig {
@@ -114,6 +115,6 @@ public static class Program
             .Services
             .SetupUsers(builder.Configuration, userOwnerConfig)
             .SetupUnitOfWork()
-            .SetupServerExample<ExampleServerHub>(registrationPolicy, serverOptions);
+            .SetupServerExample<ExampleServerHub>(builder.Configuration, registrationPolicy, serverOptions);
     }
 }

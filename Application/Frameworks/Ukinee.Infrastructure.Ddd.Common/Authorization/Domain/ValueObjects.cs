@@ -7,11 +7,3 @@ public enum AuthorizedOperation
     Update,
     Delete,
 }
-
-public enum AccessLevel
-{
-    Guest,
-    LoggedIn,
-    Owner,
-    Admin,
-}

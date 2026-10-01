@@ -438,7 +438,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload>(
-        AccessLevel accessLevel,
         Action<RouteHandlerBuilder>? builder = null
     )
     {
@@ -468,8 +467,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     )
                     .WithName($"Execute{typeof(TPayload).Name}In{typeof(TEntity).Name}Context");
 
-                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, accessLevel);
-
                 builder?.Invoke(endpoint);
             }
         );
@@ -478,7 +475,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload, THandlerResponse, TEndpointResponse>(
-        AccessLevel accessLevel,
         Action<RouteHandlerBuilder>? builder = null
     )
     {
@@ -510,8 +506,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         }
                     )
                     .WithName($"Execute{typeof(TPayload).Name}In{typeof(TEntity).Name}ContextAndGet{typeof(TEndpointResponse).Name}");
-
-                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, accessLevel);
 
                 builder?.Invoke(endpoint);
             }

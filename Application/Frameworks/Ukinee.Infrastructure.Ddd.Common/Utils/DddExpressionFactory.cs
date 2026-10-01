@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
@@ -9,6 +10,11 @@ public static class DddExpressionFactory
 {
     public const string ExpressionParameterName = "entity";
 
+    sealed private class GuidBox
+    {
+        public Guid Value;
+    }
+
     /// <summary>
     /// TEntity MUST contain expressionParameterName similar to TId expressionParameterName. This is achieved with [HasIdentifierAttribute]
     /// </summary>
@@ -17,13 +23,18 @@ public static class DddExpressionFactory
     /// <param name="userContext"></param>
     /// <typeparam name="TEntity"></typeparam>
     /// <returns></returns>
-    public static Expression<Func<TEntity, bool>> UserIdentifierRule<TEntity>(string expressionParameterName, string propertyName, UserContext userContext)
+    public static Expression<Func<TEntity, bool>> UserIdentifierRule<TEntity>(
+        string expressionParameterName,
+        string propertyName,
+        UserContext userContext
+    )
     {
-        var userGuid = userContext.Guid;
+        var box = new GuidBox { Value = userContext.Guid };
+        var capturedGuid = Expression.Field(Expression.Constant(box), nameof(GuidBox.Value));
 
         var parameter = Expression.Parameter(typeof(TEntity), expressionParameterName);
         var propertyAccess = Expression.Property(parameter, propertyName);
-        var equality = Expression.Equal(propertyAccess, Expression.Constant(userGuid));
+        var equality = Expression.Equal(propertyAccess, capturedGuid);
 
         return Expression.Lambda<Func<TEntity, bool>>(equality, parameter);
     }
@@ -40,6 +51,12 @@ public static class DddExpressionFactory
     public static Expression<Func<TEntity, bool>> GuestExpression<TEntity>(UserContext userContext) =>
         _ => true;
 
+    public static Expression<Func<TEntity, bool>> True<TEntity>() =>
+        _ => true;
+
+    public static Expression<Func<TEntity, bool>> False<TEntity>() =>
+        _ => false;
+
     public static bool IsPublicRead<TEntity>() =>
         PublicReadFilter<TEntity>.Applies;
 
@@ -51,6 +68,18 @@ public static class DddExpressionFactory
 
     public static Expression<Func<TEntity, bool>> Exists<TEntity>() =>
         SoftDeleteFilter<TEntity>.Filter;
+
+    public static Expression<Func<TEntity, bool>> SharedWithUserExpression<TEntity>(UserContext userContext)
+    where TEntity : IEntity
+    {
+        throw new NotImplementedException();
+    }
+
+    public static bool HasSharedAccess<TEntity>()
+    where TEntity : IEntity
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal static class SoftDeleteFilter<TEntity>

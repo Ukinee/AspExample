@@ -10,6 +10,7 @@ using Examples.Server.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures;
 using Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures.ApiEndpointFeature;
@@ -19,6 +20,7 @@ using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;
+using Ukinee.Infrastructure.Options.Extensions;
 using Ukinee.Users.Domain.Contracts;
 
 namespace Examples.Server.Startup;
@@ -31,15 +33,18 @@ public class ServerExampleConfig
     public required string DatabaseOptionsFilePath { get; init; }
 
     public required string ApiBaseRoute { get; init; }
+
+    public required bool IsTesting { get; init; }
 }
 
 public static class SetupServerExampleExtension
 {
     extension(IServiceCollection serviceCollection)
     {
-        public IServiceCollection SetupServerExample<THub>(RegistrationPolicy policy, ServerExampleConfig config)
+        public IServiceCollection SetupServerExample<THub>(IConfigurationManager configuration, RegistrationPolicy policy, ServerExampleConfig config)
         where THub : Hub
         {
+            RegisterOptions(serviceCollection, configuration, config);
             RegisterGeneral(serviceCollection);
 
             var eventPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<EventIdentifier, Event>(identifier => identifier.UserGuid);
@@ -52,6 +57,13 @@ public static class SetupServerExampleExtension
                 .RegisterModule<ServerExampleTag>()
                 .DatabaseDatasource.Register<ServerDatabaseContext>((options, builder) =>
                     {
+                        if (config.IsTesting)
+                        {
+                            builder.UseInMemoryDatabase(config.DatabaseName);
+
+                            return;
+                        }
+
                         var connectionString = options.GetConnectionString(config.DatabaseName);
 
                         builder.UseNpgsql(
@@ -147,6 +159,11 @@ public static class SetupServerExampleExtension
 
             return serviceCollection;
         }
+    }
+
+    private static void RegisterOptions(IServiceCollection serviceCollection, IConfigurationManager configuration, ServerExampleConfig config)
+    {
+        serviceCollection.ConfigureJson<DbContextOptions<ServerDatabaseContext>>(configuration, config.DatabaseOptionsSectionName, config.DatabaseOptionsFilePath);
     }
 
     private static void RegisterGeneral(IServiceCollection serviceCollection)

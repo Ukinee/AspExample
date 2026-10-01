@@ -53,6 +53,9 @@ public readonly partial record struct EventIdentifier
 
     public static EventIdentifier New(UserContext userContext) =>
         Create(userContext.Guid, Guid.NewGuid());
+
+    public Guid GetOwnerIdentifier() =>
+        UserGuid;
 }
 
 [RouteParamsIdentifier]
