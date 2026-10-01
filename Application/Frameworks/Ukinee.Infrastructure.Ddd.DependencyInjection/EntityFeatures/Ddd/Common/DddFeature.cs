@@ -14,7 +14,6 @@ public class DddFeature<TIdentifier, TEntity> : IBuildable
     public required List<Action<IServiceCollection>> Extensions { get; init; }
 
     public List<ServiceDescriptor> Repository { get; } = [];
-    public List<ServiceDescriptor> WriteBack { get; } = [];
     public List<ServiceDescriptor> AccessValidator { get; } = [];
     public List<ServiceDescriptor> EntityCreator { get; } = [];
     public List<ServiceDescriptor> DeltaEntityUpdater { get; } = [];
@@ -29,7 +28,6 @@ public class DddFeature<TIdentifier, TEntity> : IBuildable
     public void Build(RegistrationPolicy policy, IServiceCollection serviceCollection)
     {
         PayloadHelper.AddFiltered(serviceCollection, policy, Repository);
-        PayloadHelper.AddFiltered(serviceCollection, policy, WriteBack);
         PayloadHelper.AddFiltered(serviceCollection, policy, AccessValidator);
         PayloadHelper.AddFiltered(serviceCollection, policy, EntityCreator);
         PayloadHelper.AddFiltered(serviceCollection, policy, DeltaEntityUpdater);

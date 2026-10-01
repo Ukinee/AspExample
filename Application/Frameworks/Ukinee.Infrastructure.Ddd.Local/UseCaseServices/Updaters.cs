@@ -44,13 +44,13 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class TrackedPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>(
+public class TrackedPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IValidator<IEnumerable<TUpdatePayload>> validationService,
     IEntityUpdateFactory<TUpdatePayload, TEntity> updateFactory,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>
+) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

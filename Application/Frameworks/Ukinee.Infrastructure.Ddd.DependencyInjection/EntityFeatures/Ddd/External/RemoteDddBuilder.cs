@@ -21,10 +21,10 @@ where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct, IEquatable<TIdentifier>
 where TParams : IRouteParams<TParams, TIdentifier>
 {
-    private DddBuilder<TIdentifier, TEntity> _builder;
+    private DddBuilder<TTag, TIdentifier, TEntity> _builder;
     private readonly bool _isCacheable;
 
-    public RemoteDddBuilder(DddBuilder<TIdentifier, TEntity> builder, bool isCacheable)
+    public RemoteDddBuilder(DddBuilder<TTag, TIdentifier, TEntity> builder, bool isCacheable)
     {
         _builder = builder;
         _isCacheable = isCacheable;
@@ -50,7 +50,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
         _builder
             .SetEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
-                CreateEntityUseCase<TCreatePayload, TEntity>>(ServiceLifetime.Singleton, extensions, true);
+                CreateEntityUseCase<TEntity, TCreatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
         return this;
     }
@@ -65,7 +65,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
         _builder
             .AddPayloadEntityUpdateFeature<ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(ServiceLifetime.Singleton, extensions, true);
+                UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
         return this;
     }
@@ -75,8 +75,8 @@ where TParams : IRouteParams<TParams, TIdentifier>
         _builder.AddGetOrCreateFeature<
             ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>,
             TCreatePayload,
-            GetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>
-        >(ServiceLifetime.Singleton, []);
+            GetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload>
+        >(ServiceLifetime.Singleton, [], true);
 
         return this;
     }

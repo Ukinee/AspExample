@@ -5,10 +5,10 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 
-public class TransactionThrowingEntityCreator<TCreatePayload, TEntity>(
+public class TransactionThrowingEntityCreator<TEntity, TCreatePayload>(
     IUnitOfWorkProvider uowProvider,
-    IEntityCreator<TCreatePayload, TEntity> inner
-) : IEntityCreator<TCreatePayload, TEntity>
+    IEntityCreator<TEntity, TCreatePayload> inner
+) : IEntityCreator<TEntity, TCreatePayload>
 where TEntity : IEntity
 {
     public Task<TEntity> CreateAsync(UserContext userContext, TCreatePayload payload, CancellationToken cancellationToken)
@@ -34,8 +34,8 @@ where TEntity : IEntity
 
 public class TransactionThrowingEntityUpdater<TIdentifier, TEntity, TUpdatePayload>(
     IUnitOfWorkProvider uowProvider,
-    IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity> inner
-) : IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>
+    IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload> inner
+) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
@@ -81,5 +81,33 @@ where TIdentifier : notnull
             throw new InvalidOperationException($"Transactions not supported for {typeof(TEntity).Name}");
 
         return inner.RemoveAsync(userContext, identifiers, cancellationToken);
+    }
+}
+
+public class TransactionThrowingEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>(
+    IUnitOfWorkProvider uowProvider,
+    IEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload> inner
+) : IEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>
+where TEntity : class, IEntity<TIdentifier>
+where TIdentifier : notnull
+{
+    public Task<TEntity> GetOrCreateAsync(UserContext userContext, TIdentifier identifier, TCreatePayload payload, CancellationToken cancellationToken)
+    {
+        if (uowProvider.Current != null)
+            throw new InvalidOperationException($"Transactions not supported for {typeof(TEntity).Name}");
+
+        return inner.GetOrCreateAsync(userContext, identifier, payload, cancellationToken);
+    }
+
+    public Task<IReadOnlyCollection<TEntity>> GetOrCreateAsync(
+        UserContext userContext,
+        IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TCreatePayload>> payloads,
+        CancellationToken cancellationToken
+    )
+    {
+        if (uowProvider.Current != null)
+            throw new InvalidOperationException($"Transactions not supported for {typeof(TEntity).Name}");
+
+        return inner.GetOrCreateAsync(userContext, payloads, cancellationToken);
     }
 }

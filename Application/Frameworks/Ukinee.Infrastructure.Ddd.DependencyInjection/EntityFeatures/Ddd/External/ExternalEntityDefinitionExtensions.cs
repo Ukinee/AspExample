@@ -40,7 +40,7 @@ where TEntity : class, IEntity<TIdentifier>
     where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
 
@@ -65,7 +65,7 @@ where TEntity : class, IEntity<TIdentifier>
     where TResponse : class
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.Feature.Extensions.Add(
             CommonProxyHelper.RegisterStartupSynchronization<TIdentifier, TEntity, TWeight, ExternalSynchronizationDataSourceAdapter<TIdentifier, TEntity, TResponse>>
@@ -94,7 +94,7 @@ where TEntity : class, IEntity<TIdentifier>
     where TResponse : class
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
 

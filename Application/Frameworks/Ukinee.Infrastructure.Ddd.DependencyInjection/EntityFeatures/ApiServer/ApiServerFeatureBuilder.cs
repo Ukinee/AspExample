@@ -51,25 +51,35 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrud<TCreatePayload, TUpdatePayload>()
     {
         return WithFindMany()
-            .WithGetAll()
-            .WithGet()
-            .WithDelete()
-            .WithDeleteRange()
-            .WithCreateMany<TCreatePayload>()
-            .WithThrowingOnDuplicatesCreate<TCreatePayload>()
-            .AddUpdate<TUpdatePayload>();
+                .WithGetAll()
+                .WithGet()
+                .WithDelete()
+                .WithDeleteRange()
+                .WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
+                .WithThrowingOnDuplicatesCreate<TCreatePayload>()
+                .AddUpdate<TUpdatePayload>()
+                .AddUpdateMany<TUpdatePayload>()
+            ;
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrud<TPayload>()
     {
         return WithFindMany()
-            .WithGetAll()
-            .WithGet()
-            .WithDelete()
-            .WithDeleteRange()
-            .WithCreateMany<TPayload>()
-            .WithThrowingOnDuplicatesCreate<TPayload>()
-            .AddUpdate<TPayload>();
+                .WithGetAll()
+                .WithGet()
+                .WithDelete()
+                .WithDeleteRange()
+                .WithThrowingOnDuplicatesCreateMany<TPayload>()
+                .WithThrowingOnDuplicatesCreate<TPayload>()
+                .AddUpdate<TPayload>()
+                .AddUpdateMany<TPayload>()
+            ;
+    }
+
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterUpdate<TPayload>()
+    {
+        return AddUpdate<TPayload>()
+            .AddUpdateMany<TPayload>();
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrd<TCreatePayload>()
@@ -79,13 +89,13 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
             .WithGet()
             .WithDelete()
             .WithDeleteRange()
-            .WithCreateMany<TCreatePayload>()
+            .WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
             .WithThrowingOnDuplicatesCreate<TCreatePayload>();
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCreate<TCreatePayload>()
     {
-        return WithCreateMany<TCreatePayload>()
+        return WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
             .WithThrowingOnDuplicatesCreate<TCreatePayload>();
     }
 
@@ -206,7 +216,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         async (
                             [AsParameters] TParams routeParams,
                             [FromBody] TUpdatePayload request,
-                            [FromServices] IUpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity> updateUseCase,
+                            [FromServices] IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload> updateUseCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
@@ -232,6 +242,48 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddUpdateMany<TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    {
+        Feature.AddEndpoint((group, _) =>
+            {
+                var endpoint = group
+                    .MapPut(
+                        RelationalPathUtils.Update<TEntity, TUpdatePayload>(TParams.RouteTemplate),
+                        async (
+                            [FromBody] IReadOnlyCollection<UpdateEntityRequest<TParams, TUpdatePayload>> paramsRequest,
+                            [FromServices] IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload> updateUseCase,
+                            [FromServices] IMapper mapper,
+                            [FromServices] IUserContextProvider userContextProvider,
+                            CancellationToken ct
+                        ) =>
+                        {
+                            var userContext = userContextProvider.GetActiveUserContext();
+
+                            var requests = paramsRequest
+                                .Select(request => new UpdateEntityRequest<TIdentifier, TUpdatePayload> {
+                                        Identifier = _idFactory(request.Identifier, userContext),
+                                        Payload = request.Payload,
+                                    }
+                                )
+                                .ToList();
+
+                            var updatedEntity = await updateUseCase.Execute(userContext, requests, ct);
+                            var result = mapper.Map<TResponse>(updatedEntity);
+
+                            return TypedResults.Ok(result);
+                        }
+                    )
+                    .WithName(EndpointsNames.Update<TEntity, TUpdatePayload>());
+
+                AuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
+
+                builder?.Invoke(endpoint);
+            }
+        );
+
+        return this;
+    }
+
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithThrowingOnDuplicatesCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
@@ -241,7 +293,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         RelationalPathUtils.Create<TEntity>(),
                         async (
                             [FromBody] TCreatePayload request,
-                            [FromServices] ICreateEntityUseCase<TCreatePayload, TEntity> useCase,
+                            [FromServices] ICreateEntityUseCase<TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
@@ -266,7 +318,9 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithCreateMany<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithThrowingOnDuplicatesCreateMany<TCreatePayload>(
+        Action<RouteHandlerBuilder>? builder = null
+    )
     {
         Feature.AddEndpoint((group, def) =>
             {
@@ -275,7 +329,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         RelationalPathUtils.CreateMany<TEntity>(),
                         async (
                             [FromBody] IReadOnlyCollection<TCreatePayload> requests,
-                            [FromServices] ICreateEntityUseCase<TCreatePayload, TEntity> useCase,
+                            [FromServices] ICreateEntityUseCase<TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
@@ -310,7 +364,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         async (
                             [AsParameters] TParams routeParams,
                             [FromBody] TCreatePayload request,
-                            [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity> useCase,
+                            [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
@@ -345,14 +399,22 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     .MapPost(
                         RelationalPathUtils.EnsureExistsMany<TEntity>(),
                         async (
-                            [FromBody] IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TCreatePayload>> requests,
-                            [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity> useCase,
+                            [FromBody] IReadOnlyCollection<GetOrCreateRequest<TParams, TCreatePayload>> paramsRequests,
+                            [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
+
+                            var requests = paramsRequests
+                                .Select(request => new GetOrCreateRequest<TIdentifier, TCreatePayload> {
+                                        Identifier = _idFactory(request.Identifier, userContext),
+                                        Payload = request.Payload,
+                                    }
+                                )
+                                .ToList();
 
                             var entity = await useCase.Execute(userContext, requests, ct);
                             var result = mapper.Map<List<TResponse>>(entity);
@@ -437,9 +499,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload>(
-        Action<RouteHandlerBuilder>? builder = null
-    )
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {

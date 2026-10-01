@@ -4,7 +4,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 
-public interface IGetOrCreateEntityUseCase<TIdentifier, TPayload, TEntity>
+public interface IGetOrCreateEntityUseCase<TIdentifier, TEntity, TPayload>
 where TEntity : IEntity<TIdentifier>
 where TIdentifier : struct
 {

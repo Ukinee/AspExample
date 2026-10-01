@@ -4,7 +4,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 
-public interface ICreateEntityUseCase<in TPayload, TEntity>
+public interface ICreateEntityUseCase<TEntity, in TPayload>
 where TEntity : IEntity
 {
     public Task<TEntity> Execute(UserContext userContext, TPayload payload, CancellationToken cancellationToken);

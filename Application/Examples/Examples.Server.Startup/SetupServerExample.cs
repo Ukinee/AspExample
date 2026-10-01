@@ -89,7 +89,7 @@ public static class SetupServerExampleExtension
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
                             .RegisterCrd<CreateEventRequest>()
-                            .AddUpdate<UpdateEventDateRequest>()
+                            .RegisterUpdate<UpdateEventDateRequest>()
                     )
                 )
                 .LocalContexts.AddSoftDeletionDatabaseContext<ReviewIdentifier, Review>(contextConfigurator => contextConfigurator
@@ -152,7 +152,7 @@ public static class SetupServerExampleExtension
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
                             .RegisterCrd<CreateAttendanceRequest>()
-                            .AddUpdate<UpdateAttendanceProbabilityRequest>()
+                            .RegisterUpdate<UpdateAttendanceProbabilityRequest>()
                     )
                 )
                 .Build(policy);

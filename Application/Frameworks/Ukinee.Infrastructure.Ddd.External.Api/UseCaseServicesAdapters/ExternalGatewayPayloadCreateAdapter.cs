@@ -10,7 +10,7 @@ namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 public class ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>(
     IMapService<TResponse, TEntity> mapService,
     IExternalGatewayCreator<TIdentifier, TCreatePayload, TResponse> externalGatewayCreator
-) : IEntityCreator<TCreatePayload, TEntity>, IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>
+) : IEntityCreator<TEntity, TCreatePayload>, IEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

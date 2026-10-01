@@ -36,7 +36,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
 
         public async Task<TEntity?> FindByIdAsync(TIdentifier identifier, Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken)
         {
-            return await context.Set<TEntity>().AsNoTracking().WhereIdEquals(identifier).SingleOrDefaultAsync(cancellationToken);
+            return await context.Set<TEntity>().AsNoTracking().Where(filter).WhereIdEquals(identifier).SingleOrDefaultAsync(cancellationToken);
         }
 
         public async IAsyncEnumerable<TEntity> FindManyByIdAsync(
@@ -45,7 +45,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
             [EnumeratorCancellation] CancellationToken cancellationToken
         )
         {
-            var enumerable = context.Set<TEntity>().AsNoTracking().WhereIdIn(identifiers).AsAsyncEnumerable().WithCancellation(cancellationToken);
+            var enumerable = context.Set<TEntity>().AsNoTracking().Where(filter).WhereIdIn(identifiers).AsAsyncEnumerable().WithCancellation(cancellationToken);
 
             await foreach (var entity in enumerable)
             {
@@ -88,7 +88,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
         {
             await EnsureUnitOfWork(cancellationToken);
 
-            var entity = await context.Set<TEntity>().Where(filter).WhereIdEquals(identifier).SingleOrDefaultAsync(cancellationToken);
+            var entity = await context.Set<TEntity>().AsNoTracking().Where(filter).WhereIdEquals(identifier).SingleOrDefaultAsync(cancellationToken);
 
             if (entity == null)
                 throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);

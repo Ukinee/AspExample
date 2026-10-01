@@ -10,7 +10,7 @@ namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 public class ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>(
     IMapService<TResponse, TEntity> mapService,
     IExternalGatewayUpdater<TIdentifier, TUpdatePayload, TResponse> externalGatewayUpdater
-) : IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>
+) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

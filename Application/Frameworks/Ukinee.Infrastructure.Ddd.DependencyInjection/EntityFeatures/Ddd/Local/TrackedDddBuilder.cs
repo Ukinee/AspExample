@@ -17,11 +17,11 @@ public class TrackedDddBuilder<TTag, TIdentifier, TEntity> : ITrackedDddIdentifi
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {
-    private DddBuilder<TIdentifier, TEntity> _builder;
+    private DddBuilder<TTag, TIdentifier, TEntity> _builder;
     private readonly ServiceLifetime _serviceLifetime;
     private readonly bool _throwOnTransaction;
 
-    public TrackedDddBuilder(DddBuilder<TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime, bool throwOnTransaction)
+    public TrackedDddBuilder(DddBuilder<TTag, TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime, bool throwOnTransaction)
     {
         _builder = builder;
         _serviceLifetime = serviceLifetime;
@@ -90,7 +90,7 @@ where TIdentifier : struct
         ];
 
         _builder
-            .SetEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
+            .SetEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
                 _serviceLifetime,
                 extensions,
                 _throwOnTransaction
@@ -108,7 +108,7 @@ where TIdentifier : struct
             ..PayloadHelper.Service<IValidator<IEnumerable<TCreatePayload>>, TValidator>(_serviceLifetime),
         ];
 
-        _builder.SetEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>, TCreatePayload, CreateEntityUseCase<TCreatePayload, TEntity>>(
+        _builder.SetEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
             _serviceLifetime,
             extensions,
             _throwOnTransaction
@@ -127,8 +127,8 @@ where TIdentifier : struct
         ];
 
         _builder
-            .AddPayloadEntityUpdateFeature<TrackedPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>, TUpdatePayload,
-                UpdateEntityUseCase<TIdentifier, TUpdatePayload, TEntity>>(_serviceLifetime, extensions, _throwOnTransaction);
+            .AddPayloadEntityUpdateFeature<TrackedPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TUpdatePayload,
+                UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(_serviceLifetime, extensions, _throwOnTransaction);
 
         return this;
     }
@@ -144,10 +144,10 @@ where TIdentifier : struct
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> WithGetOrCreate<TCreatePayload>()
     {
         _builder.AddGetOrCreateFeature<
-            TrackedEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>,
+            TrackedEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>,
             TCreatePayload,
-            GetOrCreateEntityUseCase<TIdentifier, TCreatePayload, TEntity>
-        >(_serviceLifetime, []);
+            GetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload>
+        >(_serviceLifetime, [], _throwOnTransaction);
 
         return this;
     }

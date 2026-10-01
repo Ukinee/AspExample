@@ -15,7 +15,7 @@ namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local
 
 file class ProxyHelper
 {
-    public static void RegisterTrackedReaders<TIdentifier, TEntity>(DddBuilder<TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime)
+    public static void RegisterTrackedReaders<TTag, TIdentifier, TEntity>(DddBuilder<TTag, TIdentifier, TEntity> builder, ServiceLifetime serviceLifetime)
     where TEntity : class, IEntity<TIdentifier>
     where TIdentifier : struct, IEquatable<TIdentifier>
     {
@@ -37,7 +37,7 @@ where TEntity : class, IEntity<TIdentifier>
         var throwOnTransaction = true;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
 
@@ -68,7 +68,7 @@ where TEntity : class, IEntity<TIdentifier>
         var throwOnTransaction = true;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
@@ -96,7 +96,7 @@ where TEntity : class, IEntity<TIdentifier>
         var throwOnTransaction = false;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>(serviceLifetime);
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
@@ -129,7 +129,7 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
         var throwOnTransaction = false;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
-        var builder = new DddBuilder<TIdentifier, TEntity>(feature);
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>(serviceLifetime);
         builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);

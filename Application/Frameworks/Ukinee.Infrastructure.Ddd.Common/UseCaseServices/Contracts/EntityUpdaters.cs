@@ -4,7 +4,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 
-public interface IPayloadEntityUpdater<TIdentifier, TUpdatePayload, TEntity>
+public interface IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

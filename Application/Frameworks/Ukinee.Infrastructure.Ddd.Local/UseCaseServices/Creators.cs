@@ -10,10 +10,10 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
-public class TrackedEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>(
+public class TrackedEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>(
     IIdentifierReader<TIdentifier, TEntity> reader,
-    IEntityCreator<TCreatePayload, TEntity> creator
-) : IEntityEnsureExistsCreator<TIdentifier, TCreatePayload, TEntity>
+    IEntityCreator<TEntity, TCreatePayload> creator
+) : IEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
@@ -48,12 +48,12 @@ where TIdentifier : notnull
     }
 }
 
-public abstract class TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(
+public abstract class TrackedEntityCreatorBase<TIdentifier, TEntity, TCreatePayload>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IValidator<IEnumerable<TCreatePayload>> validationService,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : IEntityCreator<TCreatePayload, TEntity>
+) : IEntityCreator<TEntity, TCreatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
@@ -88,13 +88,13 @@ where TEntity : class, IEntity<TIdentifier>
     protected abstract ValueTask<TEntity> CreateInternal(UserContext userContext, TCreatePayload payload, CancellationToken cancellationToken);
 }
 
-public class FactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
+public class FactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>(
     IEntityCreateFactory<TCreatePayload, TEntity> factory,
     IValidator<IEnumerable<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
+) : TrackedEntityCreatorBase<TIdentifier, TEntity, TCreatePayload>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
@@ -104,13 +104,13 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class AsyncFactoryTrackedEntityCreator<TIdentifier, TCreatePayload, TEntity>(
+public class AsyncFactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>(
     IEntityAsyncCreateFactory<TCreatePayload, TEntity> factory,
     IValidator<IEnumerable<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : TrackedEntityCreatorBase<TIdentifier, TCreatePayload, TEntity>(repository, validationService, accessProvider, publisher)
+) : TrackedEntityCreatorBase<TIdentifier, TEntity, TCreatePayload>(repository, validationService, accessProvider, publisher)
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
