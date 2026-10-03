@@ -1,5 +1,4 @@
-﻿using Examples.Common.Domain.Models.Identifiers;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Ukinee.Users.Domain;
 using Ukinee.Users.Domain.Contracts;
 using Ukinee.Users.Domain.ValueObjects;

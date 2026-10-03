@@ -1,22 +1,5 @@
 <Solution>
   <Folder Name="/Application/" />
-  <Folder Name="/Application/Examples/" />
-  <Folder Name="/Application/Examples/Client/">
-    <Project Path="Application/Examples/Examples.Client.Domain.Models/Examples.Client.Domain.Models.csproj" />
-    <Project Path="Application/Examples/Examples.Client.Infrastructure/Examples.Client.Infrastructure.csproj" />
-    <Project Path="Application/Examples/Examples.Client.Startup/Examples.Client.Startup.csproj" />
-  </Folder>
-  <Folder Name="/Application/Examples/Common/">
-    <Project Path="Application/Examples/Examples.Common.Domain.Models/Examples.Common.Domain.Models.csproj" />
-    <Project Path="Application/Examples/Examples.Common.Domain.Presentation/Examples.Common.Domain.Presentation.csproj" />
-    <Project Path="Application/Examples/Examples.Common.Startup/Examples.Common.Startup.csproj" />
-  </Folder>
-  <Folder Name="/Application/Examples/Server/">
-    <Project Path="Application/Examples/Examples.Server.Databases/Examples.Server.Databases.csproj" />
-    <Project Path="Application/Examples/Examples.Server.Domain.Models/Examples.Server.Domain.Models.csproj" />
-    <Project Path="Application/Examples/Examples.Server.Infrastructure/Examples.Server.Infrastructure.csproj" />
-    <Project Path="Application/Examples/Examples.Server.Startup/Examples.Server.Startup.csproj" />
-  </Folder>
   <Folder Name="/Application/Frameworks/">
     <Project Path="Application/Frameworks/Ukinee.Common.Identifiers.SourceGenerators/Ukinee.Common.Identifiers.SourceGenerators.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Common.Identifiers/Ukinee.Common.Identifiers.csproj" />
@@ -38,7 +21,13 @@
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local/Ukinee.Infrastructure.Ddd.Local.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Common/Ukinee.Infrastructure.Ddd.Common.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Synchronization/Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
-    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests/Ukinee.Infrastructure.Ddd.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Application/Frameworks/Ddd/Tests/">
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests.Common/Ukinee.Infrastructure.Ddd.Tests.Common.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests.Domain/Ukinee.Infrastructure.Ddd.Tests.Domain.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests.EndToEnd/Ukinee.Infrastructure.Ddd.Tests.EndToEnd.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests.Features/Ukinee.Infrastructure.Ddd.Tests.Features.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Tests.Integration/Ukinee.Infrastructure.Ddd.Tests.Integration.csproj" />
   </Folder>
   <Folder Name="/Application/Frameworks/Users/">
     <Project Path="Application/Frameworks/Ukinee.Users.Common/Ukinee.Users.Common.csproj" />

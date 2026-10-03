@@ -1,11 +1,11 @@
-using Examples.Client.Domain.Models;
-using Examples.Client.Startup;
-using Examples.Common.Startup;
-using Examples.Server.Infrastructure.Services;
-using Examples.Server.Startup;
-using Ukinee.Infrastructure.Ddd.DependencyInjection;
+using Scalar.AspNetCore;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
+using Ukinee.Infrastructure.Ddd.Tests.Common.Extensions.ServiceCollectionExtensions;
+using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Extensions;
+using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Services;
+using Ukinee.Infrastructure.Json.OpenApi;
 using Ukinee.Users.Domain;
 using Ukinee.Users.Startup;
 
@@ -18,42 +18,51 @@ public static class Program
 
     public static void Main(string[] args)
     {
-        var mode = StartupHelper.GetMode(args);
-
         var registrationPolicy = CreateRegistrationPolicy();
-
-        var mediatrOptions = new MediatRConfig {
-            AssembliesToScanHandlers = [typeof(Program).Assembly]
-        };
 
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddOpenApi();
+        ConfigureAppBuilder(builder);
+        ConfigureAppServices(builder, registrationPolicy);
+
+        var app = builder.Build();
+
+        ConfigureApp(app);
+
+        app.Run($"https://localhost:{ServerInMemoryConfig.Port}");
+    }
+
+    private static void ConfigureAppBuilder(WebApplicationBuilder builder)
+    {
+        builder.Services.AddOpenApi(options =>
+            {
+                JsonOpenApiConfigurator.FixFlagEnums(options); //requires JsonStringFlagsEnumConverterFactory registered in middleware pipeline
+            }
+        );
 
         builder
             .SetupLogging()
             .SetupDevelopmentMiddlewares()
-            .SetupRouting()
-            .Services
-            .SetupCommonServices(mediatrOptions);
+            .SetupRouting();
+    }
 
-        if (!mode.IsServer)
-        {
-            StartAsClient(builder, mode, registrationPolicy);
-
-            return;
-        }
-
-        SetupAsServer(builder, registrationPolicy);
-
-        var app = builder.Build();
-
+    private static void ConfigureApp(WebApplication app)
+    {
         app.RegisterEndpoints();
 
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
             app.MapOpenApi();
+
+            app.MapScalarApiReference(options =>
+                {
+                    options
+                        .WithTitle("API v1")
+                        .WithTheme(ScalarTheme.Saturn)
+                        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+                }
+            );
         }
 
         app.UseHttpsRedirection();
@@ -62,45 +71,20 @@ public static class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.RegisterEndpoints();
         app.MapControllers();
-
-        app.Run($"https://localhost:{mode.Port}");
     }
 
-    private static RegistrationPolicy CreateRegistrationPolicy()
+    private static void ConfigureAppServices(WebApplicationBuilder builder, RegistrationPolicy registrationPolicy)
     {
-        var registrationPolicy = new RegistrationPolicy();
-
-        registrationPolicy.Ignore<IDisposable>();
-        registrationPolicy.AllowMultiple<ApiServerDefinition>();
-
-        return registrationPolicy;
-    }
-
-    private static void StartAsClient(WebApplicationBuilder builder, ModeConfig mode, RegistrationPolicy registrationPolicy)
-    {
-        var clientOptions = new ClientExampleConfig {
-            BaseServerAddress = $"https://localhost:{StartupHelper.GetServerConfig().Port}/api/v1",
+        var mediatrOptions = new MediatRConfig {
+            AssembliesToScanHandlers = [typeof(Program).Assembly]
         };
 
-        builder
-            .Services
-            .SetupClientTestingServices()
-            .SetupClientExample<ClientExampleHubTag>(registrationPolicy, clientOptions);
-
-        var app = builder.Build();
-        app.Run($"https://localhost:{mode.Port}");
-    }
-
-    private static void SetupAsServer(WebApplicationBuilder builder, RegistrationPolicy registrationPolicy)
-    {
         var serverOptions = new ServerExampleConfig {
             DatabaseName = "Example.Database",
             DatabaseOptionsSectionName = DatabaseOptionsSectionName,
             DatabaseOptionsFilePath = SecretOptionsPath,
             ApiBaseRoute = "api/v1",
-            IsTesting = false,
         };
 
         var userOwnerConfig = new UserConfig {
@@ -113,8 +97,19 @@ public static class Program
 
         builder
             .Services
+            .SetupCommonServices(mediatrOptions)
             .SetupUsers(builder.Configuration, userOwnerConfig)
-            .SetupUnitOfWork()
-            .SetupServerExample<ExampleServerHub>(builder.Configuration, registrationPolicy, serverOptions);
+            .SetupInMemoryServer<ExampleServerHub>(registrationPolicy, serverOptions)
+            .SetupUnitOfWork();
+    }
+
+    private static RegistrationPolicy CreateRegistrationPolicy()
+    {
+        var registrationPolicy = new RegistrationPolicy();
+
+        registrationPolicy.Ignore<IDisposable>();
+        registrationPolicy.AllowMultiple<ApiServerDefinition>();
+
+        return registrationPolicy;
     }
 }

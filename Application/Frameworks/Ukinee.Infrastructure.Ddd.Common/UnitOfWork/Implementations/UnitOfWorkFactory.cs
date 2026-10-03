@@ -1,10 +1,11 @@
 ﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Domain;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 
-public class UnitOfWorkFactory(IMediator mediator) : IUnitOfWorkFactory, IUnitOfWorkProvider
+public class UnitOfWorkFactory(IServiceProvider serviceProvider) : IUnitOfWorkFactory, IUnitOfWorkProvider
 {
     private AmbientUnitOfWork? _current;
 
@@ -71,16 +72,27 @@ public class UnitOfWorkFactory(IMediator mediator) : IUnitOfWorkFactory, IUnitOf
             _current = null;
         }
 
+        //Publish after Current becomes null so it won't be captured by transaction
+
+        var mediator = serviceProvider.GetRequiredService<IMediator>();
+
+        var failures = new List<Exception>();
+
         foreach (var notification in unitOfWork.DeferredNotifications)
         {
             try
             {
                 await mediator.Publish(notification, cancellationToken);
             }
-            catch
-            { /* log */
+            catch (Exception ex)
+            { 
+                // _logger.LogError(ex, "Deferred notification handler failed: {Notification}", n.GetType().Name);
+                failures.Add(ex);
             }
         }
+
+        if (failures.Count > 0)
+            throw new AggregateException("One or more deferred notification handlers failed.", failures);
     }
 
     private async Task Rollback(AmbientUnitOfWork unitOfWork, CancellationToken cancellationToken)

@@ -28,7 +28,7 @@ public static class PayloadHelper
 
             if (serviceType == descriptor.ImplementationType)
             {
-                if (!services.Any(d => d.ServiceType == serviceType))
+                if (services.All(d => d.ServiceType != serviceType))
                     services.Add(descriptor);
 
                 continue;
@@ -42,6 +42,12 @@ public static class PayloadHelper
             }
 
             var existing = services.FirstOrDefault(d => d.ServiceType == serviceType);
+            
+            if (existing?.IsDecorated() == true || descriptor.IsDecorated())
+            {
+                services.Add(descriptor);
+                continue;
+            }
 
             if (existing is not null)
             {

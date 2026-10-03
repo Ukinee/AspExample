@@ -1,9 +1,21 @@
 ﻿using System.Collections.Immutable;
-using Examples.Common.Domain.Models.Identifiers;
 using Ukinee.Common.Identifiers.Attributes;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 
 namespace Ukinee.Users.Domain;
+
+[Identifier(nameof(UserGuid))]
+public readonly partial record struct UserIdentifier
+{
+    public required Guid UserGuid { get; init; }
+
+    public static UserIdentifier New()
+    {
+        return new UserIdentifier() {
+            UserGuid = Guid.NewGuid(),
+        };
+    }
+}
 
 [HasIdentifier(typeof(UserIdentifier))]
 public partial record User : IEntity<UserIdentifier>

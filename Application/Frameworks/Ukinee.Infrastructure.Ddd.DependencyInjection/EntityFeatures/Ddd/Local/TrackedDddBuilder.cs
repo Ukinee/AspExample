@@ -34,7 +34,7 @@ where TIdentifier : struct
         AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition
     )
     {
-        var serviceDescriptors = AuthorizationHelper.GetDescriptors(policyDefinition);
+        var serviceDescriptors = AuthorizationHelperDi.GetDescriptors(policyDefinition);
         _builder.Feature.AccessValidator.AddRange(serviceDescriptors);
 
         return this;
@@ -101,10 +101,10 @@ where TIdentifier : struct
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetCreateUseCase<TCreatePayload, TValidator, TFactory>()
     where TValidator : class, IValidator<IEnumerable<TCreatePayload>>
-    where TFactory : class, IEntityCreateFactory<TCreatePayload, TEntity>
+    where TFactory : class, ICreateEntityFactory<TCreatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Service<IEntityCreateFactory<TCreatePayload, TEntity>, TFactory>(_serviceLifetime),
+            ..PayloadHelper.Service<ICreateEntityFactory<TCreatePayload, TEntity>, TFactory>(_serviceLifetime),
             ..PayloadHelper.Service<IValidator<IEnumerable<TCreatePayload>>, TValidator>(_serviceLifetime),
         ];
 
@@ -119,10 +119,10 @@ where TIdentifier : struct
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddUpdateUseCase<TUpdatePayload, TValidator, TFactory>()
     where TValidator : class, IValidator<IEnumerable<TUpdatePayload>>
-    where TFactory : class, IEntityUpdateFactory<TUpdatePayload, TEntity>
+    where TFactory : class, IUpdateEntityFactory<TUpdatePayload, TEntity>
     {
         IEnumerable<ServiceDescriptor> extensions = [
-            ..PayloadHelper.Service<IEntityUpdateFactory<TUpdatePayload, TEntity>, TFactory>(_serviceLifetime),
+            ..PayloadHelper.Service<IUpdateEntityFactory<TUpdatePayload, TEntity>, TFactory>(_serviceLifetime),
             ..PayloadHelper.Service<IValidator<IEnumerable<TUpdatePayload>>, TValidator>(_serviceLifetime),
         ];
 

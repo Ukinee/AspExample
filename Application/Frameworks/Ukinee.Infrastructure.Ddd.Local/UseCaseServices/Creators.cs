@@ -77,7 +77,7 @@ where TEntity : class, IEntity<TIdentifier>
         foreach (var payload in payloads)
             result.Add(await CreateInternal(userContext, payload, cancellationToken));
 
-        accessProvider.EnsureAccess(userContext, result);
+        await accessProvider.EnsureAccess(userContext, result);
 
         await repository.AddRange(result, cancellationToken);
         await publisher.PublishCreatedEvent<TIdentifier, TEntity>(userContext, result, cancellationToken);
@@ -89,7 +89,7 @@ where TEntity : class, IEntity<TIdentifier>
 }
 
 public class FactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>(
-    IEntityCreateFactory<TCreatePayload, TEntity> factory,
+    ICreateEntityFactory<TCreatePayload, TEntity> factory,
     IValidator<IEnumerable<TCreatePayload>> validationService,
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityCreateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,

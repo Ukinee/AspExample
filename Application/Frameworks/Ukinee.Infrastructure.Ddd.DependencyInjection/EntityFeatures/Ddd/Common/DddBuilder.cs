@@ -60,7 +60,7 @@ where TIdentifier : struct
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IEntityCreator<TEntity, TPayload>, TransactionThrowingEntityCreator<TEntity, TPayload>>(Feature.EntityCreator);
+            ServiceDescriptorDecorators.Decorate<IEntityCreator<TEntity, TPayload>, TransactionThrowingEntityCreatorDecorator<TEntity, TPayload>>(Feature.EntityCreator);
         }
         else
         {
@@ -90,7 +90,7 @@ where TIdentifier : struct
         if (throwOnTransaction)
         {
             ServiceDescriptorDecorators
-                .Decorate<IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TransactionThrowingEntityUpdater<TIdentifier, TEntity, TUpdatePayload>>(
+                .Decorate<IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TransactionThrowingEntityUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
                     Feature.PayloadEntityUpdaters
                 );
         }
@@ -123,25 +123,25 @@ where TIdentifier : struct
         ServiceLifetime serviceLifetime,
         bool throwOnTransaction
     )
-    where TImplementation : class, IDeltaEntityUpdater<TEntity>
-    where TUseCase : class, IDeltaUpdateEntityUseCase<TEntity>
+    where TImplementation : class, IDeltaEntityUpdater<TIdentifier, TEntity>
+    where TUseCase : class, IDeltaUpdateEntityUseCase<TIdentifier, TEntity>
     {
         Feature.DeltaEntityUpdater.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Service<IDeltaUpdateEntityUseCase<TEntity>, TUseCase>(serviceLifetime),
-            ..PayloadHelper.Service<IDeltaEntityUpdater<TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IDeltaUpdateEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IDeltaEntityUpdater<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.DeltaEntityUpdater.AddRange(descriptors);
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IDeltaEntityUpdater<TEntity>, TransactionThrowingDeltaEntityUpdater<TEntity>>(Feature.DeltaEntityUpdater);
+            ServiceDescriptorDecorators.Decorate<IDeltaEntityUpdater<TIdentifier, TEntity>, TransactionThrowingDeltaEntityUpdaterDecorator<TIdentifier, TEntity>>(Feature.DeltaEntityUpdater);
         }
         else
         {
-            ServiceDescriptorDecorators.Decorate<IDeltaUpdateEntityUseCase<TEntity>, TransactionDeltaUpdateEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
+            ServiceDescriptorDecorators.Decorate<IDeltaUpdateEntityUseCase<TIdentifier, TEntity>, TransactionDeltaUpdateEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
                 Feature.DeltaEntityUpdater
             );
         }
@@ -151,12 +151,13 @@ where TIdentifier : struct
 
     internal DddBuilder<TTag, TIdentifier, TEntity> SetEntityRemover<TImplementation, TUseCase>(ServiceLifetime serviceLifetime, bool throwOnTransaction)
     where TImplementation : class, IEntityRemover<TIdentifier, TEntity>
-    where TUseCase : class, IRemoveEntityUseCase<TEntity>
+    where TUseCase : class, IRemoveEntityUseCase<TIdentifier, TEntity>
     {
         Feature.EntityRemover.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IRemoveEntityUseCase<TEntity>, TUseCase>(serviceLifetime),
+            ..PayloadHelper.Service<IRemoveEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
             ..PayloadHelper.Service<IEntityRemover<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
@@ -164,7 +165,7 @@ where TIdentifier : struct
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemover<TIdentifier, TEntity>>(Feature.EntityRemover);
+            ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemoverDecorator<TIdentifier, TEntity>>(Feature.EntityRemover);
         }
         else
         {
@@ -241,7 +242,7 @@ where TIdentifier : struct
         if (throwOnTransaction)
         {
             ServiceDescriptorDecorators.Decorate<IEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>,
-                TransactionThrowingEntityEnsureExistsCreator<TIdentifier, TEntity, TCreatePayload>>(Feature.GetOrCreate);
+                TransactionThrowingEntityEnsureExistsCreatorDecorator<TIdentifier, TEntity, TCreatePayload>>(Feature.GetOrCreate);
         }
         else
         {

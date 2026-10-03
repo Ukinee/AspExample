@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+    <ProjectReference Include="$(SourceGeneratorsPath)Ukinee.Common.Identifiers.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+      <ProjectReference Include="..\Ukinee.Common.Identifiers\Ukinee.Common.Identifiers.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Common\Ukinee.Infrastructure.Ddd.Common.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.External.Api.Domain\Ukinee.Infrastructure.Ddd.External.Api.Domain.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Local\Ukinee.Infrastructure.Ddd.Local.csproj" />
+      <ProjectReference Include="..\Ukinee.Infrastructure.SignalR.Server\Ukinee.Infrastructure.SignalR.Server.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" Version="12.1.1" />
+    </ItemGroup>
+
+</Project>

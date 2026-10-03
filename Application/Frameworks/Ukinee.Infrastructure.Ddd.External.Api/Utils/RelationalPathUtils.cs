@@ -9,6 +9,12 @@ public static class EndpointsNames
     {
         return $"Update{typeof(TEntity).Name}Using{typeof(TPayload).Name}";
     }
+    
+    public static string UpdateMany<TEntity, TPayload>()
+    where TEntity : IEntity
+    {
+        return $"UpdateMany{typeof(TEntity).Name}Using{typeof(TPayload).Name}";
+    }
 }
 
 public static class RelationalPathUtils

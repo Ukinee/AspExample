@@ -15,13 +15,13 @@ public sealed class TrackedDeltaEntityUpdater<TIdentifier, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : IDeltaEntityUpdater<TEntity>
+) : IDeltaEntityUpdater<TIdentifier, TEntity>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
     public async Task<TEntity> Update(
         UserContext userContext,
-        TEntity entity,
+        TIdentifier identifier,
         Func<TEntity, TEntity> updateFactory,
         CancellationToken cancellationToken
     )
@@ -29,14 +29,14 @@ where TEntity : class, IEntity<TIdentifier>
         var filter = await accessProvider.GetUpdateExpression(userContext);
 
         var result = await repository.UpdateByIdAsync(
-            entity.Identifier,
+            identifier,
             filter,
             updateFactory,
             cancellationToken
         );
 
         if (result is null)
-            throw new EntityNotFoundException<TIdentifier, TEntity>(entity.Identifier);
+            throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
 
         await publisher.PublishUpdatedEvent<TIdentifier, TEntity>(userContext, [result], cancellationToken);
 
@@ -47,7 +47,7 @@ where TEntity : class, IEntity<TIdentifier>
 public class TrackedPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IValidator<IEnumerable<TUpdatePayload>> validationService,
-    IEntityUpdateFactory<TUpdatePayload, TEntity> updateFactory,
+    IUpdateEntityFactory<TUpdatePayload, TEntity> factory,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
 ) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
@@ -68,7 +68,7 @@ where TEntity : class, IEntity<TIdentifier>
         var result = await repository.UpdateByIdAsync(
             identifier,
             filter,
-            old => updateFactory.Update(userContext, old, payload),
+            old => factory.Update(userContext, old, payload),
             cancellationToken
         );
 
@@ -99,7 +99,7 @@ where TEntity : class, IEntity<TIdentifier>
         var results = await repository.UpdateManyByIdAsync(
             identifiers,
             filter,
-            (id, old) => updateFactory.Update(userContext, old, payloadById[id]),
+            (id, old) => factory.Update(userContext, old, payloadById[id]),
             cancellationToken
         );
 

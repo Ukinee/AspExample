@@ -82,20 +82,6 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
 
         private static void GenerateCode(SourceProductionContext context, EntityInfo info)
         {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        "GEN001",
-                        "Debug",
-                        "Initialize called!",
-                        "Debug",
-                        DiagnosticSeverity.Warning,
-                        true
-                    ),
-                    Location.None
-                )
-            );
-
             if (!info.IsValid)
             {
                 context.ReportDiagnostic(Diagnostic.Create(info.ErrorDescriptor, info.Location, info.ErrorArgs));

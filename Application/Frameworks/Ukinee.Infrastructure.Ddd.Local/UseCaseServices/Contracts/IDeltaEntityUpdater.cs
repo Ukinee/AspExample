@@ -5,8 +5,8 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
 
-public interface IDeltaEntityUpdater<TEntity>
-where TEntity : class, IEntity
+public interface IDeltaEntityUpdater<in TIdentifier, TEntity>
+where TEntity : class, IEntity<TIdentifier>
 {
-    public Task<TEntity> Update(UserContext userContext, TEntity entity,  Func<TEntity, TEntity> updateFactory, CancellationToken cancellationToken);
+    public Task<TEntity> Update(UserContext userContext, TIdentifier identifier,  Func<TEntity, TEntity> updateFactory, CancellationToken cancellationToken);
 }

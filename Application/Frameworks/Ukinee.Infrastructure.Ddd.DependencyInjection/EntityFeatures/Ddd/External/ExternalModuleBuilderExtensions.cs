@@ -1,31 +1,26 @@
 ﻿using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
-using Ukinee.Infrastructure.Ddd.External.Api.Domain;
 
-namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External
+namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External;
+
+public class ExternalModuleDefinitionBuilder<TTag>(ModuleBuilder<TTag> builder)
 {
-    public class ExternalModuleDefinitionBuilder<TTag>(ModuleBuilder<TTag> builder)
+    public ModuleBuilder<TTag> AddRemoteContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity>> factory)
     {
-        public ModuleBuilder<TTag> AddRemoteContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity>> factory)
-        {
-            var definition = new ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> {
-                Features = [],
-            };
+        var definition = new ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> {
+            Features = [],
+        };
 
-            factory.Invoke(definition);
-            builder.Definition.Contents.Add(definition);
+        factory.Invoke(definition);
+        builder.Definition.Contents.Add(definition);
 
-            return builder;
-        }
-    }
-
-    public static class ExternalModuleBuilderExtensions
-    {
-        extension<TTag>(ModuleBuilder<TTag> builder)
-        {
-            public ExternalModuleDefinitionBuilder<TTag> ApiClientContexts => new ExternalModuleDefinitionBuilder<TTag>(builder);
-        }
+        return builder;
     }
 }
 
-namespace Ukinee.Infrastructure.Ddd.DependencyInjection.Core
-{ }
+public static class ExternalModuleBuilderExtensions
+{
+    extension<TTag>(ModuleBuilder<TTag> builder)
+    {
+        public ExternalModuleDefinitionBuilder<TTag> ApiClientContexts => new ExternalModuleDefinitionBuilder<TTag>(builder);
+    }
+}
