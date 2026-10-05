@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.External.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Exceptions;
@@ -51,13 +52,8 @@ where TEntity : class, IEntity<TIdentifier>
         var result = await FindManyByIdAsync(userContext, identifiers, cancellationToken)
             .ToDictionaryAsync(x => x.Identifier, cancellationToken: cancellationToken);
 
-        if (result.Count != identifiers.Count)
-        {
-            var missing = identifiers.Except(result.Keys);
-
-            throw new EntityNotFoundOrDeniedException<TIdentifier, TEntity>(missing, [], userContext);
-        }
-
+        EntityNotFoundException.ThrowIfAnyMissing<TIdentifier, TEntity>(identifiers, result.Keys);
+        
         return result;
     }
 

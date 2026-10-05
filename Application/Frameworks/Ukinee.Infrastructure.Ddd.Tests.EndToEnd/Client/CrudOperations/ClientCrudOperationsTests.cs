@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Users;
@@ -34,7 +35,7 @@ public class ClientCrudOperationsTests : ClientTestBase
     }
 
     [Test]
-    public async Task UpdateUseCase_LoggedIn_ShouldEntityOnBacked()
+    public async Task UpdateUseCase_LoggedIn_ShouldUpdateEntityOnBacked()
     {
         var createUseCase = GetService<ICreateEntityUseCase<Announcement, CreateAnnouncementRequest>>();
         var updateUseCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementRequest>>();
@@ -60,6 +61,38 @@ public class ClientCrudOperationsTests : ClientTestBase
             Assert.That(createResult, Is.EqualTo(getResult1));
             Assert.That(createResult, Is.Not.SameAs(getResult1));
             Assert.That(getResult1, Is.Not.SameAs(getResult2), "Updates must invalidate or change cached entities");
+            Assert.That(updateResult.Contents, Is.EqualTo(updateRequest.Contents));
+        }
+    }
+
+    [Test]
+    public async Task UpdateUseCase_LoggedIn_NotOwner_ShouldFailWithNotFound()
+    {
+        var createUseCase = GetService<ICreateEntityUseCase<Announcement, CreateAnnouncementRequest>>();
+        var updateUseCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementRequest>>();
+        var getUseCase = GetService<IGetEntityUseCase<AnnouncementIdentifier, Announcement>>();
+
+        var createRequest = ExampleAnnouncementFactory.CreateRequest1;
+        var updateRequest = ExampleAnnouncementFactory.UpdateRequest1;
+        var actor1 = ExampleUserFactory.User1;
+        var actor2 = ExampleUserFactory.User2;
+
+        await EnsureToken(actor1);
+        await EnsureToken(actor2);
+
+        var createResult = await createUseCase.Execute(actor1, createRequest, CancellationToken.None);
+        var getResult1 = await getUseCase.Execute(actor1, createResult.Identifier, CancellationToken.None);
+        var updateResult1 = await updateUseCase.Execute(actor1, createResult.Identifier, updateRequest, CancellationToken.None);
+
+        var getResult2 = await getUseCase.Execute(actor2, createResult.Identifier, CancellationToken.None);
+        var updateResult2 =  updateUseCase.Execute(actor2, createResult.Identifier, updateRequest, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(createResult, Is.EqualTo(getResult1));
+            Assert.That(createResult, Is.Not.EqualTo(updateResult1));
+            Assert.That(updateResult1, Is.EqualTo(getResult2));
+            Assert.ThrowsAsync<EntityNotFoundException<AnnouncementIdentifier, Announcement>>(() => updateResult2);
         }
     }
 }

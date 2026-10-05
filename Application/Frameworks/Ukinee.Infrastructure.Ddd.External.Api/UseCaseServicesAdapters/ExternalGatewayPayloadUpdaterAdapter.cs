@@ -1,4 +1,5 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 using Ukinee.Infrastructure.Ddd.External.Contracts;
@@ -18,13 +19,24 @@ where TEntity : class, IEntity<TIdentifier>
     {
         var response = await externalGatewayUpdater.UpdateAsync(userContext, id, payload, cancellationToken);
 
+        if (response == null)
+            throw new EntityNotFoundException<TIdentifier, TEntity>(id);
+
         return await mapService.Map(response);
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> UpdateAsync(UserContext userContext, IReadOnlyCollection<UpdateEntityRequest<TIdentifier, TUpdatePayload>> payloads, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TEntity>> UpdateAsync(
+        UserContext userContext,
+        IReadOnlyCollection<UpdateEntityRequest<TIdentifier, TUpdatePayload>> payloads,
+        CancellationToken cancellationToken
+    )
     {
         var response = await externalGatewayUpdater.UpdateAsync(userContext, payloads, cancellationToken);
 
-        return await mapService.Map(response);
+        var result = await mapService.Map(response);
+
+        EntityNotFoundException.ThrowIfAnyMissing(payloads, result);
+
+        return result;
     }
 }

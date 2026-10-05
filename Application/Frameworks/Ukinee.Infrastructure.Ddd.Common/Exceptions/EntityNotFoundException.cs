@@ -3,13 +3,10 @@ using Ukinee.Infrastructure.Ddd.Common.Entities;
 
 namespace Ukinee.Infrastructure.Ddd.Common.Exceptions;
 
-public abstract class EntityNotFoundExceptionBase : Exception
+public abstract class EntityNotFoundException : Exception
 {
-    protected EntityNotFoundExceptionBase(string message) : base(message) { }
-}
+    protected EntityNotFoundException(string message) : base(message) { }
 
-public static class EntityNotFoundException
-{
     public static void ThrowIfAnyMissing<TIdentifier, TEntity>(IReadOnlyCollection<TIdentifier> sourceIds, IReadOnlyCollection<TIdentifier> resultIds)
     where TEntity : IEntity<TIdentifier>
     {
@@ -17,6 +14,21 @@ public static class EntityNotFoundException
         {
             Throw<TIdentifier, TEntity>(sourceIds, resultIds);
         }
+    }
+
+    public static void ThrowIfAnyMissing<TIdentifier, TEntity, TUpdatePayload>(
+        IReadOnlyCollection<UpdateEntityRequest<TIdentifier, TUpdatePayload>> payloads,
+        IReadOnlyCollection<TEntity> resultEntities
+    )
+    where TEntity : IEntity<TIdentifier>
+    {
+        if (resultEntities.Count == payloads.Count)
+            return;
+
+        var sourceIdentifiers = payloads.Select(p => p.Identifier);
+        var resultIdentifiers = resultEntities.Select(r => r.Identifier);
+
+        Throw<TIdentifier, TEntity>(sourceIdentifiers, resultIdentifiers);
     }
 
     public static void ThrowIfAnyMissing<TIdentifier, TEntity>(IReadOnlyCollection<TIdentifier> sourceIds, IReadOnlyCollection<TEntity> resultEntities)
@@ -47,7 +59,7 @@ public static class EntityNotFoundException
     }
 }
 
-public class EntityNotFoundException<TIdentifier, TEntity> : EntityNotFoundExceptionBase
+public class EntityNotFoundException<TIdentifier, TEntity> : EntityNotFoundException
 where TEntity : IEntity<TIdentifier>
 {
     public EntityNotFoundException()

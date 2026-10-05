@@ -16,7 +16,7 @@ where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 where TParams : IRouteParams<TParams, TIdentifier>
 {
-    public async Task<TResponse> UpdateAsync(
+    public async Task<TResponse?> UpdateAsync(
         UserContext userContext,
         TIdentifier identifier,
         TPayload updatePayload,
@@ -27,7 +27,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
         var requestUri = RelationalPathUtils.Update<TEntity, TPayload>(idParams.Path);
         using var request = CreateJsonRequest(userContext, HttpMethod.Put, requestUri, updatePayload);
 
-        return await ReadJsonAsync<TResponse>(request, false, cancellationToken) ?? throw new InvalidOperationException("No response returned.");
+        return await ReadJsonAsync<TResponse>(request, true, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<TResponse>> UpdateAsync(
@@ -39,6 +39,6 @@ where TParams : IRouteParams<TParams, TIdentifier>
         var requestUri = RelationalPathUtils.UpdateMany<TEntity, TPayload>();
         using var request = CreateJsonRequest(userContext, HttpMethod.Put, requestUri, payloads);
 
-        return await ReadJsonAsync<List<TResponse>>(request, false, cancellationToken) ?? throw new InvalidOperationException("No response returned.");
+        return await ReadJsonAsync<List<TResponse>>(request, false, cancellationToken) ?? throw new InvalidOperationException("No response returned");
     }
 }

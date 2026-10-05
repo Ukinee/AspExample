@@ -70,6 +70,8 @@ where TParams : IRouteParams<TParams, TIdentifier>
             throw new NotImplementedException($"{nameof(CachingVariant)}.{CachingVariant.UpdateUpserts} not implemented due to lack of entity versioning");
         }
 
+        _cachingVariant = cachingVariant;
+
         List<ServiceDescriptor> descriptors = [
             ServiceDescriptor.Singleton<IEntityCache<TIdentifier, TEntity>>(sc => sc.GetRequiredService<EntityCache<TIdentifier, TEntity>>()),
             ServiceDescriptor.Singleton<EntityCache<TIdentifier, TEntity>, EntityCache<TIdentifier, TEntity>>(),

@@ -17,7 +17,7 @@ where TIdentifier : notnull
 public interface IExternalGatewayUpdater<TIdentifier, TUpdatePayload, TResponse>
 where TIdentifier : notnull
 {
-    public Task<TResponse> UpdateAsync(UserContext userContext, TIdentifier identifier, TUpdatePayload updatePayload, CancellationToken cancellationToken);
+    public Task<TResponse?> UpdateAsync(UserContext userContext, TIdentifier identifier, TUpdatePayload updatePayload, CancellationToken cancellationToken);
 
     public Task<IReadOnlyCollection<TResponse>> UpdateAsync(
         UserContext userContext,

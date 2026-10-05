@@ -2,6 +2,7 @@ using Scalar.AspNetCore;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.Services;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Extensions.ServiceCollectionExtensions;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Extensions;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Services;
@@ -44,6 +45,8 @@ public static class Program
             .SetupLogging()
             .SetupDevelopmentMiddlewares()
             .SetupRouting();
+
+        builder.Services.AddExceptionHandler<DddExceptionsHandler>();
     }
 
     private static void ConfigureApp(WebApplication app)
@@ -64,6 +67,8 @@ public static class Program
                 }
             );
         }
+        
+        app.UseExceptionHandler(); 
 
         app.UseHttpsRedirection();
         app.UseCors();

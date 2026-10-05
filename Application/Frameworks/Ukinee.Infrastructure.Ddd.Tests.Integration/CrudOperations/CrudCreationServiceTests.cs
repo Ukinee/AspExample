@@ -11,7 +11,6 @@ using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Exceptions;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Tests.Common.Utils;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;
 using Ukinee.Infrastructure.Ddd.Tests.Domain;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
@@ -111,7 +110,7 @@ public class CrudCreationServiceTests : TestBase
             Assert.That(foundResult12, Is.SameAs(creationResultAdmin));
             Assert.That(foundResultGuest, Is.SameAs(creationResultAdmin));
 
-            Assert.ThrowsAsync<EntityAccessDeniedException<AnnouncementIdentifier, Announcement>>(() => creationResultGuest);
+            Assert.ThrowsAsync<EntityCreationAccessDeniedException<AnnouncementIdentifier, Announcement>>(() => creationResultGuest);
         }
     }
 
@@ -138,8 +137,8 @@ public class CrudCreationServiceTests : TestBase
         {
             Assert.That(foundResultAdmin, Is.SameAs(creationResultAdmin));
 
-            Assert.ThrowsAsync<EntityAccessDeniedException<BorderIdentifier, Border>>(() => creationResultGuest);
-            Assert.ThrowsAsync<EntityAccessDeniedException<BorderIdentifier, Border>>(() => creationResult1);
+            Assert.ThrowsAsync<EntityCreationAccessDeniedException<BorderIdentifier, Border>>(() => creationResultGuest);
+            Assert.ThrowsAsync<EntityCreationAccessDeniedException<BorderIdentifier, Border>>(() => creationResult1);
 
             Assert.ThrowsAsync<EntityNotFoundException<BorderIdentifier, Border>>(() => foundResult1);
             Assert.ThrowsAsync<EntityNotFoundException<BorderIdentifier, Border>>(() => foundResultGuest);
@@ -169,8 +168,8 @@ public class CrudCreationServiceTests : TestBase
         {
             Assert.That(foundResult2, Is.SameAs(creationResult2));
 
-            Assert.ThrowsAsync<EntityAccessDeniedException<CookieIdentifier, Cookie>>(() => creationResultAdmin);
-            Assert.ThrowsAsync<EntityAccessDeniedException<CookieIdentifier, Cookie>>(() => creationResultGuest);
+            Assert.ThrowsAsync<EntityCreationAccessDeniedException<CookieIdentifier, Cookie>>(() => creationResultAdmin);
+            Assert.ThrowsAsync<EntityCreationAccessDeniedException<CookieIdentifier, Cookie>>(() => creationResultGuest);
 
             Assert.ThrowsAsync<EntityNotFoundException<CookieIdentifier, Cookie>>(() => foundResultAdmin);
             Assert.ThrowsAsync<EntityNotFoundException<CookieIdentifier, Cookie>>(() => foundResultGuest);
