@@ -22,7 +22,7 @@ public static class EventBusExtensions
             return bus.Publish(DomainEvent.Removed<TIdentifier, TEntity>(userContext, identifiers), cancellation);
         }
 
-        public Task PublishUpdatedEvent<TIdentifier, TEntity>(UserContext userContext, TEntity current, TEntity? previous, CancellationToken cancellation)
+        public Task PublishUpdatedEvent<TIdentifier, TEntity>(UserContext userContext, TEntity current, TEntity previous, CancellationToken cancellation)
         where TEntity : IEntity<TIdentifier>
         {
             return bus.Publish(DomainEvent.Updated<TIdentifier, TEntity>(userContext, current, previous), cancellation);

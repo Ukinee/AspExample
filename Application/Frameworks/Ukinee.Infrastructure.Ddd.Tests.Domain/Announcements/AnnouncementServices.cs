@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
+using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Services;
 using Ukinee.Users.Common.ValueObjects;
@@ -25,9 +26,36 @@ public class AnnouncementFactory : ICreateEntityFactory<CreateAnnouncementReques
     }
 }
 
+public class AnnouncementMapService : IMapService<AnnouncementResponse, Announcement>
+{
+    public ValueTask<Announcement> Map(AnnouncementResponse externalEntity)
+    {
+        return ValueTask.FromResult(
+            new Announcement {
+                Identifier = externalEntity.Identifier,
+                IsAvailableForPublicRead = externalEntity.IsAvailableForPublicRead,
+                Contents = externalEntity.Contents,
+            }
+        );
+    }
+
+    public async ValueTask<IReadOnlyCollection<Announcement>> Map(IReadOnlyCollection<AnnouncementResponse> externalEntities)
+    {
+        var result = new List<Announcement>(externalEntities.Count);
+
+        foreach (var externalEntity in externalEntities)
+        {
+            var entity = await Map(externalEntity);
+
+            result.Add(entity);
+        }
+
+        return result;
+    }
+}
+
 public class CreateAnnouncementRequestValidator : AbstractValidator<IEnumerable<CreateAnnouncementRequest>> { }
 public class UpdateAnnouncementRequestValidator : AbstractValidator<IEnumerable<UpdateAnnouncementRequest>> { }
-
 public class AnnouncementSignalRRouteResolver : RouteResolverBase<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>;
 
 public class AnnouncementSignalRAccessValidator : ISignalRAccessValidator<AnnouncementSignalRRequest>

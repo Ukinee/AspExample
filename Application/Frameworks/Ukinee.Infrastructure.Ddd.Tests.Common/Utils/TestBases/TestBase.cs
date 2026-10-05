@@ -1,16 +1,19 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;
 
 public abstract class TestBase
 {
     protected ServiceProvider Provider = null!;
+    protected ConfigurationManager Configuration = null!;
     protected IServiceCollection Services = null!;
 
     [SetUp]
     public virtual void Setup()
     {
         Services = new ServiceCollection();
+        Configuration = new ConfigurationManager();
 
         ConfigureTestServices(Services);
 
@@ -20,6 +23,7 @@ public abstract class TestBase
     [TearDown]
     public void TearDown()
     {
+        Configuration.Dispose();
         Provider.Dispose();
     }
 

@@ -3,6 +3,7 @@ using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.SignalRClient;
+using Ukinee.Infrastructure.Ddd.External.Api.Services;
 using Ukinee.Infrastructure.Ddd.Tests.Domain;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
@@ -21,6 +22,8 @@ public static class SetupClientExtensions
     {
         public IServiceCollection SetupClient<THub>(ClientConfig clientConfig, RegistrationPolicy registrationPolicy)
         {
+            serviceCollection.AddTransient<UserTokenCredentialsHttpInterceptor>();
+            
             serviceCollection
                 .RegisterModule<TestingTag>()
                 .ApiDatasource.Register(httpClientBuilder =>
@@ -32,12 +35,13 @@ public static class SetupClientExtensions
                                 client.BaseAddress = new Uri(clientConfig.ServerBaseAddress);
                             }
                         )
+                        .AddHttpMessageHandler<UserTokenCredentialsHttpInterceptor>()
                         .AddDefaultLogger()
                         .SetHandlerLifetime(TimeSpan.FromMinutes(3));
                 })
                 .ApiClientContexts.AddRemoteContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                     .Ddd.Register<AnnouncementIdentifierParams, AnnouncementResponse>(dddConfigurator => dddConfigurator
-                        .WithMapsterResponseToEntityMap()
+                        .WithMapper<AnnouncementMapService>()
                         .SetCreateUseCase<CreateAnnouncementRequest>()
                         .AddUpdateUseCase<UpdateAnnouncementRequest>()
                         .AddLocalCache()

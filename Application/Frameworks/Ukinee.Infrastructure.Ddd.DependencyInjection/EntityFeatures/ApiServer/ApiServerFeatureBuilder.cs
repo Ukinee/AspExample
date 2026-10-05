@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
@@ -330,6 +331,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         async (
                             [FromBody] IReadOnlyCollection<TCreatePayload> requests,
                             [FromServices] ICreateEntityUseCase<TEntity, TCreatePayload> useCase,
+                            [FromServices] ILogger<ICreateEntityUseCase<TEntity, TCreatePayload>> logger,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
@@ -337,6 +339,8 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
 
+                            logger.LogInformation("Creating {TEntityName} with user context {UserContext}", typeof(TEntity).Name, userContext);
+                            
                             var entity = await useCase.Execute(userContext, requests, ct);
                             var result = mapper.Map<List<TResponse>>(entity);
 

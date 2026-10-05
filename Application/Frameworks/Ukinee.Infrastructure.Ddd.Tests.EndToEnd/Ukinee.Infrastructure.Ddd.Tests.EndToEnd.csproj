@@ -25,6 +25,7 @@
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.DependencyInjection\Ukinee.Infrastructure.Ddd.DependencyInjection.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Tests.Common\Ukinee.Infrastructure.Ddd.Tests.Common.csproj" />
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Tests.Domain\Ukinee.Infrastructure.Ddd.Tests.Domain.csproj" />
+      <ProjectReference Include="..\Ukinee.Users.Startup\Ukinee.Users.Startup.csproj" />
     </ItemGroup>
 
 </Project>

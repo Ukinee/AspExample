@@ -18,7 +18,7 @@ public static class SetupMediatRExtension
         serviceCollection.AddMediatR(builder =>
             {
                 builder.TypeEvaluator = type => false;
-                builder.Lifetime = ServiceLifetime.Singleton;
+                builder.Lifetime = ServiceLifetime.Scoped;
                 builder.RegisterGenericHandlers = false;
                 builder.NotificationPublisher = new TaskWhenAllPublisher();
                 builder.AutoRegisterRequestProcessors = false;

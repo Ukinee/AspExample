@@ -102,8 +102,8 @@ public static class SetupServerServices
                         cookiePolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
-                            .RegisterCrd<CreateBorderRequest>()
-                            .RegisterUpdate<UpdateBorderRequest>()
+                            .RegisterCrd<CreateCookieRequest>()
+                            .RegisterUpdate<UpdateCookieRequest>()
                     )
                     .SignalRServer.Register<THub, CookieSignalRRequest, CookieResponse>(signalRConfigurator => signalRConfigurator
                         .SetGroupResolver<CookieSignalRRouteResolver>()

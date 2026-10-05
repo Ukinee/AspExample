@@ -20,6 +20,7 @@ public static class SetupCommon
         SetupMapster(serviceCollection);
 
         serviceCollection.SetupJson();
+        serviceCollection.SetupUnitOfWork();
         serviceCollection.SetupMediatR(config);
 
         return serviceCollection;

@@ -33,13 +33,13 @@ where TEntity : class, IEntity<TIdentifier>
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
-        var serviceLifetime = ServiceLifetime.Singleton;
+        var serviceLifetime = ServiceLifetime.Scoped;
         var throwOnTransaction = true;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
 
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
@@ -64,13 +64,13 @@ where TEntity : class, IEntity<TIdentifier>
     where TWeight : ISynchronizationOrderByPriority, allows ref struct
     where TDataSource : class, ISynchronizationDataSource<TEntity>
     {
-        var serviceLifetime = ServiceLifetime.Singleton;
+        var serviceLifetime = ServiceLifetime.Scoped;
         var throwOnTransaction = true;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
-        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
