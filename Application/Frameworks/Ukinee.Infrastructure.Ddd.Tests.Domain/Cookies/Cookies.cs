@@ -6,7 +6,7 @@ using Ukinee.Users.Common.ValueObjects;
 namespace Ukinee.Infrastructure.Ddd.Tests.Domain.Cookies;
 
 [Identifier(nameof(UserGuid), nameof(Hash))]
-[RouteParamsIdentifier(nameof(UserGuid))]
+[RouteParamsIdentifier]
 public readonly partial record struct CookieIdentifier
 {
     public required string Hash { get; init; }

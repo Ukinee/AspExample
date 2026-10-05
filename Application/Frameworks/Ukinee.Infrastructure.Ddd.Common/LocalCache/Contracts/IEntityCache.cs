@@ -24,10 +24,10 @@ where TIdentifier : struct
     CacheLookupResult<TEntity> Lookup(TIdentifier id);
 
     void Upsert(TEntity entity);
-    void Upsert(IReadOnlyCollection<TEntity> entities);
+    void Upsert(IEnumerable<TEntity> entities);
 
     void MarkNotExists(TIdentifier id);
-    void MarkNotExists(IReadOnlyCollection<TIdentifier> ids);
+    void MarkNotExists(IEnumerable<TIdentifier> ids);
 
     void Invalidate(TIdentifier id);
     void Invalidate(IEnumerable<TIdentifier> ids);

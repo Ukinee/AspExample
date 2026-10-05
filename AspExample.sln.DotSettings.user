@@ -73,7 +73,7 @@
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ecc2d6d4_002Dc010_002D44e6_002Dbb56_002Dc18853e03cd9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateUseCase_LoggedIn_ShouldCreateAvailableToGetEntityOnBacked" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientCrudOperationsTests.CreateUseCase_LoggedIn_ShouldCreateAvailableToGetEntityOnBacked&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientCrudOperationsTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

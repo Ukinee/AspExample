@@ -29,12 +29,12 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
             var structInfos = context
                 .SyntaxProvider
                 .CreateSyntaxProvider(
-                    predicate:  (node, _) => GeneratorUtilities.IsStructSyntax(node),
-                    transform:  (ctx, _) => GetStructInfo(ctx)
+                    predicate: (node, _) => GeneratorUtilities.IsStructSyntax(node),
+                    transform: (ctx, _) => GetStructInfo(ctx)
                 )
-                .Where( info => info != null);
+                .Where(info => info != null);
 
-            context.RegisterSourceOutput(structInfos,  GenerateCode);
+            context.RegisterSourceOutput(structInfos, GenerateCode);
         }
 
         private static RouteStructInfo GetStructInfo(GeneratorSyntaxContext context)
@@ -73,6 +73,7 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
                 Namespace = typeSymbol.ContainingNamespace?.ToString() ?? "Global",
                 OriginalTypeName = typeSymbol.Name,
                 Properties = routeProperties,
+                ExcludedNames = excludedNames,
                 IsRecord = typeDecl.IsKind(SyntaxKind.RecordStructDeclaration)
             };
         }
@@ -121,7 +122,11 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
 
             sb.AppendLine($"namespace {info.Namespace}");
             sb.AppendLine("{");
-            sb.AppendLine($"    public readonly partial record struct {paramsTypeName} : Ukinee.Infrastructure.Ddd.External.Api.Domain.IRouteParams<{paramsTypeName}, {info.OriginalTypeName}>");
+
+            sb.AppendLine(
+                $"    public readonly partial record struct {paramsTypeName} : Ukinee.Infrastructure.Ddd.External.Api.Domain.IRouteParams<{paramsTypeName}, {info.OriginalTypeName}>"
+            );
+
             sb.AppendLine("    {");
 
             foreach (var prop in info.Properties)
@@ -154,6 +159,19 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
             var templatePath = string.Join("/", info.Properties.Select(p => string.IsNullOrEmpty(p.Constraint) ? $"{{{p.Name}}}" : $"{{{p.Name}:{p.Constraint}}}"));
 
             sb.AppendLine($"        public static string RouteTemplate => \"{templatePath}\";");
+
+            if (info.ExcludedNames.IsEmpty)
+            {
+                sb.AppendLine();
+
+                var initParams = info.Properties.Select(p => $"{p.Name} = {p.Name}");
+                var initString = string.Join(", ", initParams);
+
+                sb.AppendLine($"        public {info.OriginalTypeName} ToIdentifier() {{");
+                sb.AppendLine($"            return new {info.OriginalTypeName}() {{ {initString} }};");
+                sb.AppendLine("        }");
+            }
+
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
@@ -168,6 +186,7 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
             public ImmutableList<PropertyInfo> Properties { get; set; } = ImmutableList<PropertyInfo>.Empty;
             public bool IsRecord { get; set; }
             public Diagnostic Error { get; set; }
+            public ImmutableHashSet<string> ExcludedNames { get; set; }
         }
 
         private class PropertyInfo

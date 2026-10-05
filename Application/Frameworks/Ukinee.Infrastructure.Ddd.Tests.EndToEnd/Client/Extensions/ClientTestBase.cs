@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
+using Ukinee.Infrastructure.Ddd.Common.LocalCache.Options;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.External.Contracts;
@@ -24,9 +25,11 @@ public abstract class ClientTestBase : TestBase
 
     protected readonly ClientConfig Config = new ClientConfig {
         ServerBaseAddress = $"https://localhost:{ServerInMemoryConfig.Port}/api/v1/",
+        CacheOptionsSectionName = nameof(CachingOptions),
+        CacheOptionsFilePath = "F:\\Files\\Rider\\AspExample\\AspExample\\ClientConfigs\\CachingConfigs.json",
     };
 
-    protected readonly UserTokenConfig UserTokenConfig = new UserTokenConfig {
+    protected readonly UserOptionsConfig UserOptionsConfig = new UserOptionsConfig {
         TokenOptionsSectionName = nameof(TokenOptions),
         TokenOptionsFilePath = "F:\\Files\\Rider\\AspExample\\AspExample\\SecretOptions\\supersecretoptions.json",
     };
@@ -41,8 +44,8 @@ public abstract class ClientTestBase : TestBase
             .SetupCommonServices(MediatRConfig);
 
         services
-            .SetupClientTestingServices(Configuration, UserTokenConfig)
-            .SetupClient<TestingTag>(Config, RegistrationPolicy)
+            .SetupClientTestingServices(Configuration, UserOptionsConfig)
+            .SetupClient<TestingTag>(Configuration, Config, RegistrationPolicy)
             .AddSingleton<TestingUserContextProvider>()
             .AddSingleton<IUserContextProvider>(sp => sp.GetRequiredService<TestingUserContextProvider>());
     }

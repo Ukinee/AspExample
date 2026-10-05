@@ -14,7 +14,7 @@ public static class SetupClientTestingServicesExtension
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection SetupClientTestingServices(IConfigurationManager configuration, UserTokenConfig config)
+        public IServiceCollection SetupClientTestingServices(IConfigurationManager configuration, UserOptionsConfig config)
         {
             services.AddSingleton<IUserTokenFactory, TokenFactory>();
             services.AddSingleton<IUserTokenStore, TestingUserTokenStore>();

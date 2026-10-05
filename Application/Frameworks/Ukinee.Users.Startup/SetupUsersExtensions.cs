@@ -17,13 +17,13 @@ using TokenOptions = Ukinee.Users.Domain.TokenOptions;
 
 namespace Ukinee.Users.Startup;
 
-public class UserTokenConfig
+public class UserOptionsConfig
 {
     public required string TokenOptionsSectionName { get; init; }
     public required string TokenOptionsFilePath { get; init; }
 }
 
-public class UserConfig : UserTokenConfig
+public class UserConfig : UserOptionsConfig
 {
     public required string DatabaseName { get; init; }
 

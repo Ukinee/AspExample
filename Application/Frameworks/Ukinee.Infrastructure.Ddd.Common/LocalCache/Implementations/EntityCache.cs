@@ -36,7 +36,7 @@ where TIdentifier : struct
         _entries[entity.Identifier] = new Entry(entity, expiresAt);
     }
 
-    public void Upsert(IReadOnlyCollection<TEntity> entities)
+    public void Upsert(IEnumerable<TEntity> entities)
     {
         var expiresAt = GetExpiration();
 
@@ -51,7 +51,7 @@ where TIdentifier : struct
         _entries[id] = new Entry(null, GetExpiration());
     }
 
-    public void MarkNotExists(IReadOnlyCollection<TIdentifier> ids)
+    public void MarkNotExists(IEnumerable<TIdentifier> ids)
     {
         var expiresAt = GetExpiration();
 

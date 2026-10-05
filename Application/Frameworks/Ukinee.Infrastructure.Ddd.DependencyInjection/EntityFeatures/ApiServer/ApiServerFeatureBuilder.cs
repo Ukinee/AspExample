@@ -249,7 +249,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
             {
                 var endpoint = group
                     .MapPut(
-                        RelationalPathUtils.Update<TEntity, TUpdatePayload>(TParams.RouteTemplate),
+                        RelationalPathUtils.UpdateMany<TEntity, TUpdatePayload>(),
                         async (
                             [FromBody] IReadOnlyCollection<UpdateEntityRequest<TParams, TUpdatePayload>> paramsRequest,
                             [FromServices] IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload> updateUseCase,

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.Utils;
 using Ukinee.Users.Common.ValueObjects;
 

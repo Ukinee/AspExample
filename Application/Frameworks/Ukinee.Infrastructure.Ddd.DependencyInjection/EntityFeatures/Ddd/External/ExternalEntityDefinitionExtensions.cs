@@ -87,7 +87,7 @@ where TEntity : class, IEntity<TIdentifier>
     }
 
     public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> Register<TIdentifierParams, TResponse>(
-        Func<IMapServiceRegisterer<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>>
+        Func<ICacheRegisterer<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>>
             factory
     )
     where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>

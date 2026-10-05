@@ -58,7 +58,7 @@ public static class SetupServerServices
                     )
                     .ApiServer.Register<AnnouncementIdentifierParams, AnnouncementResponse>(
                         config.ApiBaseRoute,
-                        (idParams, userContext) => AnnouncementIdentifier.Create(idParams.Guid, userContext.Guid),
+                        (idParams, _) => idParams.ToIdentifier(),
                         announcementPolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
@@ -78,7 +78,7 @@ public static class SetupServerServices
                     )
                     .ApiServer.Register<BorderIdentifierParams, BorderResponse>(
                         config.ApiBaseRoute,
-                        (idParams, _) => BorderIdentifier.Create(idParams.Guid),
+                        (idParams, _) => idParams.ToIdentifier(),
                         borderPolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
@@ -98,7 +98,7 @@ public static class SetupServerServices
                     )
                     .ApiServer.Register<CookieIdentifierParams, CookieResponse>(
                         config.ApiBaseRoute,
-                        (idParams, userContext) => CookieIdentifier.Create(userContext, idParams.Hash),
+                        (idParams, _) => idParams.ToIdentifier(),
                         cookiePolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()

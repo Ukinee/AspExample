@@ -28,7 +28,7 @@ public class AnnouncementSignalRRequest
 }
 
 [Identifier(nameof(Guid), nameof(UserGuid))]
-[RouteParamsIdentifier(nameof(UserGuid))]
+[RouteParamsIdentifier]
 public readonly partial record struct AnnouncementIdentifier
 {
     public required Guid UserGuid { get; init; }
