@@ -1,17 +1,13 @@
-﻿using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Ardalis.Specification;
 using Ukinee.DbAccess.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
-using Ukinee.Infrastructure.Ddd.Common.Utils;
 using Ukinee.Infrastructure.Ddd.Common.Utils.Extensions;
-using Ukinee.Infrastructure.Ddd.Local.AccessValidation;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
@@ -25,7 +21,7 @@ where TEntity : class, IEntity<TIdentifier>
 {
     public async Task<TEntity?> FindByIdAsync(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken)
     {
-        var filter = await CreateFilter(userContext);
+        var filter = await accessValidator.GetReadExpression(userContext);
 
         var specification = Specification
             .For<TEntity>()
@@ -35,9 +31,13 @@ where TEntity : class, IEntity<TIdentifier>
         return await repository.FindAsync(specification, filter, cancellationToken);
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TEntity> FindManyByIdAsync(
+        UserContext userContext,
+        IReadOnlyCollection<TIdentifier> identifiers,
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
     {
-        var filter = await CreateFilter(userContext);
+        var filter = await accessValidator.GetReadExpression(userContext);
 
         var specification = Specification
             .For<TEntity>()
@@ -52,7 +52,11 @@ where TEntity : class, IEntity<TIdentifier>
         }
     }
 
-    public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken)
+    public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(
+        UserContext userContext,
+        IReadOnlyCollection<TIdentifier> identifiers,
+        CancellationToken cancellationToken
+    )
     {
         var identifiersCollection = identifiers.AsCollection();
 
@@ -67,7 +71,8 @@ where TEntity : class, IEntity<TIdentifier>
 
     public async IAsyncEnumerable<TEntity> GetAllAsync(UserContext userContext, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var filter = await CreateFilter(userContext);
+        var filter = await accessValidator.GetReadExpression(userContext);
+
         var specification = Specification.For<TEntity>().Specification;
 
         var enumerable = repository.FindManyAsync(specification, filter, cancellationToken);
@@ -82,15 +87,20 @@ where TEntity : class, IEntity<TIdentifier>
 
     public async Task<TEntity?> FindAsync(UserContext userContext, Specification<TEntity> specification, CancellationToken cancellationToken)
     {
-        var filter = await CreateFilter(userContext);
+        var filter = await accessValidator.GetReadExpression(userContext);
+
         var result = await repository.FindAsync(specification, filter, cancellationToken);
 
         return result;
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyAsync(UserContext userContext, Specification<TEntity> specification, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TEntity> FindManyAsync(
+        UserContext userContext,
+        Specification<TEntity> specification,
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
     {
-        var filter = await CreateFilter(userContext);
+        var filter = await accessValidator.GetReadExpression(userContext);
         var result = repository.FindManyAsync(specification, filter, cancellationToken);
 
         await foreach (var item in result)
@@ -99,15 +109,5 @@ where TEntity : class, IEntity<TIdentifier>
 
             yield return item;
         }
-    }
-
-    private async Task<Expression<Func<TEntity, bool>>> CreateFilter(UserContext userContext)
-    {
-        var access = await accessValidator.GetReadExpression(userContext);
-        var exists = DddExpressionFactory.Exists<TEntity>();
-        
-        var filter = DddExpressionUtils.And(exists, access);
-
-        return filter;
     }
 }

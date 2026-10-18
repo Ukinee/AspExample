@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;

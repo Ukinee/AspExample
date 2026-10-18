@@ -9,13 +9,12 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.GatewayServices;
 
-public class ExternalGateway<TTag, TParams, TIdentifier, TEntity, TResponse>(
+public class ExternalGateway<TTag, TIdentifier, TEntity, TResponse>(
     IJsonOptionsProvider<ExternalGatewayTag> jsonOptionsProvider,
     IHttpClientFactory httpClientFactory
-) : ExternalGatewayBase<TTag, TParams, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGateway<TIdentifier, TResponse>
-where TIdentifier : notnull
+) : ExternalGatewayBase<TTag, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGateway<TIdentifier, TResponse>
+where TIdentifier : IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
 where TResponse : class
 {
     public async Task<TResponse?> FindByIdAsync(
@@ -24,8 +23,7 @@ where TResponse : class
         CancellationToken cancellationToken
     )
     {
-        var idParams = TParams.FromIdentifier(identifier);
-        var requestUri = RelationalPathUtils.Find<TEntity>(idParams.Path);
+        var requestUri = RelationalPathUtils.Find<TEntity>(identifier.Path);
         using var request = CreateRequest(userContext, HttpMethod.Get, requestUri);
 
         return await ReadJsonAsync<TResponse>(request, true, cancellationToken);

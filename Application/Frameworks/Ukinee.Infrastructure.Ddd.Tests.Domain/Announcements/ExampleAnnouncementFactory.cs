@@ -34,15 +34,15 @@ public class ExampleAnnouncementFactory
         Contents = Example3.Contents,
     };
 
-    public static UpdateAnnouncementRequest UpdateRequest1 => new UpdateAnnouncementRequest {
+    public static UpdateAnnouncementContentsRequest UpdateRequest1 => new UpdateAnnouncementContentsRequest {
         Contents = "UpdatedAnnouncementRequest1",
     };
 
-    public static UpdateAnnouncementRequest UpdateRequest2 => new UpdateAnnouncementRequest {
+    public static UpdateAnnouncementContentsRequest UpdateRequest2 => new UpdateAnnouncementContentsRequest {
         Contents = "UpdatedAnnouncementRequest2",
     };
 
-    public static UpdateAnnouncementRequest UpdateRequest3 => new UpdateAnnouncementRequest {
+    public static UpdateAnnouncementContentsRequest UpdateRequest3 => new UpdateAnnouncementContentsRequest {
         Contents = "UpdatedAnnouncementRequest3",
     };
 }

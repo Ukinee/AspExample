@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Ukinee.DbAccess.Extensions;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;

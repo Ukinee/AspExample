@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCases;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
@@ -43,7 +43,7 @@ where TEntity : class, IEntity<TIdentifier>
 
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+        builder.SetDeltaEntityUpdater<TrackedEntityDeltaUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
             serviceLifetime,
             throwOnTransaction
         );
@@ -101,7 +101,7 @@ where TEntity : class, IEntity<TIdentifier>
         builder.SetRepository<DbService<TIdentifier, TEntity, TTag>>(serviceLifetime);
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+        builder.SetDeltaEntityUpdater<TrackedEntityDeltaUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
             serviceLifetime,
             throwOnTransaction
         );
@@ -136,7 +136,7 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
         builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
         builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>(serviceLifetime);
 
-        builder.SetDeltaEntityUpdater<TrackedDeltaEntityUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+        builder.SetDeltaEntityUpdater<TrackedEntityDeltaUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
             serviceLifetime,
             throwOnTransaction
         );

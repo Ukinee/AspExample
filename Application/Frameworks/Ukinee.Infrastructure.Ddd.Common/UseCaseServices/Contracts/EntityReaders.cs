@@ -13,7 +13,7 @@ where TEntity : class, IEntity<TIdentifier>
     public Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
 }
 
-public interface IEntityReader<in TIdentifier, out TEntity>
+public interface IAllEntityReader<in TIdentifier, out TEntity>
 where TEntity : IEntity
 {
     public IAsyncEnumerable<TEntity> GetAllAsync(UserContext userContext, CancellationToken cancellationToken);

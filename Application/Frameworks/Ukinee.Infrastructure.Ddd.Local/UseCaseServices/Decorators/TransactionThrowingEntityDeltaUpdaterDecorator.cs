@@ -5,10 +5,10 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Decorators;
 
-public class TransactionThrowingDeltaEntityUpdaterDecorator<TIdentifier, TEntity>(
+public class TransactionThrowingEntityDeltaUpdaterDecorator<TIdentifier, TEntity>(
     IUnitOfWorkProvider uowProvider,
-    IDeltaEntityUpdater<TIdentifier, TEntity> inner
-) : IDeltaEntityUpdater<TIdentifier, TEntity>
+    IEntityDeltaUpdater<TIdentifier, TEntity> inner
+) : IEntityDeltaUpdater<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
 {
     public Task<TEntity> Update(UserContext userContext, TIdentifier identifier, Func<TEntity, TEntity> updateFactory, CancellationToken cancellationToken)

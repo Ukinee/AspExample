@@ -8,13 +8,12 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.GatewayServices;
 
-public class ExternalGatewayUpdater<TTag, TParams, TIdentifier, TPayload, TEntity, TResponse>(
+public class ExternalGatewayUpdater<TTag, TIdentifier, TPayload, TEntity, TResponse>(
     IJsonOptionsProvider<ExternalGatewayTag> jsonOptionsProvider,
     IHttpClientFactory httpClientFactory
-) : ExternalGatewayBase<TTag, TParams, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGatewayUpdater<TIdentifier, TPayload, TResponse>
-where TIdentifier : notnull
+) : ExternalGatewayBase<TTag, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGatewayUpdater<TIdentifier, TPayload, TResponse>
+where TIdentifier : notnull, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
 {
     public async Task<TResponse?> UpdateAsync(
         UserContext userContext,
@@ -23,8 +22,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
         CancellationToken cancellationToken
     )
     {
-        var idParams = TParams.FromIdentifier(identifier);
-        var requestUri = RelationalPathUtils.Update<TEntity, TPayload>(idParams.Path);
+        var requestUri = RelationalPathUtils.Update<TEntity, TPayload>(identifier.Path);
         using var request = CreateJsonRequest(userContext, HttpMethod.Put, requestUri, updatePayload);
 
         return await ReadJsonAsync<TResponse>(request, true, cancellationToken);

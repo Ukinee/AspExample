@@ -18,6 +18,13 @@ public abstract class TestBase
         ConfigureTestServices(Services);
 
         Provider = Services.BuildServiceProvider();
+
+        ResolveServices();
+    }
+
+    public virtual void ResolveServices()
+    {
+        
     }
 
     [TearDown]

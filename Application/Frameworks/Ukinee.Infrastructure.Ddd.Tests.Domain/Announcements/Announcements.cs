@@ -1,6 +1,6 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
@@ -10,7 +10,7 @@ public class CreateAnnouncementRequest
     public required string Contents { get; init; }
 }
 
-public class UpdateAnnouncementRequest
+public class UpdateAnnouncementContentsRequest
 {
     public required string Contents { get; init; }
 }
@@ -28,7 +28,7 @@ public class AnnouncementSignalRRequest
 }
 
 [Identifier(nameof(Guid), nameof(UserGuid))]
-[RouteParamsIdentifier]
+[ApiIdentifier]
 public readonly partial record struct AnnouncementIdentifier
 {
     public required Guid UserGuid { get; init; }

@@ -1,4 +1,4 @@
-﻿namespace Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+﻿namespace Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 
 public interface IEntityWithSoftDelete<out TSelf>
 {

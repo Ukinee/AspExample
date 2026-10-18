@@ -1,4 +1,4 @@
-﻿using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+﻿using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;

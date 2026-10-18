@@ -15,100 +15,75 @@ using Ukinee.Users.Domain.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 
-public class ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> :
-    ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse>
-where TIdentifier : struct, IEquatable<TIdentifier>
+public class ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> :
+    ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : struct, IRouteParams<TParams, TIdentifier>
 {
-    private readonly Func<TParams, UserContext, TIdentifier> _idFactory;
     private readonly AuthorizationPolicyDefinition<TIdentifier, TEntity> _policyDefinition;
     internal readonly ApiServerDefinition Feature;
 
     public ApiServerFeatureBuilder(
-        Func<TParams, UserContext, TIdentifier> idFactory,
         AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
         ApiServerDefinition feature
     )
     {
-        _idFactory = idFactory;
         _policyDefinition = policyDefinition;
         Feature = feature;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterRead(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterRead(Action<RouteHandlerBuilder>? builder = null)
     {
         return WithFindMany(builder)
             .WithGet(builder)
             .WithGetAll(builder);
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterReadDelete(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterDelete(Action<RouteHandlerBuilder>? builder = null)
     {
-        return RegisterRead(builder)
+        return WithDelete(builder)
             .WithDelete(builder);
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrud<TCreatePayload, TUpdatePayload>()
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterCrud<TCreatePayload, TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
-        return WithFindMany()
-                .WithGetAll()
-                .WithGet()
-                .WithDelete()
-                .WithDeleteRange()
-                .WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
-                .WithThrowingOnDuplicatesCreate<TCreatePayload>()
-                .AddUpdate<TUpdatePayload>()
-                .AddUpdateMany<TUpdatePayload>()
+        return RegisterRead(builder)
+                .RegisterDelete(builder)
+                .RegisterCreate<TCreatePayload>(builder)
+                .RegisterUpdate<TUpdatePayload>(builder)
             ;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrud<TPayload>()
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterCrud<TPayload>(Action<RouteHandlerBuilder>? builder = null)
     {
-        return WithFindMany()
-                .WithGetAll()
-                .WithGet()
-                .WithDelete()
-                .WithDeleteRange()
-                .WithThrowingOnDuplicatesCreateMany<TPayload>()
-                .WithThrowingOnDuplicatesCreate<TPayload>()
-                .AddUpdate<TPayload>()
-                .AddUpdateMany<TPayload>()
+        return RegisterRead(builder)
+                .RegisterDelete(builder)
+                .RegisterCreate<TPayload>(builder)
+                .RegisterUpdate<TPayload>(builder)
             ;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterUpdate<TPayload>()
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterUpdate<TPayload>(Action<RouteHandlerBuilder>? builder = null)
     {
-        return AddUpdate<TPayload>()
-            .AddUpdateMany<TPayload>();
+        return AddUpdate<TPayload>(builder)
+            .AddUpdateMany<TPayload>(builder);
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCrd<TCreatePayload>()
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
-        return WithFindMany()
-            .WithGetAll()
-            .WithGet()
-            .WithDelete()
-            .WithDeleteRange()
-            .WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
-            .WithThrowingOnDuplicatesCreate<TCreatePayload>();
+        return WithThrowingOnDuplicatesCreateMany<TCreatePayload>(builder)
+            .WithThrowingOnDuplicatesCreate<TCreatePayload>(builder);
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> RegisterCreate<TCreatePayload>()
-    {
-        return WithThrowingOnDuplicatesCreateMany<TCreatePayload>()
-            .WithThrowingOnDuplicatesCreate<TCreatePayload>();
-    }
-
-    ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse>
-        ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse>.WithGroupConfiguration(Action<RouteGroupBuilder> builder)
+    ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse>
+        ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>.WithGroupConfiguration(Action<RouteGroupBuilder> builder)
     {
         Feature.ConfigureGroup(builder);
 
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithGetAll(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithGetAll(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
             {
@@ -140,7 +115,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithFindMany(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithFindMany(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
@@ -173,15 +148,15 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithGet(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithGet(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
                 RouteHandlerBuilder endpoint = group
                     .MapGet(
-                        RelationalPathUtils.Find<TEntity>(TParams.RouteTemplate),
+                        RelationalPathUtils.Find<TEntity>(TIdentifier.RouteTemplate),
                         async (
-                            [AsParameters] TParams routeParams,
+                            [AsParameters] TIdentifier identifier,
                             [FromServices] IGetEntityUseCase<TIdentifier, TEntity> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
@@ -189,8 +164,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-                            var id = _idFactory(routeParams, userContext);
-                            var entity = await useCase.Execute(userContext, id, ct);
+                            var entity = await useCase.Execute(userContext, identifier, ct);
                             var result = mapper.Map<TResponse>(entity);
 
                             return TypedResults.Ok(result);
@@ -207,15 +181,15 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddUpdate<TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> AddUpdate<TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
                 var endpoint = group
                     .MapPut(
-                        RelationalPathUtils.Update<TEntity, TUpdatePayload>(TParams.RouteTemplate),
+                        RelationalPathUtils.Update<TEntity, TUpdatePayload>(TIdentifier.RouteTemplate),
                         async (
-                            [AsParameters] TParams routeParams,
+                            [AsParameters] TIdentifier identifier,
                             [FromBody] TUpdatePayload request,
                             [FromServices] IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload> updateUseCase,
                             [FromServices] IMapper mapper,
@@ -224,9 +198,8 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-                            var id = _idFactory(routeParams, userContext);
 
-                            var updatedEntity = await updateUseCase.Execute(userContext, id, request, ct);
+                            var updatedEntity = await updateUseCase.Execute(userContext, identifier, request, ct);
                             var result = mapper.Map<TResponse>(updatedEntity);
 
                             return TypedResults.Ok(result);
@@ -243,7 +216,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddUpdateMany<TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> AddUpdateMany<TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
@@ -251,7 +224,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     .MapPut(
                         RelationalPathUtils.UpdateMany<TEntity, TUpdatePayload>(),
                         async (
-                            [FromBody] IReadOnlyCollection<UpdateEntityRequest<TParams, TUpdatePayload>> paramsRequest,
+                            [FromBody] IReadOnlyCollection<UpdateEntityRequest<TIdentifier, TUpdatePayload>> requests,
                             [FromServices] IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload> updateUseCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
@@ -259,14 +232,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-
-                            var requests = paramsRequest
-                                .Select(request => new UpdateEntityRequest<TIdentifier, TUpdatePayload> {
-                                        Identifier = _idFactory(request.Identifier, userContext),
-                                        Payload = request.Payload,
-                                    }
-                                )
-                                .ToList();
 
                             var updatedEntity = await updateUseCase.Execute(userContext, requests, ct);
                             var result = mapper.Map<TResponse>(updatedEntity);
@@ -285,7 +250,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithThrowingOnDuplicatesCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithThrowingOnDuplicatesCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
             {
@@ -319,9 +284,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithThrowingOnDuplicatesCreateMany<TCreatePayload>(
-        Action<RouteHandlerBuilder>? builder = null
-    )
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithThrowingOnDuplicatesCreateMany<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
             {
@@ -340,7 +303,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                             var userContext = userContextProvider.GetActiveUserContext();
 
                             logger.LogInformation("Creating {TEntityName} with user context {UserContext}", typeof(TEntity).Name, userContext);
-                            
+
                             var entity = await useCase.Execute(userContext, requests, ct);
                             var result = mapper.Map<List<TResponse>>(entity);
 
@@ -358,15 +321,15 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithEnsureExistsCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithEnsureExistsCreate<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
             {
                 var endpoint = group
                     .MapPost(
-                        RelationalPathUtils.EnsureExists<TEntity>(TParams.RouteTemplate),
+                        RelationalPathUtils.EnsureExists<TEntity>(TIdentifier.RouteTemplate),
                         async (
-                            [AsParameters] TParams routeParams,
+                            [AsParameters] TIdentifier identifier,
                             [FromBody] TCreatePayload request,
                             [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
@@ -376,9 +339,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
 
-                            var id = _idFactory(routeParams, userContext);
-
-                            var entity = await useCase.Execute(userContext, id, request, ct);
+                            var entity = await useCase.Execute(userContext, identifier, request, ct);
                             var result = mapper.Map<TResponse>(entity);
 
                             return TypedResults.Created($"{def.BaseRoute}", result);
@@ -395,7 +356,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithEnsureExistsCreateMany<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithEnsureExistsCreateMany<TCreatePayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, def) =>
             {
@@ -403,7 +364,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     .MapPost(
                         RelationalPathUtils.EnsureExistsMany<TEntity>(),
                         async (
-                            [FromBody] IReadOnlyCollection<GetOrCreateRequest<TParams, TCreatePayload>> paramsRequests,
+                            [FromBody] IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TCreatePayload>> requests,
                             [FromServices] IGetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload> useCase,
                             [FromServices] IMapper mapper,
                             [FromServices] IUserContextProvider userContextProvider,
@@ -411,14 +372,6 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-
-                            var requests = paramsRequests
-                                .Select(request => new GetOrCreateRequest<TIdentifier, TCreatePayload> {
-                                        Identifier = _idFactory(request.Identifier, userContext),
-                                        Payload = request.Payload,
-                                    }
-                                )
-                                .ToList();
 
                             var entity = await useCase.Execute(userContext, requests, ct);
                             var result = mapper.Map<List<TResponse>>(entity);
@@ -437,24 +390,23 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithDelete(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithDelete(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
                 var endpoint = group
                     .MapDelete(
-                        RelationalPathUtils.Delete<TEntity>(TParams.RouteTemplate),
+                        RelationalPathUtils.Delete<TEntity>(TIdentifier.RouteTemplate),
                         async (
-                            [AsParameters] TParams routeParams,
+                            [AsParameters] TIdentifier identifier,
                             [FromServices] IRemoveEntityUseCase<TIdentifier, TEntity> removeUseCase,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-                            var id = _idFactory(routeParams, userContext);
 
-                            await removeUseCase.Execute(userContext, id, ct);
+                            await removeUseCase.Execute(userContext, identifier, ct);
 
                             return TypedResults.NoContent();
                         }
@@ -470,7 +422,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithDeleteRange(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithDeleteRange(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
@@ -478,16 +430,15 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
                     .MapDelete(
                         RelationalPathUtils.DeleteMany<TEntity>(),
                         async (
-                            [FromBody] List<TParams> identifiers,
+                            [FromBody] List<TIdentifier> identifiers,
                             [FromServices] IRemoveEntityUseCase<TIdentifier, TEntity> removeUseCase,
                             [FromServices] IUserContextProvider userContextProvider,
                             CancellationToken ct
                         ) =>
                         {
                             var userContext = userContextProvider.GetActiveUserContext();
-                            var id = identifiers.Select(param => _idFactory(param, userContext)).ToList();
 
-                            await removeUseCase.Execute(userContext, id, ct);
+                            await removeUseCase.Execute(userContext, identifiers, ct);
 
                             return TypedResults.NoContent();
                         }
@@ -503,7 +454,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload>(Action<RouteHandlerBuilder>? builder = null)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> AddRequestHandler<TPayload>(Action<RouteHandlerBuilder>? builder = null)
     {
         Feature.AddEndpoint((group, _) =>
             {
@@ -538,7 +489,7 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> AddRequestHandler<TPayload, THandlerResponse, TEndpointResponse>(
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> AddRequestHandler<TPayload, THandlerResponse, TEndpointResponse>(
         Action<RouteHandlerBuilder>? builder = null
     )
     {
@@ -579,10 +530,9 @@ where TParams : struct, IRouteParams<TParams, TIdentifier>
     }
 }
 
-public interface ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse>
-where TIdentifier : struct, IEquatable<TIdentifier>
+public interface ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : struct, IRouteParams<TParams, TIdentifier>
 {
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithGroupConfiguration(Action<RouteGroupBuilder> builder);
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithGroupConfiguration(Action<RouteGroupBuilder> builder);
 }

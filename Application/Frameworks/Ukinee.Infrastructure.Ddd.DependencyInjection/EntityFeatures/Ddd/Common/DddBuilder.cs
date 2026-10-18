@@ -76,11 +76,11 @@ where TIdentifier : struct
         IEnumerable<ServiceDescriptor> extensions,
         bool throwOnTransaction
     )
-    where TImplementation : class, IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
+    where TImplementation : class, IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>
     where TUseCase : class, IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>
     {
         IEnumerable<ServiceDescriptor> descriptors = [
-            ..PayloadHelper.Service<IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, TImplementation>(serviceLifetime),
             ..PayloadHelper.Service<IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>, TUseCase>(serviceLifetime),
             ..extensions,
         ];
@@ -90,7 +90,7 @@ where TIdentifier : struct
         if (throwOnTransaction)
         {
             ServiceDescriptorDecorators
-                .Decorate<IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TransactionThrowingEntityUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
+                .Decorate<IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, TransactionThrowingUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
                     Feature.PayloadEntityUpdaters
                 );
         }
@@ -123,21 +123,21 @@ where TIdentifier : struct
         ServiceLifetime serviceLifetime,
         bool throwOnTransaction
     )
-    where TImplementation : class, IDeltaEntityUpdater<TIdentifier, TEntity>
+    where TImplementation : class, IEntityDeltaUpdater<TIdentifier, TEntity>
     where TUseCase : class, IDeltaUpdateEntityUseCase<TIdentifier, TEntity>
     {
         Feature.DeltaEntityUpdater.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IDeltaUpdateEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
-            ..PayloadHelper.Service<IDeltaEntityUpdater<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IEntityDeltaUpdater<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.DeltaEntityUpdater.AddRange(descriptors);
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IDeltaEntityUpdater<TIdentifier, TEntity>, TransactionThrowingDeltaEntityUpdaterDecorator<TIdentifier, TEntity>>(Feature.DeltaEntityUpdater);
+            ServiceDescriptorDecorators.Decorate<IEntityDeltaUpdater<TIdentifier, TEntity>, TransactionThrowingEntityDeltaUpdaterDecorator<TIdentifier, TEntity>>(Feature.DeltaEntityUpdater);
         }
         else
         {
@@ -194,14 +194,14 @@ where TIdentifier : struct
     }
 
     internal DddBuilder<TTag, TIdentifier, TEntity> SetEntityReader<TImplementation, TUseCase>(ServiceLifetime serviceLifetime)
-    where TImplementation : class, IEntityReader<TIdentifier, TEntity>
+    where TImplementation : class, IAllEntityReader<TIdentifier, TEntity>
     where TUseCase : class, IGetAllEntityUseCase<TIdentifier, TEntity>
     {
         Feature.EntityReader.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IGetAllEntityUseCase<TIdentifier, TEntity>, TUseCase>(serviceLifetime),
-            ..PayloadHelper.Service<IEntityReader<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
+            ..PayloadHelper.Service<IAllEntityReader<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
         ];
 
         Feature.EntityReader.AddRange(descriptors);

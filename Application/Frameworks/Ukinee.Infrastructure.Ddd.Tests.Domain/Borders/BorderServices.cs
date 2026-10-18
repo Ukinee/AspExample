@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
+using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
+using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Services;
 using Ukinee.Users.Common.ValueObjects;
@@ -24,6 +26,35 @@ public class BorderFactory : ICreateEntityFactory<CreateBorderRequest, Border>, 
         };
     }
 }
+
+public class BorderMapService : IMapService<BorderResponse, Border>
+{
+    public ValueTask<Border> Map(BorderResponse externalEntity)
+    {
+        return ValueTask.FromResult(
+            new Border {
+                Identifier = externalEntity.Identifier,
+                IsAvailableForPublicRead = externalEntity.IsAvailableForPublicRead,
+                Size = externalEntity.Size,
+            }
+        );
+    }
+
+    public async ValueTask<IReadOnlyCollection<Border>> Map(IReadOnlyCollection<BorderResponse> externalEntities)
+    {
+        var result = new List<Border>(externalEntities.Count);
+
+        foreach (var externalEntity in externalEntities)
+        {
+            var entity = await Map(externalEntity);
+
+            result.Add(entity);
+        }
+
+        return result;
+    }
+}
+
 
 public class CreateBorderRequestValidator : AbstractValidator<IEnumerable<CreateBorderRequest>>;
 public class UpdateBorderRequestValidator : AbstractValidator<IEnumerable<UpdateBorderRequest>>;

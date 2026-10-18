@@ -11,20 +11,20 @@ public enum ReadAccessMode
     LoggedIn,
     OwnerOnly,
     SharedUsers,
-    Roles
+    Roles,
 }
 
 public enum CreateAccessMode
 {
     LoggedIn,
-    Roles
+    Roles,
 }
 
 public enum ModifyAccessMode
 {
     OwnerOnly,
     SharedUsers,
-    Roles
+    Roles,
 }
 
 public readonly record struct ReadAccessRule

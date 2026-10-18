@@ -36,10 +36,10 @@ where TIdentifier : struct
     }
 }
 
-public class CacheInvalidatingEntityUpdaterDecorator<TIdentifier, TEntity, TPayload>(
-    IPayloadEntityUpdater<TIdentifier, TEntity, TPayload> inner,
+public class CacheInvalidatingUpdaterDecorator<TIdentifier, TEntity, TPayload>(
+    IEntityPayloadUpdater<TIdentifier, TEntity, TPayload> inner,
     IEntityCache<TIdentifier, TEntity> cache
-) : IPayloadEntityUpdater<TIdentifier, TEntity, TPayload>
+) : IEntityPayloadUpdater<TIdentifier, TEntity, TPayload>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct
 {

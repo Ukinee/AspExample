@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 

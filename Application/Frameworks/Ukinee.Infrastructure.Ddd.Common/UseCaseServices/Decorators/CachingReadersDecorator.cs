@@ -6,10 +6,10 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 
-public class CachingEntityReader<TIdentifier, TEntity>(
+public class CachingAllEntityReader<TIdentifier, TEntity>(
     IEntityCache<TIdentifier, TEntity> cache,
-    IEntityReader<TIdentifier, TEntity> inner
-) : IEntityReader<TIdentifier, TEntity>
+    IAllEntityReader<TIdentifier, TEntity> inner
+) : IAllEntityReader<TIdentifier, TEntity>
 where TIdentifier : struct
 where TEntity : class, IEntity<TIdentifier>
 {

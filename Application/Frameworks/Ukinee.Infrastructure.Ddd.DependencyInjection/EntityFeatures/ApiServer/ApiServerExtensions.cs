@@ -7,12 +7,11 @@ namespace Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures.ApiEndpoint
 
 public static class ApiServerExtensions
 {
-    extension<TIdentifier, TEntity, TParams, TResponse>(ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse> configurator)
-    where TIdentifier : struct, IEquatable<TIdentifier>
+    extension<TIdentifier, TEntity, TResponse>(ICrudGroupConfigurator<TIdentifier, TEntity, TResponse> configurator)
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
-    where TParams : struct, IRouteParams<TParams, TIdentifier>
     {
-        public ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse> WithNoAdditionalConfiguration()
+        public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithNoAdditionalConfiguration()
         {
             return configurator.WithGroupConfiguration(builder => { });
         }

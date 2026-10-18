@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Options;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
@@ -48,7 +49,9 @@ public abstract class ClientTestBase : TestBase
             .SetupClient<TestingTag>(Configuration, Config, RegistrationPolicy)
             .AddSingleton<TestingUserContextProvider>()
             .AddSingleton<IUserContextProvider>(sp => sp.GetRequiredService<TestingUserContextProvider>());
+
     }
+
 
     protected async Task EnsureToken(UserContext userContext)
     {

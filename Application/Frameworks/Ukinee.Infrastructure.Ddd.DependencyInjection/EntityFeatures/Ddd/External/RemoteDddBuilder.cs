@@ -23,12 +23,11 @@ public enum CachingVariant
     UpdateUpserts,
 }
 
-public class RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> :
-    ICacheRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse>,
-    IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse>
+public class RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> :
+    ICacheRegisterer<TTag, TIdentifier, TEntity, TResponse>,
+    IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>
 where TEntity : class, IEntity<TIdentifier>
-where TIdentifier : struct, IEquatable<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 {
     private DddBuilder<TTag, TIdentifier, TEntity> _builder;
     private readonly bool _isCacheable;
@@ -42,18 +41,18 @@ where TParams : IRouteParams<TParams, TIdentifier>
 
     internal DddFeature<TIdentifier, TEntity> Feature => _builder.Feature;
 
-    RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse>.WithMapper<TImplementation>()
+    RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>.WithMapper<TImplementation>()
     {
         _builder.Feature.Extensions.Add(collection => collection.TryAddSingleton<IMapService<TResponse, TEntity>, TImplementation>());
 
         return this;
     }
 
-    public IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant)
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant)
     {
         if (!_isCacheable)
             throw new InvalidOperationException(
-                $"{nameof(RemoteDddBuilder<,,,,>)} is created as not cacheable. "
+                $"{nameof(RemoteDddBuilder<,,,>)} is created as not cacheable. "
                 + $"This is probably because of startup sync. "
                 + $"Please, do NOT call {nameof(WithCache)} inside of {nameof(RemoteDddBuilderProxy<,,>.RegisterStartupRemoteSynchronizationToMemoryRepository)}"
             );
@@ -80,25 +79,25 @@ where TParams : IRouteParams<TParams, TIdentifier>
         Feature.IdentifierReader.AddRange(descriptors);
 
         ServiceDescriptorDecorators.Decorate<IIdentifierReader<TIdentifier, TEntity>, CachingIdentifierReader<TIdentifier, TEntity>>(Feature.IdentifierReader);
-        ServiceDescriptorDecorators.Decorate<IEntityReader<TIdentifier, TEntity>, CachingEntityReader<TIdentifier, TEntity>>(Feature.EntityReader);
+        ServiceDescriptorDecorators.Decorate<IAllEntityReader<TIdentifier, TEntity>, CachingAllEntityReader<TIdentifier, TEntity>>(Feature.EntityReader);
         ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, CacheInvalidatingEntityRemoverDecorator<TIdentifier, TEntity>>(Feature.EntityRemover);
 
         return this;
     }
 
-    public IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse> WithNoCache()
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithNoCache()
     {
         _cachingVariant = CachingVariant.DoNothing;
 
         return this;
     }
 
-    public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> SetCreateUseCase<TCreatePayload>()
+    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> SetCreateUseCase<TCreatePayload>()
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Service<
                 IExternalGatewayCreator<TIdentifier, TCreatePayload, TResponse>,
-                ExternalGatewayCreator<TTag, TParams, TIdentifier, TCreatePayload, TEntity, TResponse>
+                ExternalGatewayCreator<TTag, TIdentifier, TCreatePayload, TEntity, TResponse> // тут колдунство регистрации
             >(ServiceLifetime.Singleton),
         ];
 
@@ -116,22 +115,22 @@ where TParams : IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> AddUpdateUseCase<TUpdatePayload>()
+    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> AddUpdateUseCase<TUpdatePayload>()
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Service<
                 IExternalGatewayUpdater<TIdentifier, TUpdatePayload, TResponse>,
-                ExternalGatewayUpdater<TTag, TParams, TIdentifier, TUpdatePayload, TEntity, TResponse>>(ServiceLifetime.Singleton),
+                ExternalGatewayUpdater<TTag, TIdentifier, TUpdatePayload, TEntity, TResponse>>(ServiceLifetime.Singleton),
         ];
 
         _builder
-            .AddPayloadEntityUpdateFeature<ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
+            .AddPayloadEntityUpdateFeature<ExternalGatewayEntityPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
                 UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
         if (_cachingVariant == CachingVariant.UpdateInvalidates)
         {
             ServiceDescriptorDecorators
-                .Decorate<IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, CacheInvalidatingEntityUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
+                .Decorate<IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, CacheInvalidatingUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
                     _builder.Feature.PayloadEntityUpdaters
                 );
         }
@@ -139,7 +138,7 @@ where TParams : IRouteParams<TParams, TIdentifier>
         return this;
     }
 
-    public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> WithGetOrCreate<TCreatePayload>()
+    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> WithGetOrCreate<TCreatePayload>()
     {
         _builder.AddGetOrCreateFeature<
             ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>,
@@ -151,20 +150,18 @@ where TParams : IRouteParams<TParams, TIdentifier>
     }
 }
 
-public interface ICacheRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse>
+public interface ICacheRegisterer<TTag, TIdentifier, TEntity, TResponse>
 where TEntity : class, IEntity<TIdentifier>
-where TIdentifier : struct, IEquatable<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 {
-    public IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant);
-    public IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse> WithNoCache();
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant);
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithNoCache();
 }
 
-public interface IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse>
+public interface IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>
 where TEntity : class, IEntity<TIdentifier>
-where TIdentifier : struct, IEquatable<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 {
-    public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> WithMapper<TImplementation>()
+    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> WithMapper<TImplementation>()
     where TImplementation : class, IMapService<TResponse, TEntity>;
 }

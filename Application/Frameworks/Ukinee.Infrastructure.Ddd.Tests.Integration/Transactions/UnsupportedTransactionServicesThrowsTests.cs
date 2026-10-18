@@ -54,11 +54,11 @@ public class UnsupportedTransactionServicesThrowsTests : TestBase
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(eventPolicy)
                     .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
-                    .AddUpdateUseCase<UpdateAnnouncementRequest, UpdateAnnouncementRequestValidator, AnnouncementFactory>()
+                    .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
                 )
             )
             .ApiClientContexts.AddRemoteContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
-                .Ddd.Register<BorderIdentifierParams, BorderResponse>(dddConfigurator => dddConfigurator
+                .Ddd.Register<BorderResponse>(dddConfigurator => dddConfigurator
                     .WithCache(CachingVariant.UpdateInvalidates)
                     .WithMapsterResponseToEntityMap()
                     .SetCreateUseCase<CreateBorderRequest>()
@@ -102,7 +102,7 @@ public class UnsupportedTransactionServicesThrowsTests : TestBase
     [Test]
     public async Task UpdateUseCase_InMemory_ShouldFail_TransactionNotSupported()
     {
-        var useCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementRequest>>();
+        var useCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementContentsRequest>>();
 
         Assert.ThrowsAsync<NotSupportedException>(async () => await ExecuteInTransactionContext(async () => await useCase.Execute(
                     UserContext,

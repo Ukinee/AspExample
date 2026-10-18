@@ -1,12 +1,12 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Domain.Cookies;
 
 [Identifier(nameof(UserGuid), nameof(Hash))]
-[RouteParamsIdentifier]
+[ApiIdentifier]
 public readonly partial record struct CookieIdentifier
 {
     public required string Hash { get; init; }
@@ -34,6 +34,7 @@ public record CookieResponse
     public required CookieIdentifier Identifier { get; init; }
 
     public required int Calories { get; init; }
+    public required bool IsAvailableForPublicRead { get; init; }
 }
 
 public record CookieSignalRRequest { }

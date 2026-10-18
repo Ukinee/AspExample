@@ -1,6 +1,6 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External;
 using Ukinee.Infrastructure.Ddd.External.Api.Domain;
@@ -9,24 +9,22 @@ using Ukinee.Users.Common.ValueObjects;
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 
 public class ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, TDefinition>(TDefinition definition)
-where TIdentifier : struct, IEquatable<TIdentifier>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
 where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity>
 {
-    public TDefinition Register<TParams, TResponse>(
+    public TDefinition Register<TResponse>(
         string baseRoute,
-        Func<TParams, UserContext, TIdentifier> idFactory,
         AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
-        Action<ICrudGroupConfigurator<TIdentifier, TEntity, TParams, TResponse>> apiServerConfigurator
+        Action<ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>> apiServerConfigurator
     )
-    where TParams : struct, IRouteParams<TParams, TIdentifier>
     {
         var feature = new ApiServerDefinition {
             BaseRoute = baseRoute,
             Tag = $"{typeof(TEntity).Name}Tag",
         };
 
-        var builder = new ApiServerFeatureBuilder<TIdentifier, TEntity, TParams, TResponse>(idFactory, policyDefinition, feature);
+        var builder = new ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse>(policyDefinition, feature);
 
         apiServerConfigurator.Invoke(builder);
 
@@ -49,7 +47,7 @@ public static class ApiEndpointEntityExtensions
     // }
 
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.InMemoryEntityDefinition<TIdentifier, TEntity> definition)
-    where TIdentifier : struct, IEquatable<TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
     {
         public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.InMemoryEntityDefinition<TIdentifier, TEntity>> ApiServer =>
@@ -57,7 +55,7 @@ public static class ApiEndpointEntityExtensions
     }
     
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> definition)
-    where TIdentifier : struct, IEquatable<TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
     {
         public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity>> ApiServer =>
@@ -65,7 +63,7 @@ public static class ApiEndpointEntityExtensions
     }
     
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
-    where TIdentifier : struct, IEquatable<TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
     {
         public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity>> ApiServer =>

@@ -7,7 +7,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 
-public class AnnouncementFactory : ICreateEntityFactory<CreateAnnouncementRequest, Announcement>, IUpdateEntityFactory<UpdateAnnouncementRequest, Announcement>
+public class AnnouncementFactory : ICreateEntityFactory<CreateAnnouncementRequest, Announcement>, IUpdateEntityFactory<UpdateAnnouncementContentsRequest, Announcement>
 {
     public Announcement Create(UserContext userContext, CreateAnnouncementRequest payload)
     {
@@ -18,7 +18,7 @@ public class AnnouncementFactory : ICreateEntityFactory<CreateAnnouncementReques
         };
     }
 
-    public Announcement Update(UserContext userContext, Announcement old, UpdateAnnouncementRequest payload)
+    public Announcement Update(UserContext userContext, Announcement old, UpdateAnnouncementContentsRequest payload)
     {
         return old with {
             Contents = payload.Contents,
@@ -55,7 +55,7 @@ public class AnnouncementMapService : IMapService<AnnouncementResponse, Announce
 }
 
 public class CreateAnnouncementRequestValidator : AbstractValidator<IEnumerable<CreateAnnouncementRequest>> { }
-public class UpdateAnnouncementRequestValidator : AbstractValidator<IEnumerable<UpdateAnnouncementRequest>> { }
+public class UpdateAnnouncementContentsRequestValidator : AbstractValidator<IEnumerable<UpdateAnnouncementContentsRequest>> { }
 public class AnnouncementSignalRRouteResolver : RouteResolverBase<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>;
 
 public class AnnouncementSignalRAccessValidator : ISignalRAccessValidator<AnnouncementSignalRRequest>

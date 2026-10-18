@@ -60,7 +60,7 @@ public class CrudCreationServiceTests : TestBase
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(announcementPolicy)
                     .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
-                    .AddUpdateUseCase<UpdateAnnouncementRequest, UpdateAnnouncementRequestValidator, AnnouncementFactory>()
+                    .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
                 )
             )
             .LocalContexts.AddInMemoryContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
@@ -181,7 +181,7 @@ public class CrudCreationServiceTests : TestBase
     [Test]
     public async Task UpdateUseCase_Owner_CanEditEntity()
     {
-        var updateUseCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementRequest>>();
+        var updateUseCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementContentsRequest>>();
 
         Seed<AnnouncementIdentifier, Announcement>(ExampleAnnouncementFactory.Example1, ExampleAnnouncementFactory.Example2, ExampleAnnouncementFactory.Example3);
 

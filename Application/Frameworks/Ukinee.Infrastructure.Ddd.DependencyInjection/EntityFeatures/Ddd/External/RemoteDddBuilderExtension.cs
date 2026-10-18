@@ -6,13 +6,12 @@ namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Exter
 
 public static class RemoteDddBuilderExtension
 {
-    extension<TTag, TParams, TIdentifier, TEntity, TResponse>(IMapServiceRegisterer<TTag, TParams, TIdentifier, TEntity, TResponse> mapServiceRegisterer)
+    extension<TTag, TIdentifier, TEntity, TResponse>(IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> mapServiceRegisterer)
     where TEntity : class, IEntity<TIdentifier>
-    where TIdentifier : struct, IEquatable<TIdentifier>
-    where TParams : IRouteParams<TParams, TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TResponse : notnull
     {
-        public RemoteDddBuilder<TTag, TParams, TIdentifier, TEntity, TResponse> WithMapsterResponseToEntityMap()
+        public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> WithMapsterResponseToEntityMap()
         {
             return mapServiceRegisterer.WithMapper<MapsterMapService<TResponse,TEntity>>();
         }

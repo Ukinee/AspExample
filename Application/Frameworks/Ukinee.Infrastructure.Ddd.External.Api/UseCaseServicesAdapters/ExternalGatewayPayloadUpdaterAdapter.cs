@@ -8,10 +8,10 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 
-public class ExternalGatewayPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>(
+public class ExternalGatewayEntityPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>(
     IMapService<TResponse, TEntity> mapService,
     IExternalGatewayUpdater<TIdentifier, TUpdatePayload, TResponse> externalGatewayUpdater
-) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
+) : IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

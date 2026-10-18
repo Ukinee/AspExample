@@ -6,7 +6,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCases;
 
-public class UpdateEntityUseCase<TIdentifier, TEntity, TPayload>(IPayloadEntityUpdater<TIdentifier, TEntity, TPayload> updater)
+public class UpdateEntityUseCase<TIdentifier, TEntity, TPayload>(IEntityPayloadUpdater<TIdentifier, TEntity, TPayload> updater)
     : IUpdateEntityUseCase<TIdentifier, TEntity, TPayload>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull

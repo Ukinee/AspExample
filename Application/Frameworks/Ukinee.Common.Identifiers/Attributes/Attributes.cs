@@ -14,12 +14,8 @@ namespace Ukinee.Common.Identifiers.Attributes
     }
 
     [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
-    public sealed class RouteParamsIdentifierAttribute : Attribute
+    public sealed class ApiIdentifierAttribute : Attribute
     {
-        public string[] Exclude { get; }
-
-        public RouteParamsIdentifierAttribute(params string[] exclude) =>
-            Exclude = exclude;
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]

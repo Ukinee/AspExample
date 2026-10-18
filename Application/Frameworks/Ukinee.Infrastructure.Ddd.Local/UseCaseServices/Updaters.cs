@@ -11,11 +11,11 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
-public sealed class TrackedDeltaEntityUpdater<TIdentifier, TEntity>(
+public sealed class TrackedEntityDeltaUpdater<TIdentifier, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : IDeltaEntityUpdater<TIdentifier, TEntity>
+) : IEntityDeltaUpdater<TIdentifier, TEntity>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {
@@ -44,13 +44,13 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class TrackedPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>(
+public class TrackedEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IValidator<IEnumerable<TUpdatePayload>> validationService,
     IUpdateEntityFactory<TUpdatePayload, TEntity> factory,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
-) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
+) : IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
@@ -28,6 +29,12 @@ public class DddExceptionsHandler : IExceptionHandler
 
                 return true;
 
+            case ValidationException validationEx:
+                httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await WriteValidationProblemDetailsAsync(httpContext, validationEx, cancellationToken);
+
+                return true;
+
             default: return false;
         }
     }
@@ -37,9 +44,29 @@ public class DddExceptionsHandler : IExceptionHandler
         var problemDetails = new ProblemDetails {
             Status = context.Response.StatusCode,
             Title = title,
-            Detail = detail
+            Detail = detail,
         };
 
         return context.Response.WriteAsJsonAsync(problemDetails, ct);
+    }
+
+    private static Task WriteValidationProblemDetailsAsync(HttpContext context, ValidationException ex, CancellationToken ct)
+    {
+        var errors = ex
+            .Errors
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "Request" : e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray()
+            );
+
+        var validationProblemDetails = new HttpValidationProblemDetails(errors) {
+            Status = context.Response.StatusCode,
+            Type = "https://ietf.org",
+            Title = "One or more validation errors occurred.",
+            Detail = "Please refer to the errors property for additional details.",
+        };
+
+        return context.Response.WriteAsJsonAsync(validationProblemDetails, ct);
     }
 }

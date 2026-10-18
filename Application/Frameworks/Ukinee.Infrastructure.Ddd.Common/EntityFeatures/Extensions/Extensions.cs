@@ -1,9 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Ardalis.Specification;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.Utils;
 
-namespace Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+namespace Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
 
 public static class Specification
 {

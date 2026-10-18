@@ -32,10 +32,10 @@ where TEntity : IEntity
     }
 }
 
-public class TransactionThrowingEntityUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>(
+public class TransactionThrowingUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>(
     IUnitOfWorkProvider uowProvider,
-    IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload> inner
-) : IPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>
+    IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload> inner
+) : IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {

@@ -8,13 +8,12 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.External.Api.GatewayServices;
 
-public class ExternalGatewayCreator<TTag, TParams, TIdentifier, TPayload, TEntity, TResponse>(
+public class ExternalGatewayCreator<TTag, TIdentifier, TPayload, TEntity, TResponse>(
     IJsonOptionsProvider<ExternalGatewayTag> jsonOptionsProvider,
     IHttpClientFactory httpClientFactory
-) : ExternalGatewayBase<TTag, TParams, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGatewayCreator<TIdentifier, TPayload, TResponse>
-where TIdentifier : notnull
+) : ExternalGatewayBase<TTag, TIdentifier, TEntity>(jsonOptionsProvider, httpClientFactory), IExternalGatewayCreator<TIdentifier, TPayload, TResponse>
+where TIdentifier : notnull, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
 {
     public async Task<IReadOnlyCollection<TResponse>> CreateAsync(
         UserContext userContext,

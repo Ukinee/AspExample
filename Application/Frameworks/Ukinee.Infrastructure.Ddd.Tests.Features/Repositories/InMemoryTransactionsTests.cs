@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using NUnit.Framework;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Extensions;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;

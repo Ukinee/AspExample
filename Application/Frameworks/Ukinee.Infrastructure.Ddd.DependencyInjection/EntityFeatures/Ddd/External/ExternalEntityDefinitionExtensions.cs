@@ -15,39 +15,37 @@ namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Exter
 
 file class ProxyHelper
 {
-    public static void RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>(IServiceCollection serviceCollection)
+    public static void RegisterGateway<TTag, TIdentifier, TEntity, TResponse>(IServiceCollection serviceCollection)
     where TEntity : class, IEntity<TIdentifier>
-    where TIdentifier : struct, IEquatable<TIdentifier>
-    where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TResponse : class
     {
         serviceCollection
-            .AddSingleton<IExternalGateway<TIdentifier, TResponse>, ExternalGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>>()
+            .AddSingleton<IExternalGateway<TIdentifier, TResponse>, ExternalGateway<TTag, TIdentifier, TEntity, TResponse>>()
             ;
     }
 }
 
 public class RemoteDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> definition)
-where TIdentifier : struct, IEquatable<TIdentifier>
+where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
 
 {
-    public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> RegisterReadOnly<TIdentifierParams, TResponse>(
-        Func<IMapServiceRegisterer<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>>
+    public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> RegisterReadOnly<TResponse>(
+        Func<IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>>
             factory
     )
     where TResponse : class
-    where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
-        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
+        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifier, TEntity, TResponse>);
 
         builder.SetEntityReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetIdentifierReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
 
-        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>(builder, true);
+        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>(builder, true);
         factory.Invoke(remoteBuilder);
 
         definition.Features.Add(remoteBuilder.Feature);
@@ -56,12 +54,11 @@ where TEntity : class, IEntity<TIdentifier>
     }
 
     public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity>
-        RegisterStartupRemoteSynchronizationToMemoryRepository<TIdentifierParams, TResponse, TWeight>(
-            Func<IMapServiceRegisterer<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>,
-                RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>> factory
+        RegisterStartupRemoteSynchronizationToMemoryRepository<TResponse, TWeight>(
+            Func<IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>,
+                RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>> factory
         )
     where TWeight : ISynchronizationOrderByPriority
-    where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>
     where TResponse : class
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
@@ -71,14 +68,14 @@ where TEntity : class, IEntity<TIdentifier>
             CommonProxyHelper.RegisterStartupSynchronization<TIdentifier, TEntity, TWeight, ExternalSynchronizationDataSourceAdapter<TIdentifier, TEntity, TResponse>>
         );
 
-        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
+        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifier, TEntity, TResponse>);
 
         builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
 
-        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>(builder, false);
+        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>(builder, false);
         factory.Invoke(remoteBuilder);
 
         definition.Features.Add(remoteBuilder.Feature);
@@ -86,23 +83,22 @@ where TEntity : class, IEntity<TIdentifier>
         return definition;
     }
 
-    public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> Register<TIdentifierParams, TResponse>(
-        Func<ICacheRegisterer<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>>
+    public ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> Register<TResponse>(
+        Func<ICacheRegisterer<TTag, TIdentifier, TEntity, TResponse>, RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>>
             factory
     )
-    where TIdentifierParams : IRouteParams<TIdentifierParams, TIdentifier>
     where TResponse : class
     {
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
         var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
-        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>);
+        builder.Feature.Extensions.Add(ProxyHelper.RegisterGateway<TTag, TIdentifier, TEntity, TResponse>);
 
         builder.SetEntityReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetIdentifierReader<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, GetEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
         builder.SetEntityRemover<ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>, RemoveEntityUseCase<TIdentifier, TEntity>>(ServiceLifetime.Singleton, true);
 
-        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifierParams, TIdentifier, TEntity, TResponse>(builder, true);
+        var remoteBuilder = new RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse>(builder, true);
         factory.Invoke(remoteBuilder);
 
         definition.Features.Add(remoteBuilder.Feature);
@@ -114,7 +110,7 @@ where TEntity : class, IEntity<TIdentifier>
 public static class ExternalEntityDefinitionExtensions
 {
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.RemoteEntityDefinition<TIdentifier, TEntity> definition)
-    where TIdentifier : struct, IEquatable<TIdentifier>
+    where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
     {
         public RemoteDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new RemoteDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);

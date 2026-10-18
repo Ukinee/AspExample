@@ -16,6 +16,8 @@ using Ukinee.Users.Domain.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Extensions;
 
+public class ServerTag;
+
 public class ServerInMemoryConfig
 {
     public const string Port = "5002";
@@ -49,41 +51,37 @@ public static class SetupServerServices
             var cookiePolicy = TestingAuthorizationPolicyDefinition.VipOwnerOnly<CookieIdentifier, Cookie>(identifier => identifier.UserGuid);
 
             serviceCollection
-                .RegisterModule<TestingTag>()
+                .RegisterModule<ServerTag>()
                 .LocalContexts.AddInMemoryContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                     .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                         .SetAccessPolicy(announcementPolicy)
                         .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
-                        .AddUpdateUseCase<UpdateAnnouncementRequest, UpdateAnnouncementRequestValidator, AnnouncementFactory>()
+                        .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
                     )
-                    .ApiServer.Register<AnnouncementIdentifierParams, AnnouncementResponse>(
+                    .ApiServer.Register<AnnouncementResponse>(
                         config.ApiBaseRoute,
-                        (idParams, _) => idParams.ToIdentifier(),
                         announcementPolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
-                            .RegisterCrd<CreateAnnouncementRequest>()
-                            .RegisterUpdate<UpdateAnnouncementRequest>()
+                            .RegisterCrud<CreateAnnouncementRequest, UpdateAnnouncementContentsRequest>()
                     )
                     .SignalRServer.Register<THub, AnnouncementSignalRRequest, AnnouncementResponse>(signalRConfigurator => signalRConfigurator
                         .SetGroupResolver<AnnouncementSignalRRouteResolver>()
                         .SetAccessValidationService<AnnouncementSignalRAccessValidator>()
                     )
                 )
-                .LocalContexts.AddInMemoryContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
-                    .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
+                .LocalContexts.AddHonestDeletionDatabaseContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
+                    .Ddd.RegisterWithDatabaseRepository(dddConfigurator => dddConfigurator
                         .SetAccessPolicy(borderPolicy)
                         .SetCreateUseCase<CreateBorderRequest, CreateBorderRequestValidator, BorderFactory>()
                         .AddUpdateUseCase<UpdateBorderRequest, UpdateBorderRequestValidator, BorderFactory>()
                     )
-                    .ApiServer.Register<BorderIdentifierParams, BorderResponse>(
+                    .ApiServer.Register<BorderResponse>(
                         config.ApiBaseRoute,
-                        (idParams, _) => idParams.ToIdentifier(),
                         borderPolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
-                            .RegisterCrd<CreateBorderRequest>()
-                            .RegisterUpdate<UpdateBorderRequest>()
+                            .RegisterCrud<CreateBorderRequest, UpdateBorderRequest>()
                     )
                     .SignalRServer.Register<THub, BorderSignalRRequest, BorderResponse>(signalRConfigurator => signalRConfigurator
                         .SetGroupResolver<BorderSignalRRouteResolver>()
@@ -96,14 +94,12 @@ public static class SetupServerServices
                         .SetCreateUseCase<CreateCookieRequest, CreateCookieRequestValidator, CookieFactory>()
                         .AddUpdateUseCase<UpdateCookieRequest, UpdateCookieRequestValidator, CookieFactory>()
                     )
-                    .ApiServer.Register<CookieIdentifierParams, CookieResponse>(
+                    .ApiServer.Register<CookieResponse>(
                         config.ApiBaseRoute,
-                        (idParams, _) => idParams.ToIdentifier(),
                         cookiePolicy,
                         apiServerConfigurator => apiServerConfigurator
                             .WithNoAdditionalConfiguration()
-                            .RegisterCrd<CreateCookieRequest>()
-                            .RegisterUpdate<UpdateCookieRequest>()
+                            .RegisterCrud<CreateCookieRequest, UpdateCookieRequest>()
                     )
                     .SignalRServer.Register<THub, CookieSignalRRequest, CookieResponse>(signalRConfigurator => signalRConfigurator
                         .SetGroupResolver<CookieSignalRRouteResolver>()

@@ -8,7 +8,7 @@ using Ukinee.Users.Common.ValueObjects;
 namespace Ukinee.Infrastructure.Ddd.Common.UseCases;
 
 public class GetEntityUseCase<TIdentifier, TEntity>(
-    IEntityReader<TIdentifier, TEntity> entityReader,
+    IAllEntityReader<TIdentifier, TEntity> allEntityReader,
     IIdentifierReader<TIdentifier, TEntity> identifierReader
 ) : IGetEntityUseCase<TIdentifier, TEntity>, IGetAllEntityUseCase<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
@@ -17,7 +17,7 @@ where TIdentifier : struct
     protected readonly IIdentifierReader<TIdentifier, TEntity> IdentifierReader = identifierReader;
 
     public IAsyncEnumerable<TEntity> ExecuteAll(UserContext userContext, CancellationToken cancellationToken) =>
-        entityReader.GetAllAsync(userContext, cancellationToken);
+        allEntityReader.GetAllAsync(userContext, cancellationToken);
 
     public async Task<TEntity> Execute(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken) =>
         await IdentifierReader.GetByIdAsync(userContext, identifier, cancellationToken);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.Utils;
 using Ukinee.Users.Common.ValueObjects;
 
@@ -62,7 +63,7 @@ public static class AuthorizationPolicy
                     ReadAccessMode.LoggedIn => userContext.IsAuthenticated ? DddExpressionFactory.PublicRead<TEntity>() : null,
                     ReadAccessMode.OwnerOnly => DddExpressionFactory.UserGuidInIdentifierExpression<TEntity>(ownerPropertyName!, userContext),
                     ReadAccessMode.SharedUsers => DddExpressionFactory.SharedWithUserExpression<TEntity>(userContext),
-                    ReadAccessMode.Roles => DddExpressionFactory.True<TEntity>(),
+                    ReadAccessMode.Roles => DddExpressionFactory.LoggedInExpression<TEntity>(userContext),
                     _ => throw new ArgumentOutOfRangeException(nameof(rule.Mode)),
                 };
 
@@ -87,7 +88,7 @@ public static class AuthorizationPolicy
                 .Where(rule => HasAllRoles(ctx, rule.RequiredRoles))
                 .Any(rule => rule.Mode switch {
                         CreateAccessMode.LoggedIn => ctx.IsAuthenticated,
-                        CreateAccessMode.Roles => true,
+                        CreateAccessMode.Roles => ctx.IsAuthenticated,
                         _ => throw new ArgumentOutOfRangeException(nameof(rule.Mode)),
                     }
                 );
@@ -117,7 +118,7 @@ public static class AuthorizationPolicy
                 var expr = rule.Mode switch {
                     ModifyAccessMode.OwnerOnly => DddExpressionFactory.UserGuidInIdentifierExpression<TEntity>(ownerPropertyName!, ctx),
                     ModifyAccessMode.SharedUsers => DddExpressionFactory.SharedWithUserExpression<TEntity>(ctx),
-                    ModifyAccessMode.Roles => DddExpressionFactory.True<TEntity>(),
+                    ModifyAccessMode.Roles => DddExpressionFactory.LoggedInExpression<TEntity>(ctx),
                     _ => throw new ArgumentOutOfRangeException(nameof(rule.Mode)),
                 };
 
@@ -151,14 +152,14 @@ public static class AuthorizationPolicy
         var needsPublicRead = def.ReadRules.Any(r => r.Mode is ReadAccessMode.Guest or ReadAccessMode.LoggedIn);
 
         if (needsPublicRead && !DddExpressionFactory.IsPublicRead<TEntity>())
-            throw new InvalidOperationException($"{typeof(TEntity)} does not implement IEntityWithPublicRead (required by Guest/LoggedIn read rules).");
+            throw new InvalidOperationException($"{typeof(TEntity)} does not implement {nameof(IEntityWithPublicRead<>)} (required by {ReadAccessMode.Guest}/{ReadAccessMode.LoggedIn} read rules).");
 
         var needsShared = def.ReadRules.Any(r => r.Mode == ReadAccessMode.SharedUsers) ||
                           def.UpdateRules.Any(r => r.Mode == ModifyAccessMode.SharedUsers) ||
                           def.DeleteRules.Any(r => r.Mode == ModifyAccessMode.SharedUsers);
 
         if (needsShared && !DddExpressionFactory.HasSharedAccess<TEntity>())
-            throw new InvalidOperationException($"{typeof(TEntity)} does not implement IEntityWithSharedAccess (required by SharedUsers rules).");
+            throw new InvalidOperationException($"{typeof(TEntity)} does not implement {nameof(IEntityWithSharedAccess<>)} (required by {ReadAccessMode.SharedUsers} rules).");
 
         var needsOwner = def.ReadRules.Any(r => r.Mode == ReadAccessMode.OwnerOnly) ||
                          def.UpdateRules.Any(r => r.Mode == ModifyAccessMode.OwnerOnly) ||

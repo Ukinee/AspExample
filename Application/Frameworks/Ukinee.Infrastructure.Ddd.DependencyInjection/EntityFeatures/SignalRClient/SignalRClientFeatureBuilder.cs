@@ -34,14 +34,14 @@ where TEntity : class, IEntity<TIdentifier>
         feature.CacheRequestHandlers.AddRange(cacheDescriptors);
     }
 
-    public SignalRClientFeatureBuilder<TTag, THubTag, TIdentifier, TEntity, TSubscribeRequest, TViewModel> AddLocalCacheUpdate()
+    public SignalRClientFeatureBuilder<TTag, THubTag, TIdentifier, TEntity, TSubscribeRequest, TViewModel> AddLocalCacheInvalidation()
     {
         Feature.CacheRequestHandlers.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
-            .. PayloadHelper.Singleton2<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
-            .. PayloadHelper.Singleton2<IRequestHandler<RemoveCachedEntitiesCommand<TIdentifier, TEntity>>, LocalCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<UpsertCachedEntitiesCommand<TIdentifier, TEntity>>, InvalidatingCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<InvalidateCacheCommand<TIdentifier, TEntity>>, InvalidatingCacheRequestHandler<TIdentifier, TEntity>>(),
+            .. PayloadHelper.Singleton2<IRequestHandler<RemoveCachedEntitiesCommand<TIdentifier, TEntity>>, InvalidatingCacheRequestHandler<TIdentifier, TEntity>>(),
         ];
 
         Feature.CacheRequestHandlers.AddRange(descriptors);

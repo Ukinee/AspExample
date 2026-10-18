@@ -6,7 +6,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCases;
 
-public class DeltaUpdateEntityUseCase<TIdentifier, TEntity>(IDeltaEntityUpdater<TIdentifier, TEntity> updater) : IDeltaUpdateEntityUseCase<TIdentifier, TEntity>
+public class DeltaUpdateEntityUseCase<TIdentifier, TEntity>(IEntityDeltaUpdater<TIdentifier, TEntity> updater) : IDeltaUpdateEntityUseCase<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {

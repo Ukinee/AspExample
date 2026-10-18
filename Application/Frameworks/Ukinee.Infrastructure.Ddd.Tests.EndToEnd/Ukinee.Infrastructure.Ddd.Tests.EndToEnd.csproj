@@ -28,4 +28,8 @@
       <ProjectReference Include="..\Ukinee.Users.Startup\Ukinee.Users.Startup.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Client\SignalR\" />
+    </ItemGroup>
+
 </Project>

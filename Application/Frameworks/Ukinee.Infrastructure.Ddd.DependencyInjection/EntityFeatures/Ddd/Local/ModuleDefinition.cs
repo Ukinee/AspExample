@@ -1,4 +1,4 @@
-﻿using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+﻿using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 
 // ReSharper disable once CheckNamespace
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.Core

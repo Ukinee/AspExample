@@ -13,7 +13,7 @@ namespace Ukinee.Infrastructure.Ddd.External.Api.UseCaseServicesAdapters;
 public class ExternalGatewayAdapter<TIdentifier, TEntity, TResponse>(
     IMapService<TResponse, TEntity> mapService,
     IExternalGateway<TIdentifier, TResponse> externalGateway
-) : IIdentifierReader<TIdentifier, TEntity>, IEntityReader<TIdentifier, TEntity>, IEntityRemover<TIdentifier, TEntity>
+) : IIdentifierReader<TIdentifier, TEntity>, IAllEntityReader<TIdentifier, TEntity>, IEntityRemover<TIdentifier, TEntity>
 where TIdentifier : notnull
 where TEntity : class, IEntity<TIdentifier>
 {

@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using Ukinee.Infrastructure.Ddd.Local;
+using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
+using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Services;
 using Ukinee.Users.Common.ValueObjects;
@@ -24,6 +26,35 @@ public class CookieFactory : ICreateEntityFactory<CreateCookieRequest, Cookie>, 
         };
     }
 }
+
+public class CookieMapService : IMapService<CookieResponse, Cookie>
+{
+    public ValueTask<Cookie> Map(CookieResponse externalEntity)
+    {
+        return ValueTask.FromResult(
+            new Cookie {
+                Identifier = externalEntity.Identifier,
+                Calories = externalEntity.Calories,
+                IsAvailableForPublicRead = externalEntity.IsAvailableForPublicRead,
+            }
+        );
+    }
+
+    public async ValueTask<IReadOnlyCollection<Cookie>> Map(IReadOnlyCollection<CookieResponse> externalEntities)
+    {
+        var result = new List<Cookie>(externalEntities.Count);
+
+        foreach (var externalEntity in externalEntities)
+        {
+            var entity = await Map(externalEntity);
+
+            result.Add(entity);
+        }
+
+        return result;
+    }
+}
+
 
 public class CreateCookieRequestValidator : AbstractValidator<IEnumerable<CreateCookieRequest>>;
 public class UpdateCookieRequestValidator : AbstractValidator<IEnumerable<UpdateCookieRequest>>;

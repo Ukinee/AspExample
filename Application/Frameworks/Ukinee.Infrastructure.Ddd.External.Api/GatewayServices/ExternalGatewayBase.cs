@@ -12,13 +12,12 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
-public abstract class ExternalGatewayBase<TTag, TParams, TIdentifier, TEntity>(
+public abstract class ExternalGatewayBase<TTag, TIdentifier, TEntity>(
     IJsonOptionsProvider<ExternalGatewayTag> jsonOptionsProvider,
     IHttpClientFactory httpClientFactory
 )
-where TIdentifier : notnull
+where TIdentifier : IRouteParams
 where TEntity : class, IEntity<TIdentifier>
-where TParams : IRouteParams<TParams, TIdentifier>
 {
     protected JsonSerializerOptions JsonOptions => jsonOptionsProvider.Options;
 

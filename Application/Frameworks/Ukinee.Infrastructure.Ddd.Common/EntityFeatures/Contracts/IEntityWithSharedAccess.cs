@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Ukinee.Users.Common.ValueObjects;
 
-namespace Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+namespace Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 
 public interface IEntityWithSharedAccess<out TSelf>
 {

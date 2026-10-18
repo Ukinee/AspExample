@@ -1,11 +1,11 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.Specifications.Contracts;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
 
 [Identifier(nameof(Guid))]
-[RouteParamsIdentifier]
+[ApiIdentifier]
 public readonly partial record struct BorderIdentifier
 {
     public Guid Guid { get; init; }
@@ -25,11 +25,10 @@ public record BorderResponse
 {
     public required BorderIdentifier Identifier { get; init; }
     public required int Size { get; init; }
+    public required bool IsAvailableForPublicRead { get; init; }
 }
 
-public record BorderSignalRRequest
-{
-}
+public record BorderSignalRRequest { }
 
 [HasIdentifier(typeof(BorderIdentifier))]
 public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<Border>

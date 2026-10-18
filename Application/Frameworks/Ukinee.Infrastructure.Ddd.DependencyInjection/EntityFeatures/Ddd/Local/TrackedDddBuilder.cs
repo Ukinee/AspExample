@@ -127,7 +127,7 @@ where TIdentifier : struct
         ];
 
         _builder
-            .AddPayloadEntityUpdateFeature<TrackedPayloadEntityUpdater<TIdentifier, TEntity, TUpdatePayload>, TUpdatePayload,
+            .AddPayloadEntityUpdateFeature<TrackedEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, TUpdatePayload,
                 UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(_serviceLifetime, extensions, _throwOnTransaction);
 
         return this;
