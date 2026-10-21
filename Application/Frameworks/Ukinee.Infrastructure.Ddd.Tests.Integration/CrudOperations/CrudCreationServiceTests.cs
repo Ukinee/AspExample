@@ -59,21 +59,21 @@ public class CrudCreationServiceTests : TestBase
             .LocalContexts.AddInMemoryContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(announcementPolicy)
-                    .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
+                    .AddCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
                     .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
                 )
             )
             .LocalContexts.AddInMemoryContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(borderPolicy)
-                    .SetCreateUseCase<CreateBorderRequest, CreateBorderRequestValidator, BorderFactory>()
+                    .AddCreateUseCase<CreateBorderRequest, CreateBorderRequestValidator, BorderFactory>()
                     .AddUpdateUseCase<UpdateBorderRequest, UpdateBorderRequestValidator, BorderFactory>()
                 )
             )
             .LocalContexts.AddInMemoryContext<CookieIdentifier, Cookie>(contextConfigurator => contextConfigurator
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(cookiePolicy)
-                    .SetCreateUseCase<CreateCookieRequest, CreateCookieRequestValidator, CookieFactory>()
+                    .AddCreateUseCase<CreateCookieRequest, CreateCookieRequestValidator, CookieFactory>()
                     .AddUpdateUseCase<UpdateCookieRequest, UpdateCookieRequestValidator, CookieFactory>()
                 )
             )

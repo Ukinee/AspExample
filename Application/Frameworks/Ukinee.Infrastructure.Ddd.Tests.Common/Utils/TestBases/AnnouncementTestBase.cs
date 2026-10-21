@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 
 namespace Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;

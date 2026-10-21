@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
-using Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Ukinee.Infrastructure.Ddd.Local.EfCore.Options;
 using Ukinee.Infrastructure.Options.Extensions;
 using Ukinee.Users.Common.ValueObjects;
 using Ukinee.Users.Databases;
@@ -19,6 +18,9 @@ namespace Ukinee.Users.Startup;
 
 public class UserOptionsConfig
 {
+    public const string SecretPath = "SecretOptions/supersecretoptions.json";
+    public const string SectionName = "TokenOptions";
+
     public required string TokenOptionsSectionName { get; init; }
     public required string TokenOptionsFilePath { get; init; }
 }
@@ -26,9 +28,6 @@ public class UserOptionsConfig
 public class UserConfig : UserOptionsConfig
 {
     public required string DatabaseName { get; init; }
-
-    public required string DatabaseOptionsSectionName { get; init; }
-    public required string DatabaseOptionsFilePath { get; init; }
 }
 
 public static class SetupUsersExtensions
@@ -46,7 +45,7 @@ public static class SetupUsersExtensions
                 )
                 .ConfigureOptions(configuration, config)
                 .ConfigureServices()
-                .ConfigureDatabase(config)
+                .ConfigureDatabase(config, configuration)
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer();
 
@@ -58,14 +57,6 @@ public static class SetupUsersExtensions
             serviceCollection.TryAddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
 
             serviceCollection.ConfigureJson<TokenOptions>(configuration, config.TokenOptionsSectionName, config.TokenOptionsFilePath);
-
-            serviceCollection.ConfigureJson<DbConnectionSettingsCollection<UserDbContext>>(
-                configuration,
-                config.DatabaseOptionsSectionName,
-                config.DatabaseOptionsFilePath
-            );
-
-            serviceCollection.AddSingleton<DbOptions<UserDbContext>>();
 
             return serviceCollection;
         }
@@ -85,12 +76,11 @@ public static class SetupUsersExtensions
             return serviceCollection;
         }
 
-        private IServiceCollection ConfigureDatabase(UserConfig config)
+        private IServiceCollection ConfigureDatabase(UserConfig config, IConfiguration configuration)
         {
             serviceCollection.AddDbContext<UserDbContext>((serviceProvider, builder) =>
                 {
-                    var options = serviceProvider.GetRequiredService<DbOptions<UserDbContext>>();
-                    var connectionString = options.GetConnectionString(config.DatabaseName);
+                    var connectionString = configuration.GetConnectionString(config.DatabaseName);
 
                     builder.UseNpgsql(
                         connectionString,

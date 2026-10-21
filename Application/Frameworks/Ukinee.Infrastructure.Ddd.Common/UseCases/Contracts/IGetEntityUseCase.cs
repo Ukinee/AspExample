@@ -11,7 +11,7 @@ where TIdentifier : struct
     public Task<TEntity> Execute(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken);
     public Task<TEntity?> Execute(UserContext userContext, TIdentifier? identifier, CancellationToken cancellationToken);
     public IAsyncEnumerable<TEntity> ExecuteSoft(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
-    public Task<Dictionary<TIdentifier, TEntity>> ExecuteStrict(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
+    public Task<IReadOnlyDictionary<TIdentifier, TEntity>> ExecuteStrict(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
 }
 
 public interface IGetAllEntityUseCase<TIdentifier, out TEntity>

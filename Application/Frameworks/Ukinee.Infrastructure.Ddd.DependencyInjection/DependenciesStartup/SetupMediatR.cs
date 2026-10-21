@@ -26,9 +26,7 @@ public static class SetupMediatRExtension
                 foreach (var assembly in config.AssembliesToScanHandlers)
                     builder.RegisterServicesFromAssemblies(assembly);
             }
-        );
-
-        serviceCollection.Decorate<IMediator, TransactionMediatorDecorator>();
+        ).Decorate<IMediator, TransactionMediatorDecorator>();
 
         return serviceCollection;
     }

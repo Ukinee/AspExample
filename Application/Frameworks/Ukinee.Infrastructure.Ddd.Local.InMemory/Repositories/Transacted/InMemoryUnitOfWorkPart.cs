@@ -2,7 +2,7 @@
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 
-namespace Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
+namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 
 public class InMemoryUnitOfWorkPart<TIdentifier, TEntity>(
     Type ownerType,

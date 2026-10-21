@@ -15,16 +15,15 @@ using Ukinee.Users.Domain.Contracts;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 
-public class ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> :
-    ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>
+public class ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse>
 where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 where TEntity : class, IEntity<TIdentifier>
 {
-    private readonly AuthorizationPolicyDefinition<TIdentifier, TEntity> _policyDefinition;
+    private readonly AuthorizationPolicyDefinition<TIdentifier, TEntity>? _policyDefinition;
     internal readonly ApiServerDefinition Feature;
 
     public ApiServerFeatureBuilder(
-        AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
+        AuthorizationPolicyDefinition<TIdentifier, TEntity>? policyDefinition,
         ApiServerDefinition feature
     )
     {
@@ -42,7 +41,7 @@ where TEntity : class, IEntity<TIdentifier>
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterDelete(Action<RouteHandlerBuilder>? builder = null)
     {
         return WithDelete(builder)
-            .WithDelete(builder);
+            .WithDeleteRange(builder);
     }
 
     public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> RegisterCrud<TCreatePayload, TUpdatePayload>(Action<RouteHandlerBuilder>? builder = null)
@@ -75,8 +74,7 @@ where TEntity : class, IEntity<TIdentifier>
             .WithThrowingOnDuplicatesCreate<TCreatePayload>(builder);
     }
 
-    ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse>
-        ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>.WithGroupConfiguration(Action<RouteGroupBuilder> builder)
+    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> AddGroupConfiguration(Action<RouteGroupBuilder> builder)
     {
         Feature.ConfigureGroup(builder);
 
@@ -106,7 +104,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"GetAll{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -139,7 +138,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"FindMany{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -172,7 +172,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"GetSpecific{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Read);
 
                 builder?.Invoke(endpoint);
             }
@@ -207,7 +208,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName(EndpointsNames.Update<TEntity, TUpdatePayload>());
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
 
                 builder?.Invoke(endpoint);
             }
@@ -241,7 +243,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName(EndpointsNames.UpdateMany<TEntity, TUpdatePayload>());
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Update);
 
                 builder?.Invoke(endpoint);
             }
@@ -256,7 +259,7 @@ where TEntity : class, IEntity<TIdentifier>
             {
                 var endpoint = group
                     .MapPost(
-                        RelationalPathUtils.Create<TEntity>(),
+                        RelationalPathUtils.Create<TEntity, TCreatePayload>(),
                         async (
                             [FromBody] TCreatePayload request,
                             [FromServices] ICreateEntityUseCase<TEntity, TCreatePayload> useCase,
@@ -273,9 +276,10 @@ where TEntity : class, IEntity<TIdentifier>
                             return TypedResults.Created($"{def.BaseRoute}", result);
                         }
                     )
-                    .WithName($"Create{typeof(TEntity).Name}");
+                    .WithName($"Create{typeof(TEntity).Name}With{typeof(TCreatePayload).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -290,7 +294,7 @@ where TEntity : class, IEntity<TIdentifier>
             {
                 var endpoint = group
                     .MapPost(
-                        RelationalPathUtils.CreateMany<TEntity>(),
+                        RelationalPathUtils.CreateMany<TEntity, TCreatePayload>(),
                         async (
                             [FromBody] IReadOnlyCollection<TCreatePayload> requests,
                             [FromServices] ICreateEntityUseCase<TEntity, TCreatePayload> useCase,
@@ -310,9 +314,10 @@ where TEntity : class, IEntity<TIdentifier>
                             return TypedResults.Created($"{def.BaseRoute}", result);
                         }
                     )
-                    .WithName($"CreateMany{typeof(TEntity).Name}");
+                    .WithName($"CreateMany{typeof(TEntity).Name}With{typeof(TCreatePayload).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -347,7 +352,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"EnsureExists{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -381,7 +387,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"EnsureExistsMany{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Create);
 
                 builder?.Invoke(endpoint);
             }
@@ -413,7 +420,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"Delete{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
 
                 builder?.Invoke(endpoint);
             }
@@ -445,7 +453,8 @@ where TEntity : class, IEntity<TIdentifier>
                     )
                     .WithName($"DeleteRange{typeof(TEntity).Name}");
 
-                ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
+                if (_policyDefinition != null)
+                    ApiAuthorizationHelper.ApplyPolicy(endpoint, _policyDefinition, AuthorizedOperation.Delete);
 
                 builder?.Invoke(endpoint);
             }
@@ -528,11 +537,4 @@ where TEntity : class, IEntity<TIdentifier>
 
         return this;
     }
-}
-
-public interface ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>
-where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
-where TEntity : class, IEntity<TIdentifier>
-{
-    public ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse> WithGroupConfiguration(Action<RouteGroupBuilder> builder);
 }

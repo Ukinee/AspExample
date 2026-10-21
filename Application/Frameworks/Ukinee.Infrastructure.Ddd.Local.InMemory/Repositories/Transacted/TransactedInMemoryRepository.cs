@@ -10,9 +10,9 @@ using Ukinee.Infrastructure.Ddd.Local.Repositories;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-namespace Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
+namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 
-public class TransactedInMemoryRepository<TIdentifier, TEntity, TTag>(
+public class TransactedInMemoryRepository<TTag, TIdentifier, TEntity>(
     IUnitOfWorkProvider unitOfWorkProvider,
     InMemoryStore<TIdentifier, TEntity> store
 ) : IEditableTrackedRepository<TIdentifier, TEntity>

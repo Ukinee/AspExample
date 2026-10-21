@@ -1,103 +1,541 @@
 DDDSL
 ===
 
-Демонстрационный проект с примером построения DDD+CQRS приложений с симметричным клиентом и сервером. Концентрирует в
-себе подход, используемый в личных приложениях.
-Покрывает 90% типовых требований и может использоваться для быстрого прототипирования шаблонных CRUD приложений.
+DDDSL - фреймворк для DDD приложений с единым набором индерфейсов для локальных и удаленных сущностей: любой хост
+регистрирует сущности локально (In-Memory или Db) или удаленно (HTTP, SignalR) и работает с ними одинаково. Источники
+данных, политики доступа, сущности и ее модули регистрируются декларативно через DSL.
+
+Хост - процесс, илспользующий DSL для регистрации сущности (неважно, локально или удаленно);
+Локальный контекст - модуль DSL, ответственный за регистрацию сервисов, существующих в памяти приложения или в базе
+данных; Подробнее в [локальных сущностях](#локальные-сущности--localcontexts).
+Удаленный контекс - модуль DSL, ответственный за регистрацию сервисов для получения доступа к локальной сущности другого
+процесса; Подробнее в [удаленных сущностях](#удаленные-сущности--apiclientcontexts).
 
 ## Содержание
 
 ## Quick Start
 
+Предположим, мы хотим написать сервис для хранения публичных анонсов. Нам понадобятся две доменные модели:
+
+```csharp
+[ApiIdentifier]
+[Identifier(nameof(UserGuid), nameof(Guid))]
+public readonly partial record struct AnnouncementIdentifier
+{
+    public required Guid UserGuid { get; init; }
+    public required Guid Guid { get; init; }
+
+    public static AnnouncementIdentifier Create(UserContext userContext, Guid guid)
+    {
+        return new AnnouncementIdentifier {
+            UserGuid = userContext.Guid,
+            Guid = guid,
+        };
+    }
+}
+```
+
+Необходимость атрибутов описана в [отдельной секции](#идентификаторы). Если коротко, то ``ApiIdentifierAttribute``
+добавляет идетификатору возможность быть использованным в Api, а ``IdentifierAttribute(nameof(Guid))``
+фиксирует порядок свойств (их может быть несколько) и генерирует методы ``Create``, ``ToString``, реализацию
+``ISpanParsable``.
+
+``UserGuid`` тут это guid пользователя, создавшего сущность.
+
+```csharp
+[HasIdentifier(typeof(AnnouncementIdentifier))]
+public partial record Announcement : IEntity<AnnouncementIdentifier>, IEntityWithPublicRead<Announcement>
+{
+    public required partial AnnouncementIdentifier Identifier { get; init; }
+    public required bool IsAvailableForPublicRead { get; init; }
+
+    public required string Contents { get; init; }
+
+    public Announcement OpenPublicRead()
+    {
+        return this with {
+            IsAvailableForPublicRead = true,
+        };
+    }
+
+    public Announcement ClosePublicRead()
+    {
+        return this with {
+            IsAvailableForPublicRead = false,
+        };
+    }
+}
+```
+
+HasIdentifier необходимо указывать из за особенновстей EFCore и ComplexProperty, которые не позволяют Identifier быть
+первичным ключом. Поэтому, мы генерируем все свойства ``AnnouncementIdentifier`` внутри [Announcement](#идентификаторы),
+а само свойство Identifier игнорируем на стороне БД.
+
+Наша задача - показать наши анонсы миру - поэтому, мы добавляем интерфейс ``IEntityWithPublicRead`` и реалезуем
+``OpenPublicRead`` и ``ClosePublicRead``. Пока что реализация методов - бойлерплейт, но уже в [планах](#todo) перенести
+ее в генератор кода!
+
+Долбавим пару DTO, которые будут использоваться как запросы от пользователя:
+
+```csharp
+public class CreateAnnouncementRequest
+{
+    public required string Contents { get; init; }
+}
+
+public class UpdateAnnouncementContentsRequest
+{
+    public required string Contents { get; init; }
+}
+```
+
+И заодно напишем DbContext для всего модуля:
+
+```csharp
+public class ServerDbContext(DbContextOptions<ServerDbContext> options) : TaggedDbContext<ServerDbContext, ServerTag>(options)
+{
+    public DbSet<Announcement> Announcements { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder
+            .Entity<Announcement>()
+            .ToTable("announcements")
+            .ConfigureComplexIdentifierKey<AnnouncementIdentifier, Announcement>();
+    }
+}
+```
+
+В этом блоке кода необычное только ``TaggedDbContext`` и ``ConfigureComplexIdentifierKey``.
+
+Начнем с ``TaggedDbContext`` и ``ServerTag``. ``ServerTag`` - пустой маркерный класс, он используется для разделения
+разных модулей приложения. Разные модули могут использовать разные контексты баз данных! ``TaggedDbContext`` - пустой
+базовый класс, необходимый для указания тэга и разделения контекстов.
+
+``ConfigureComplexIdentifierKey`` как раз и отвечает за указание первичного ключа по всем свойствам ``TIdentifier``.
+
+``ServerTag`` в фреймворке повсеместно, не только в БД. Он нужен как раз для того, чтобы интерфейсы разных модулей не
+пересекались.
+
+Перед регистрацией модуля, необходимо зарегистрировать зависимости:
+
+```csharp
+private static void SetupMapper(IServiceCollection serviceCollection)
+{
+    serviceCollection
+        .AddSingleton<TypeAdapterConfig>(_ =>
+            {
+                var config = TypeAdapterConfig.GlobalSettings;
+                config.Default.RequireDestinationMemberSource(true);
+                config.Compile(true);
+                return config;
+            }
+        )
+        .AddSingleton<IMapper, ServiceMapper>();
+}
+
+public static IServiceCollection SetupMediatR(IServiceCollection serviceCollection, MediatRConfig config)
+{
+    serviceCollection
+        .AddMediatR(builder =>
+            {
+                builder.TypeEvaluator = type => false;
+                builder.Lifetime = ServiceLifetime.Scoped;
+                builder.RegisterGenericHandlers = false;
+                builder.NotificationPublisher = new TaskWhenAllPublisher();
+                builder.AutoRegisterRequestProcessors = false;
+
+                foreach (var assembly in config.AssembliesToScanHandlers)
+                    builder.RegisterServicesFromAssemblies(assembly);
+            }
+        )
+        .Decorate<IMediator, TransactionMediatorDecorator>();
+
+    return serviceCollection;
+}
+```
+
+Настройки могут быть произвольными, но медиатор нужно задекорировать в ``TransactionMediatorDecorator``. Он
+перенаправляет события в транзакцию, если она запущена. В момент завершения транзакции, она резолвит медиатор и
+отправляет все удерживаемые уведомления.
+
+Авторизация:
+
+```csharp
+private static void SetupAuthorization(IServiceCollection serviceCollection)
+{
+    serviceCollection
+        .AddAuthorization(authBuilder =>
+            {
+                authBuilder.AddPolicy("LoggedInPolicy", policy => policy.RequireAuthenticatedUser());
+            }
+        )
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer();
+}
+```
+
+Хотя в этом гите и есть проекты ``Ukinee.Users.*``, это MVP. Подразумевается, что вы реализуете пользователей
+самостоятельно. Фрейворк использует интерфейс ``IUserContextProvider`` для изначального получения ``UserContext``:
+
+```csharp
+public readonly record struct UserContext
+{
+    public required Guid Guid { get; init; }
+    public required bool IsAuthenticated { get; init; }
+
+    public required ImmutableArray<string> Roles { get; init; }
+
+    public required string? Name { get; init; }
+    
+    ...
+```
+
+Фреймворку нужна только эта информация о пользователе. Контекст должен жить только в рамках запроса и не должен
+храниться как есть. ``Guid`` - идентификатор пользователя.
+
+### Введение в DSL
+
+Теперь, к регистрации самого модуля.
+
+```csharp
+    extension(IServiceCollection serviceCollection)
+    {
+        public IServiceCollection SetupServer(IConfiguration configuration, ServerConfig config)
+        {
+            var policy = RegistrationPolicy.Server;
+
+            var mediatRConfig = new MediatRConfig {
+                AssembliesToScanHandlers = [typeof(SetupMinimalServerExample).Assembly], // он ОЧЕНЬ хочет сканировать проекты
+            };
+
+            SetupMapper(serviceCollection);
+            SetupMediatR(serviceCollection, mediatRConfig);
+            SetupAuthorization(serviceCollection);
+            serviceCollection.AddSignalR();
+
+            serviceCollection.AddSingleton<TimeProvider>(_ => TimeProvider.System);
+
+            serviceCollection
+                .AddScoped<UnitOfWorkFactory>()
+                .AddScoped<IUnitOfWorkProvider>(sp => sp.GetRequiredService<UnitOfWorkFactory>())
+                .AddScoped<IUnitOfWorkFactory>(sp => sp.GetRequiredService<UnitOfWorkFactory>());
+
+            configuration.AddJsonFile(config.ConntectionStringPath, optional: false, reloadOnChange: true); // любой способ регистрации ConntectionString в конфигурации 
+
+            serviceCollection
+                .AddScoped<IUserContextProvider, TestingUserContextProvider>(_ => new TestingUserContextProvider(UserContext.Test));
+            
+            var announcementPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<AnnouncementIdentifier, Announcement>(identifier => identifier.UserGuid);
+
+            serviceCollection
+                .RegisterModule<ServerTag>()
+                .DatabaseDatasource.Register<ServerDbContext>((DbContextOptionsBuilder builder) =>
+                    {
+                        var connectionString = configuration.GetConnectionString(config.DatabaseName);
+
+                        builder.UseNpgsql(connectionString);
+                    }
+                )
+                .LocalContexts.AddHonestDeletionDatabaseContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
+                    .Ddd.RegisterWithDatabaseRepository(dddConfigurator => dddConfigurator
+                        .SetAccessPolicy(announcementPolicy)
+                        .SetCreateUseCase<CreateAnnouncementRequest, AnnouncementFactory>()
+                        .AddUpdateUseCase<UpdateAnnouncementContentsRequest, AnnouncementFactory>()
+                    )
+                    .ApiServer.Register<AnnouncementResponse>(
+                        config.ApiBaseRoute,
+                        announcementPolicy,
+                        apiServerConfigurator => apiServerConfigurator
+                            .RegisterCrud<CreateAnnouncementRequest, UpdateAnnouncementContentsRequest>()
+                            .AddGroupConfiguration(builder => builder.AllowAnonymous())
+                    )
+                )
+                .Build(policy);
+
+            return serviceCollection;
+        }
+    }
+```
+
+Сначала обязательно нужно объявить политику доступа. Подробнее про них [тут](#политики-доступа). Сейчас достаточно
+понимать, что реализация ``GuestReadAndOwnerEdit`` означает, что у сущности есть владелец, указанный в Id (нужно указать
+где он именно в параметре метода) и что эндпоинты для чтения не требуют даже авторизации.
+
+Весь DSL строгостипизирован, требует вызовов обязательных методов до вызова пользовательских на уровне компиляции.
+
+Первая фабрика DSL создается через метод ``RegisterModule``. Он как раз и требует объявления тэга, который будет
+использоваться сервисами. Регистрировать несколько модулей с одинаковыми тегами в одном приложении нельзя.
+
+Далее, у фабрики, возвращаемой ``RegisterModule``, мы хотим определить источник данных. Это будет база данных. Обратимся
+к ``DatabaseDatasource`` и выполним классическую настройку контекста. В контексте должны быть ``DbSet`` всех
+сущностей, объявляемых в этом модуле DSL, и которые используют БД как хранилище. Компилятор не труебует вызова этого
+метода, но если используется ``Add*DatabaseContext`` его вызов обязателен.
+
+И, наконец, описание самой сущности.
+
+Мы хотим, чтобы именно этот хост владел сущностью. Для этого мы объявим ее как
+локальную - ``LocalContexts`` и пометим ее честным удалением - ``AddHonestDeletionDatabaseContext``. Сам по себе
+метод ничего не регистрирует, если оставить лямбду ``AddHonestDeletionDatabaseContext`` пустой, это будет no-op. Вся
+регистрация разбита мо модулям ``contextConfigurator``.
+
+Глубокое описание принципа работы DSL и детали по ``RegistrationPolicy`` в [этом блоке](#dsl-и-как-оно-устроено),
+а [здесь](#dsl) пользовательское описание.
+
+Описание работы ``UnitOfWorkFactory`` и траназакций: [пользовательское](#транзакции), [глубокое](#транзакции-1).
+
+### Описание Ddd в DSL
+
+Базовые [операции](#операции) регистрируются в модуле ``Ddd``.
+``Ddd``, в зависимости от контеста, содержит разные типы фабрик и, соответственно, разные методы, задающие разное
+базовое поведение. У БД реализации есть только один метод - ``RegisterWithDatabaseRepository``. Его делегат оставить
+пустым не получится - нам нужно настроить правила доступа - передадим политику. Это единственный обязательный шаг, если
+ничего больше не вызывать, в DI попадут сервсы для чтения сущностей, обновления по делегату, а так же для удаления
+сущностей (регистрируются внутри ``RegisterWithDatabaseRepository``).
+
+Если оставить как есть, будут зарегистрированы следующие интерфейсы:
+
+- ``IEditableTrackedRepository<TIdentifier, TEntity>``
+- ``ITrackedRepository<TIdentifier, TEntity>``
+- ``IDeltaUpdateEntityUseCase<TIdentifier, TEntity>``
+- ``IEntityDeltaUpdater<TIdentifier, TEntity>``
+- ``IRemoveEntityUseCase<TEntity>``
+- ``IRemoveEntityUseCase<TIdentifier, TEntity>``
+- ``IEntityRemover<TIdentifier, TEntity>``
+- ``IGetAllEntityUseCase<TIdentifier, TEntity>``
+- ``IAllEntityReader<TIdentifier, TEntity>``
+- ``IGetEntityUseCase<TIdentifier, TEntity>``
+- ``IIdentifierReader<TIdentifier, TEntity>``
+- ``ITrackedReader<TIdentifier, TEntity>``
+- ``ISpecificationReader<TIdentifier, TEntity>``
+
+Для добавления возможности содать сущность из DTO, вызовем ``AddCreateUseCase``. У него есть 2 перегрузки. Первая
+требует только DTO и фабрику, которая превращает этот DTO в сущность. Вторая добавляет еще и FluentValidator для DTO.
+Так же, есть версии методов ``AddAsyncCreateUseCase``, если фабрика требует асинхронного контекста.
+
+Каждый вызов ``AddCreateUseCase`` или ``AddAsyncCreateUseCase`` добавляет следующие интерфейсы в DI:
+
+- ``IEntityCreator<TEntity, TCreatePayload>``
+- ``ICreateEntityUseCase<TEntity, TCreatePayload>``
+
+И то, что это локальный контекст регистрирует дополнительно
+
+- ``ICreateEntityFactory<TCreatePayload, TEntity>`` / ``IEntityAsyncCreateFactory<TCreatePayload, TEntity>``
+- ``IValidator<IEnumerable<TCreatePayload>>`` - если не указывать, будет использована no-op версия;
+
+Аналогично с ``AddUpdateUseCase``, только без асинхронной версии. Тоже есть перегрузка без валидации, требует DTO и
+фабрику.
+
+При вызове регистрируется:
+
+- ``IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>``
+- ``IUpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>``
+
+И локальный контекст регистрирует:
+
+- ``IUpdateEntityFactory<TUpdatePayload, TEntity>``
+- ``IValidator<IEnumerable<TUpdatePayload>>`` - если не указать - no-op версия;
+
+Используемая фабрика:
+
+```csharp
+public class AnnouncementFactory : ICreateEntityFactory<CreateAnnouncementRequest, Announcement>, IUpdateEntityFactory<UpdateAnnouncementContentsRequest, Announcement>
+{
+    public Announcement Create(UserContext userContext, CreateAnnouncementRequest payload)
+    {
+        return new Announcement {
+            Identifier = AnnouncementIdentifier.Create(userContext, Guid.NewGuid()),
+            IsAvailableForPublicRead = true,
+            Contents = payload.Contents,
+        };
+    }
+
+    public Announcement Update(UserContext userContext, Announcement old, UpdateAnnouncementContentsRequest payload)
+    {
+        return old with {
+            Contents = payload.Contents,
+        };
+    }
+}
+```
+
+Подробнее про то, как и чем пользоваться, тут: [операции](#операции).
+
+### Описание ApiServer в DSL
+
+Теперь, ApiServer. Это опциональный модуль, конфигурация которого доступна только для локальных сущностей.
+
+Метод ``Register`` с generic принимает DTO, в который будет мапится результат операции. Есть перегрузка ``Register`` без
+generic, которая возвращает пользователь ``TEntity`` целиком. Если нужно ограничить пользователю видимость определенных
+полей - нужно сделать отдельный DTO.
+
+Первый параметр - base route. Например, ``api/v1``.
+
+Второй - наша политика. Можно передать null, тогда фреймворк не
+будет дополнительно настраивать авторизацию и поведение не будет отличаться от дефолтного MinimalApi.
+
+Есть отдельный метод ``AddGroupConfiguration``, который настраивает ``RouteGroupBuilder``. Последовтаельные вызовы
+аггрегируют Action. В примере выше я использую ``.AddGroupConfiguration(builder => builder.AllowAnonymous())`` только из
+за того что нет зарегистрированной инфраструктуры аутетнтификации пользователя.
+
+Сам билдер дает возможность настраивать эндпоинты отдельно:
+
+- ``WithFindMany`` - получения множества сущностей по id; streaming POST* эндпоинт; не возвращает ненайденные сущности;
+- ``WithGetAll`` - получение всех доступных сущностей; streaming GET эндпоинт;
+- ``WithGet`` - получение конкретной сущности по id; GET эндпоинт;
+- ``WithDelete`` - удаление одной сущнсоти; DELETE запрос;
+- ``WithDeleteRange`` - удаление множества сущностей в рамках транзакции; DELETE запрос;
+- ``WithThrowingOnDuplicatesCreate`` - он же GetOrCreate - создание одной сущности; POST запрос;
+- ``WithThrowingOnDuplicatesCreateMany`` - создание множества сущностей в рамках транзакции; POST запрос;
+- ``WithEnsureExistsCreate`` - создание одной сущности; ID необходимо знать до создания, no-op, если сущность
+  существует; POST запрос;
+- ``WithEnsureExistsCreateMany`` - создание множества сущностей в рамках транзакции; создает отсутствующие сущности;
+  POST запрос;
+- ``AddUpdate`` - обновление одной сущности по id; PUT запрос;
+- ``AddUpdateMany`` - обновление множества сущностей; PUT запрос;
+
+\* - ``WithFindMany`` POST потому что принимает коллекцию ID в теле запроса.
+
+Или использовать групповые вызовы:
+
+- ``RegisterRead`` - вызывает ``WithFindMany``, ``WithGetAll``, ``WithGet``
+- ``RegisterDelete`` - вызывает ``WithDelete``, ``WithDeleteRange``
+- ``RegisterUpdate<TPayload>`` - вызывает ``AddUpdate``, ``AddUpdateMany``
+- ``RegisterCreate<TPayload>`` - вызывает ``WithThrowingOnDuplicatesCreate``, ``WithThrowingOnDuplicatesCreateMany``
+- ``RegisterCrud<TPayload>`` - вызывает ``RegisterRead``, ``RegisterDelete``, ``RegisterUpdate<TPayload>``,
+  ``RegisterCreate<TPayload>``
+- ``RegisterCrud<TCreatePayload, TUpdatePayload>`` - вызывает ``RegisterRead``, ``RegisterDelete``,
+  ``RegisterUpdate<TUpdatePayload>``, ``RegisterCreate<TCreatePayload>``
+
+Теперь, после запуска приложения, Scalar (или Swagger) показывает следующие эндпоинты:
+
+```
+post   /api/v1/Announcement/find
+get    /api/v1/Announcement/{UserGuid}/{Guid}
+delete /api/v1/Announcement/{UserGuid}/{Guid}
+get    /api/v1/Announcement
+delete /api/v1/Announcement/deleteMany
+post   /api/v1/Announcement/createManyWithCreateAnnouncementRequest
+post   /api/v1/Announcement/createWithCreateAnnouncementRequest
+put    /api/v1/Announcement/updateWithUpdateAnnouncementContentsRequest/{UserGuid}/{Guid}
+put    /api/v1/Announcement/updateManyWithUpdateAnnouncementContentsRequest
+```
+
 ## Используемые технологии // Обязательные зависимости
+
+- Mapster - Используется для мапинга сущностей при ответе пользователю. Важно знать как мапит сущности по совпадению
+  имен;
+- MediatR - Используется только как In-Memory signal bus для связи модулей; Прямое использование необязательно;
+- SignalR - Зависимость обязательная, но используется в опциональном модуле SignalR. Используется и клиент и
+  сервер;
+- FluentValidation - для создания валидаторов сущностей; Валидаторы опциональны;
+- Scrutor - в проекте с DSL используется только для декорирования сервисов;
+- LinqKit - необходим фреймворку для объединения Expression;
+- Ardalis.Specification - спецификации для репозиториев и сервисов сущностей;
 
 ## Высокоуровневое описание фич // Что можно
 
-Фреймворк предоставляет возможность работы с локальным (база данных и in-memory) и удаленными сущностями через общий
-набор интерфейсов и настройкой через DSL.
-
-Фреймворк построен на основе дженериков, поэтому рекомендуется использовать c# alias.
-
-Во всех примерах сущность и на клиенте и на сервере одинакова, а общение происходит через ``TResponse``. Т.е в примерах
-сервер хранит TEntity, мапит в TResponse, клиент восстанавливает TEntity из TResponse. Это сделано исключительно в
-качестве
-примера, в реальном сценарии модель клиента может отличаться от модели сервера.
+Основной функционал фреймворка заключается в бесшовной работе над сущностями, независимо от места их хранения. Что
+локальные, что удаленные сущности имеют общий набор [интерфейсов](#операции) для работы.
 
 ### Сущности
 
 Для всех операций в фреймворке, сущности требуется реализация интерфейса ``IEntity<TIdentifier>``, где TIdentifier может
-быть комплексным типом и налииче атрибута ``[HasIdentifier(typeof(TIdentifier))]``.
+быть комплексным типом, и налииче атрибута ``[HasIdentifier(typeof(TIdentifier))]``.
 
 Помимо этого, есть дополнительные интерфейсы, дополняющие сущность функционалом:
 
 - ``IEntityWithSoftDelete`` - помечает сущность доступной для мягкого удаления;
-- ``IEntityWithPublicRead`` - позволяет сущности быть прочитанной не только владельцем, но и другими пользователями (
-  определяется политикой доступа);
-- ``IEntityWithSharedAccess`` - дает доступ к сущности конкретным пользователям. Функционал определяется политикой
-  доступа;
+- ``IEntityWithPublicRead`` - добавляет свойство ``IsAvailableForPublicRead`` и позволяет быть прочитанной не
+  только владельцем, но и другими пользователями (определяется политикой доступа);
+- ``IEntityWithSharedAccess`` - добавляет свойство ``SharedUserGuids`` - дает доступ к сущности конкретным
+  пользователям. Функционал определяется политикой доступа;
 
 ### Операции
 
-Интерфейсы, применяемые в контексте транзакции для проведения CRUD операций (далее ``IEntity сервисы``):
+Интерфейсы, применяемые в контексте транзакции для проведения CRUD операций (далее ``EntityService``):
 
 - ``IEntityCreator``, ``IEntityEnsureExistsCreator``
-- ``IIdentifierReader``, ``IAllEntityReader``, ``ISpecificationReader``*
-- ``IEntityPayloadUpdater``, ``IEntityDeltaUpdater``*
+- ``IIdentifierReader``, ``IAllEntityReader``, ``ISpecificationReader``\*, ``ITrackedReader``\*
+- ``IEntityPayloadUpdater``, ``IEntityDeltaUpdater``\*
 - ``IEntityRemover``
 
-Юзкейсы, выполняющие единичную операцию. Классы сами начинает транзакцию, выполняют операцию и коммитят изменения:
+\* Досупны только для локальных сущностей
+
+Юзкейсы, выполняющие единичную операцию. Классы сами начинает транзакцию, выполняют операцию и коммитят изменения (далее
+``UseCase``):
 
 - ``ICreateEntityUseCase``
 - ``IGetEntityUseCase``, ``IGetAllEntityUseCase``
 - ``IUpdateEntityUseCase``
 - ``IRemoveEntityUseCase``
 
-Для создания транзакции используется IUnitOfWorkFactory.
-
-\* Досупны только для локальных сущностей
-
-### DSL как Guardrails
-
-Все интерфейсы фреймворка, работающие с сущностями, используют дженерики. Для удобной регистрации в DI предусмотрен DSL
-builder. Пример для удаленных сущностей (см. детали в [LocalContexts](#локальные_сущности)
-и [ApiClientContexts](#удаленные_сущности), тут описание принципа):
+Если задача - выполняить атомарную операцию здесь и сейчас, достаточно использовать UseCase.
+Если нужно выполнить сложную бизнес операцию, сначала необходимо запустить транзакцию и использовать ``IEntityServie``:
 
 ```csharp
-serviceCollection
-    .RegisterModule<TestingTag>()
-    .ApiDatasource.Register(httpClientBuilder =>
-        ...
-    )
-    .ApiClientContexts.AddRemoteContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
-        .Ddd.Register<AnnouncementIdentifierParams, AnnouncementResponse>(dddConfigurator => dddConfigurator
-            ...
-            .SetCreateUseCase<CreateAnnouncementRequest>()
-            .AddUpdateUseCase<UpdateAnnouncementContentsRequest>()
-        )
-    )
+public class TransactionExampleUseCase(
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IIdentifierReader<ConversationIdentifier, Conversation> conversationReader,
+    IEntityDeltaUpdater<ContactIdentifier, Contact> contactUpdater,
+    IEntityPayloadUpdater<ConversationIdentifier, Conversation, SetConversationCounterRequest> conversationUpdater
+)
+{
+    public async Task Execute(UserContext userContext, ConversationIdentifier identifier, CancellationToken token)
+    {
+        var conversation = await conversationReader.GetByIdAsync(userContext, identifier, token);
+
+        var counter = 1;
+
+        await using (var uow = unitOfWorkFactory.Create<MessengerTag>())
+        {
+            foreach (var contactIdentifier in conversation.ContactIdentifiers)
+            {
+                await contactUpdater.Update(
+                    userContext,
+                    contactIdentifier,
+                    old => old with { Profile = old.Profile with { Username = $"{old.Profile.Username}_{counter}", }, },
+                    token
+                );
+
+                counter++;
+            }
+
+            var conversationRequest = new SetConversationCounterRequest {
+                Count = counter,
+            };
+
+            await conversationUpdater.UpdateAsync(userContext, identifier, conversationRequest, token);
+
+            await uow.CommitAsync(token);
+        }
+    }
+}
 ```
 
-Вся регистрация начинается с вызова RegisterModule. Это необходимо для задания модулю маркерного дженерика. Это пустой
-класс, используемый для разделения сервисов по модулям и определения корректности транзакции.
-При использовании провйдера данных (т.е. при использовании удаленных сущностей или хранимых в БД локальных сущностей),
-их необходимо зарегистрировать, используя ``ApiDatasource.Register`` или ``DatabaseDatasource.Register``.
+Транзакция начинается через метод ``IUnitOfWorkFactory.Create<TTag>``, где TTag тот же тэг, что использовался в
+``.RegisterModule<TTag>()``. Это позволяет базе данных и Transacted-In-Memory, зарегистрированных в рамках модуля,
+использовать одну транзакцию. При этом, изменяющие операции над обычными In-Memory или Remote сущностями, бросают
+ошибку, если выполняются в контексте транзакции (даже если зарегистрированы в том же модуле). Подробнее про механизм
+в [декораторах](#декораторы).
 
-Сами сущности регистрируются в ``.ApiClientContexts`` или ``.LocalContexts``. Последующие методы определяют поведение
-контекста.
+На данный момент, фреймворк не поддерживает транзакции между разными модулями, даже если они фактически настроены на
+общий сервер БД или другой модуль зарегистрировал сущность как Transacted-In-Memory.
 
-Независимо от типа сущности (удаленная или локальная), при вызове ``Ddd.Register``, регистрируются сервисы для чтения и
-удаления сущностей (для всего списка регистрируемых сервисов, смотри XML документацию вызываемого метода).
+В примере выше, если ``Conversation`` зарегистрирован как обычный ``InMemory`` или ``Remote``, операция упадет с
+``NotSupportedException``. Тогда вызов необходимо вынести за транзакцию.
 
-Метод ``SetCreateUseCase<>()`` вызывается один раз (он перезаписывает свое существующее поведение). Регистрирует сервисы
-создания сущности.
-Методов ``AddUpdateUseCase<>()`` может вызываться несколько, каждый их них регистрирует сервис для применения указанного
-запроса к сущности.
+Транзакции реализованы через Ambient Scoped сервис.
 
 ### Локальные сущности // LocalContexts
 
+В этом блоке более подробное объяснение примерма из [quick-start](#quick-start).
+
 Локальность сущности подразумевает ответственность за хранение, проверку прав доступа, валидацию операций.
-Запросы на создание и обновление требуют валидаторов и фабрик, в которых происходит создание сущностей. Весь пайплайн
-выглядит так:
+Запросы на создание и обновление требуют фабрик и опциональных валидаторо, в которых происходит создание сущностей.
+Весь пайплайн выглядит так:
 
 [Тут нужна картинка с абстрактным пайплайном локальной сущности]
 
@@ -121,86 +559,16 @@ UseCase (он самостоятельно открывает транзакци
 - Хранимые в памяти мущности могут быть
     - ``RegisterAsInMemoryState`` - аналогично честной БД реализации: изначально сущностей нет, создание, удаление и
       обновление применяются как обычно. Транзакции не поддерживаются.
-    - ``RegisterAsTransactedInMemoryState``* - аналогично RegisterAsInMemoryState. Транзакции поддерживаются.
+    - ``RegisterAsTransactedInMemoryState`` - аналогично ``RegisterAsInMemoryState``. Транзакции поддерживаются, хотя и
+      не симметричны EFCore. Пока без поддержки оптимистичных блокировок - LastWriteWins.
     - ``RegisterWithLocalStaticDataSource<TWeight, TDataSource>`` - подразумевает существование неизменяемого списка
       сущностей, который загружается в репозиторий в старте приложения из TDataSource.
 
-\* - планируется после реализации версионирования.
+- Для примера DSL смотри [quick-start](#quick-start);
+- Для разбора локального Ddd смотри [Описание Ddd в DSL](#описание-ddd-в-dsl);
+- Для разбора ApiServer смотри [Описание ApiServer в DSL](#описание-apiserver-в-dsl);
 
-Регистрация пайплайна в DSL выглядит так:
-
-```csharp
-var announcementPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<AnnouncementIdentifier, Announcement>(identifier => identifier.UserGuid);
-
-serviceCollection
-    .RegisterModule<ServerTag>()
-    .LocalContexts.AddInMemoryContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
-        .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
-            .SetAccessPolicy(announcementPolicy)
-            .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
-            .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
-        )
-        .ApiServer.Register<AnnouncementIdentifierParams, AnnouncementResponse>(
-            config.ApiBaseRoute,
-            (idParams, _) => idParams.ToIdentifier(),
-            announcementPolicy,
-            apiServerConfigurator => apiServerConfigurator
-                .WithNoAdditionalConfiguration()
-                .RegisterCrud<CreateAnnouncementRequest, UpdateAnnouncementContentsRequest>()
-        )
-        .SignalRServer.Register<THub, AnnouncementSignalRRequest, AnnouncementResponse>(signalRConfigurator => signalRConfigurator
-            .SetGroupResolver<AnnouncementSignalRRouteResolver>()
-            .SetAccessValidationService<AnnouncementSignalRAccessValidator>()
-        )
-    )
-    .Build();
-```
-
-Политики доступа и механизмы их применения разбираются в [отдельном блоке](#политики_доступа).
-
-#### ApiServer
-
-Опциональный модуль ApiServer (доступен только для локальных сущностей) позволяет добавить CRUD эндпоинты, которые
-используют зарегистрированные DDD сервисы для выполнения операций. Политика доступа применяет правила ролей к эндпоинтам
-автоматчиески.
-
-DSL имеет обязательный шаг, конфигурирующий ``RouteGroupBuilder``. Можно либо вызвать ``WithGroupConfiguration`` с
-пусотой лябдой, либо вызвать метод ``WithNoAdditionalConfiguration``. [//todo : может, сделать шаг опциональным? Тогда
-нужно будет задокументировать, что последовательные вызовы добавляют функционал.]
-
-Методы регистрации отдельных эндпоинтов:
-
-- ``WithFindMany`` - получения множества сущностей по id; streaming POST эндпоинт; не возвращает ненайденные сущности;
-- ``WithGetAll`` - получение всех доступных сущностей; streaming GET эндпоинт;
-- ``WithGet`` - получение конкретной сущности по id; GET эндпоинт;
-- ``WithDelete`` - удаление одной сущнсоти; DELETE запрос;
-- ``WithDeleteRange`` - удаление множества сущностей в рамках транзакции; DELETE запрос;
-- ``WithThrowingOnDuplicatesCreate`` - он же GetOrCreate - создание одной сущности; POST запрос;
-- ``WithThrowingOnDuplicatesCreateMany`` - создание множества сущностей в рамках транзакции; POST запрос;
-- ``WithEnsureExistsCreate`` - создание одной сущности; ID необходимо знать до создания, no-op, если сущность
-  существует; POST запрос;
-- ``WithEnsureExistsCreateMany`` - создание множества сущностей в рамках транзакции; создает отсутствующие сущности;
-  POST запрос;
-- ``AddUpdate`` - обновление одной сущности по id; PUT запрос;
-- ``AddUpdateMany`` - обновление множества сущностей; PUT запрос;
-
-Вызовы этих методов скрыты за методами:
-
-- ``RegisterRead`` - вызывает ``WithFindMany``, ``WithGetAll``, ``WithGet``
-- ``RegisterDelete`` - вызывает ``WithDelete``, ``WithDeleteRange``
-- ``RegisterUpdate<TPayload>`` - вызывает ``AddUpdate``, ``AddUpdateMany``
-- ``RegisterCreate<TPayload>`` - вызывает ``WithThrowingOnDuplicatesCreate``, ``WithThrowingOnDuplicatesCreateMany``
-- ``RegisterCrud<TPayload>`` - вызывает ``RegisterRead``, ``RegisterDelete``, ``RegisterUpdate<TPayload>``,
-  ``RegisterCreate<TPayload>``
-- ``RegisterCrud<TCreatePayload, TUpdatePayload>`` - вызывает ``RegisterRead``, ``RegisterDelete``,
-  ``RegisterUpdate<TUpdatePayload>``, ``RegisterCreate<TCreatePayload>``
-
-Фреймворк не предостваляет реализации энпоинтов для произвольного чтения спецификаций. Они реализуются пользователем
-отдельно. [//todo или через механизм .AddCustomRequestHandler<THandler> .AddCustomRequestHandler<THandler, TResponse>]
-
-Метод ``ApiServer.Register`` требует 1 дженерик - тип, в который будет мапится TEntity при ответе клиенту.
-
-#### SignalRServer
+#### Описание SignalRServer в DSL
 
 Опциональный модуль SignalRServer (только для локальных сущностей) регистрирует сервисы для real-time синхронизации
 состояния.
@@ -210,7 +578,8 @@ DSL имеет обязательный шаг, конфигурирующий `
 1. Пользователь подключается к Hub - фреймворк не предоставляет методов подписки и отписки, только обработку
    существующей подписки.
 2. Пользователь отправляет сообщение с данными для подписки (в примере это ``AnnouncementSignalRRequest``). Оно должно
-   попасть в ``IHubService``;
+   попасть в ``IHubService``. Поскольку делать несколько Hub - плохая практика (нельзя через фреймворк создать несколько
+   дженерик хабов), донести событие о подписке до сервиса - задача разработчика;
 3. Сообщение валидируется сервисом из ``SetAccessValidationService``;
 4. Сообщение попадает в SetGroupResolver, где по определенному набору правил превращается в группы для SignalR;
 
@@ -230,10 +599,10 @@ IEntity сервисы создания и обновления валидиру
 
 Построчная валидация доступа основана на интерфейсах
 
-- IEntityCreateAccessExpressionProvider
-- IEntityReadAccessExpressionProvider
-- IEntityUpdateAccessExpressionProvider
-- IEntityDeleteAccessExpressionProvider
+- ``IEntityCreateAccessExpressionProvider``
+- ``IEntityReadAccessExpressionProvider``
+- ``IEntityUpdateAccessExpressionProvider``
+- ``IEntityDeleteAccessExpressionProvider``
 
 Каждый из интерфейсов имеет один метод -
 ``public Task<Expression<Func<TEntity, bool>>> GetXXXExpression(UserContext userContext)`` - асинхронную
@@ -276,23 +645,6 @@ Guest и LoggedIn требуют наличия ``IEntityWithPublicRead`` на �
 Поэтому, при использвании ``SetAccessExpressionProvider<>`` вместо ``SetAccessPolicy`` необходимо убедиться, что эта
 проверка есть.
 
-#### Транзакции
-
-Транзакция начинается через метод ``IUnitOfWorkFactory.Create<TTag>``, где TTag тот же тэг, что использовался в
-``.RegisterModule<TTag>()``. Это позволяет базе данных, зарегистрированной в рамках модуля, использовать транзакцию. При
-этом, изменяющие операции над In-Memory или Remote сущностями бросают ошибку, если выполняются в
-контексте транзакции (даже если зарегистрированы в том же модуле). Это достигается при помощи декоратора над IEntity
-сервисами.
-
-На данный момент, фреймворк не поддерживает транзакции между разными модулями, даже если они фактически настроены на
-общий сервер БД.
-
-Как писалось ранее, для In-Memory репозитория есть реализация транзакций (
-``Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories.TransactedInMemoryRepository``), но сделать его
-симметричным транзакциям EFCore невозможно. Поэтому, репозиторий пока используется только для тестирования.
-
-[Тут должен быть пример транзакции с несколькими БД сущностями и InMemory]
-
 #### Honest & Soft Deletion
 
 Сущности, помеченные ``IEntityWithSoftDelete`` и зарегистрированные через DSL меняют свое поведение при удалении.
@@ -303,17 +655,36 @@ Guest и LoggedIn требуют наличия ``IEntityWithPublicRead`` на �
 
 ### Удаленные сущности // ApiClientContexts
 
-#### Кеширование
+#### Кэширование
 
-### DSL
+### Детально про DSL
 
 Необходимость - апелляция к детальному знанию всей архитектуры, громоздкий DI, который легко заменяется DSL
+
+#### Все случаи магической магии о которых нужно и не нужно знать
+
+#### RegistrationPolicy
+
+#### Иерархия билдеров
 
 ## Низкоуровневое описание фич // Как и почему так
 
 ### Идентификаторы
 
 Идентификаторы и их кодогены. Истоки в EF и Expression выборки
+
+```csharp
+public partial record Announcement
+{
+    public System.Guid UserGuid { get; private set; }
+    public System.Guid Guid { get; private set; }
+    public required partial Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements.AnnouncementIdentifier Identifier
+    {
+        get => new() { UserGuid = this.UserGuid, Guid = this.Guid };
+        init => (this.UserGuid, this.Guid) = (value.UserGuid, value.Guid);
+    }
+}
+```
 
 ### Декораторы
 
@@ -324,18 +695,6 @@ Guest и LoggedIn требуют наличия ``IEntityWithPublicRead`` на �
 
 IUOWFactory IUOWProvider
 
-### Описание полного пайплайна CRUD и AddRequestHandler
-
-### DSL и как оно устроено
-
-#### Все случаи магической магии о которых нужно и не нужно знать
-
-#### RegistrationPolicy
-
-#### Типы сущностей
-
-#### Иерархия билдеров
-
 ## Компромиссы
 
 - падение на невалидных транзакциях (Для InMemory или remote сущностей)
@@ -343,13 +702,27 @@ IUOWFactory IUOWProvider
   транзакции, если они на одном сервере, но выглядит как дополнительная магия
 - всегда полный респонс в SignalR. Может, можно отправлять примененный Payload, id и версию, если они есть, а если нет -
   полный респонс?
+- Сейчас нет возможности дать дополнительное имя эндпоинту, поэтому при попытке в одном приложении сделать эндпоинт и
+  /v1 и /v2 , приложение упадет с ошибкой о дублирующимя имени MinimalApi, хотя route будет отличаться.
 
 ## TODO
 
-Версионирование
-Оптимистичные блокировки
-Версионное кеширование
-SAGA
-Outbox
+Анализатор кода, требующий вызов ``DatabaseDatasource`` для БД и ApiDatasource для API.
+
+Генератор кода валидации транзакций. Он должен смотреть все use case, где есть транзакции, собирать какие entity
+редактируются, генерировать что то, с помощью чего при запуске можно проверить корректность используемых сущностей (
+гарантировать что они из одного модуля / разных модулей с одной БД, что используется транзакционная in memory bd и не
+api)
+
+Поддержка IEntityWithVersion. Это позволит добавить в транзакционный in memory репозиторий оптимистичные блокировки, не
+инвалидирующий кэш на клиенте, оптимизацию SignalR (присылать версию, id)
+
+Outbox / Inbox + возможно, поддержку для transacted in memory write behind (хотя тут проблема с тем что у in memory нет
+валидации отдельных полей и мы упадем в рантайме, если несовпадает структуа или провалится валидация). Что на счет WAL?
+Типа, применяем X в транзакции с inMemory. Но тогда проблема с последовательностью применений операций.
+
 Observability
+
 Api-Key auth для Service-Service взаимодействия
+
+Кодоген реализации интерфейсов, удалить HasIdentifier и перейти на IEntity<AnnouncementIdentifier>

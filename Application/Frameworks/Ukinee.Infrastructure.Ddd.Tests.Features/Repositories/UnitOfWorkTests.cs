@@ -4,8 +4,8 @@ using NUnit.Framework;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.Mocks;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;
 using Ukinee.Infrastructure.Ddd.Tests.Domain;
@@ -26,10 +26,10 @@ public class UnitOfWorkTests : AnnouncementTestBase
         };
 
         services.AddSingleton<InMemoryStore<AnnouncementIdentifier, Announcement>>();
-        services.AddScoped<IEditableTrackedRepository<AnnouncementIdentifier, Announcement>, TransactedInMemoryRepository<AnnouncementIdentifier, Announcement, TestingTag>>();
+        services.AddScoped<IEditableTrackedRepository<AnnouncementIdentifier, Announcement>, TransactedInMemoryRepository<TestingTag, AnnouncementIdentifier, Announcement>>();
 
         services.AddSingleton<InMemoryStore<BorderIdentifier, Border>>();
-        services.AddScoped<IEditableTrackedRepository<BorderIdentifier, Border>, TransactedInMemoryRepository<BorderIdentifier, Border, TestingTag>>();
+        services.AddScoped<IEditableTrackedRepository<BorderIdentifier, Border>, TransactedInMemoryRepository<TestingTag, BorderIdentifier, Border>>();
 
         services
             .SetupUnitOfWork()

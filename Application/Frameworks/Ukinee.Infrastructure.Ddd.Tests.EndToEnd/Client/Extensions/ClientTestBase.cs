@@ -25,7 +25,7 @@ public abstract class ClientTestBase : TestBase
     };
 
     protected readonly ClientConfig Config = new ClientConfig {
-        ServerBaseAddress = $"https://localhost:{ServerInMemoryConfig.Port}/api/v1/",
+        ServerBaseAddress = $"https://localhost:{ServerConfig.Port}/api/v1/",
         CacheOptionsSectionName = nameof(CachingOptions),
         CacheOptionsFilePath = "F:\\Files\\Rider\\AspExample\\AspExample\\ClientConfigs\\CachingConfigs.json",
     };

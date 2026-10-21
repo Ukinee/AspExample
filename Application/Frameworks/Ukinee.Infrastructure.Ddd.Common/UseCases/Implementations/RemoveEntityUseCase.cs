@@ -13,18 +13,14 @@ where TEntity : class, IEntity<TIdentifier>
     public Task Execute(UserContext userContext, TEntity entity, CancellationToken cancellationToken) =>
         Execute(userContext, [entity], cancellationToken);
 
-    public async Task Execute(UserContext userContext, IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken)
-    {
+    public async Task Execute(UserContext userContext, IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken) =>
         await remover.RemoveAsync(userContext, entities, cancellationToken);
-    }
 
     public Task Execute(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken) =>
         Execute(userContext, [identifier], cancellationToken);
 
-    public async Task Execute(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken)
-    {
+    public async Task Execute(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken) =>
         await remover.RemoveAsync(userContext, identifiers, cancellationToken);
-    }
 }
 
 public class TransactionRemoveEntityUseCaseDecorator<TTag, TIdentifier, TEntity>(

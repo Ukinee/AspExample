@@ -5,8 +5,8 @@ using Ukinee.Infrastructure.Ddd.Common.UseCases;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories;
-using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
 using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 using Ukinee.Infrastructure.Ddd.Local.UseCases;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
@@ -22,6 +22,7 @@ file class ProxyHelper
         builder.SetEntityReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
         builder.SetIdentifierReader<TrackedReader<TIdentifier, TEntity>, GetEntityUseCase<TIdentifier, TEntity>>(serviceLifetime);
         builder.SetSpecificationReader<TrackedReader<TIdentifier, TEntity>>(serviceLifetime);
+        builder.SetTrackedReader<TrackedReader<TIdentifier, TEntity>>(serviceLifetime);
     }
 }
 
@@ -40,6 +41,37 @@ where TEntity : class, IEntity<TIdentifier>
         var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
 
         builder.SetRepository<InMemoryRepository<TIdentifier, TEntity>>(ServiceLifetime.Singleton);
+
+        ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
+
+        builder.SetDeltaEntityUpdater<TrackedEntityDeltaUpdater<TIdentifier, TEntity>, DeltaUpdateEntityUseCase<TIdentifier, TEntity>>(
+            serviceLifetime,
+            throwOnTransaction
+        );
+
+        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+
+        var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
+
+        dddConfigurator?.Invoke(tackedBuilder);
+        definition.Features.Add(tackedBuilder.Feature);
+
+        return definition;
+    }
+    
+    public ModuleDefinition<TTag>.InMemoryEntityDefinition<TIdentifier, TEntity> RegisterAsTransactedInMemoryState(
+        Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
+    )
+    {
+        var serviceLifetime = ServiceLifetime.Singleton;
+        var throwOnTransaction = false;
+
+        var feature = DddFeature<TIdentifier, TEntity>.Empty;
+        var builder = new DddBuilder<TTag, TIdentifier, TEntity>(feature);
+        
+        var store = ServiceDescriptor.Singleton<InMemoryStore<TIdentifier, TEntity>, InMemoryStore<TIdentifier, TEntity>>();
+
+        builder.SetRepository<TransactedInMemoryRepository<TTag, TIdentifier, TEntity>>(ServiceLifetime.Singleton, store);
 
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
@@ -84,11 +116,11 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> definition)
+public class HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
 where TIdentifier : struct, IEquatable<TIdentifier>
 where TEntity : class, IEntity<TIdentifier>
 {
-    public ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
+    public ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
@@ -117,11 +149,11 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class DeletableDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
+public class DeletableDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
 where TIdentifier : struct, IEquatable<TIdentifier>
 where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
 {
-    public ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
+    public ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
@@ -161,14 +193,14 @@ public static class LocalEntityDefinitionExtensions
         public InMemoryDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new InMemoryDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>
     {
         public HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
     {

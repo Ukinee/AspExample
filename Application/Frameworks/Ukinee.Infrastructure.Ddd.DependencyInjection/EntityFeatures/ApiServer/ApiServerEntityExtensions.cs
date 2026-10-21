@@ -15,8 +15,8 @@ where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity
 {
     public TDefinition Register<TResponse>(
         string baseRoute,
-        AuthorizationPolicyDefinition<TIdentifier, TEntity> policyDefinition,
-        Action<ICrudGroupConfigurator<TIdentifier, TEntity, TResponse>> apiServerConfigurator
+        AuthorizationPolicyDefinition<TIdentifier, TEntity>? policyDefinition,
+        Action<ApiServerFeatureBuilder<TIdentifier, TEntity, TResponse>> apiServerConfigurator
     )
     {
         var feature = new ApiServerDefinition {
@@ -31,6 +31,15 @@ where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity
         definition.Features.Add(builder.Feature);
 
         return definition;
+    }
+    
+    public TDefinition Register(
+        string baseRoute,
+        AuthorizationPolicyDefinition<TIdentifier, TEntity>? policyDefinition,
+        Action<ApiServerFeatureBuilder<TIdentifier, TEntity, TEntity>> apiServerConfigurator
+    )
+    {
+       return Register<TEntity>(baseRoute, policyDefinition, apiServerConfigurator);
     }
 }
 
@@ -54,19 +63,19 @@ public static class ApiEndpointEntityExtensions
             new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.InMemoryEntityDefinition<TIdentifier, TEntity>>(definition);
     }
     
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
     {
-        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity>> ApiServer =>
-            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity>>(definition);
+        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> ApiServer =>
+            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity>>(definition);
     }
     
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
     {
-        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity>> ApiServer =>
-            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity>>(definition);
+        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> ApiServer =>
+            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity>>(definition);
     }
 }

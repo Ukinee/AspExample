@@ -1,55 +1,31 @@
-﻿using System.Runtime.CompilerServices;
-using Ardalis.Specification;
-using Ukinee.DbAccess.Extensions;
+﻿using Ardalis.Specification;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
-using Ukinee.Infrastructure.Ddd.Common.Exceptions;
-using Ukinee.Infrastructure.Ddd.Common.Utils.Extensions;
-using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
-using Ukinee.Infrastructure.Ddd.Local.Repositories;
+using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices.Contracts;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
 public class TrackedReader<TIdentifier, TEntity>(
-    ITrackedRepository<TIdentifier, TEntity> repository,
-    IEntityReadAccessExpressionProvider<TIdentifier, TEntity> accessValidator
+    IIdentifierReader<TIdentifier, TEntity> identifierReader,
+    IAllEntityReader<TIdentifier, TEntity> allEntityReader,
+    ISpecificationReader<TIdentifier, TEntity> specificationReader
 ) : ITrackedReader<TIdentifier, TEntity>
 where TIdentifier : struct
 where TEntity : class, IEntity<TIdentifier>
 {
     public async Task<TEntity?> FindByIdAsync(UserContext userContext, TIdentifier identifier, CancellationToken cancellationToken)
     {
-        var filter = await accessValidator.GetReadExpression(userContext);
-
-        var specification = Specification
-            .For<TEntity>()
-            .WhereIdEquals(identifier)
-            .Specification;
-
-        return await repository.FindAsync(specification, filter, cancellationToken);
+        return await identifierReader.FindByIdAsync(userContext, identifier, cancellationToken);
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyByIdAsync(
+    public IAsyncEnumerable<TEntity> FindManyByIdAsync(
         UserContext userContext,
         IReadOnlyCollection<TIdentifier> identifiers,
-        [EnumeratorCancellation] CancellationToken cancellationToken
+        CancellationToken cancellationToken
     )
     {
-        var filter = await accessValidator.GetReadExpression(userContext);
-
-        var specification = Specification
-            .For<TEntity>()
-            .WhereIdIn(identifiers)
-            .Specification;
-
-        await foreach (var item in repository.FindManyAsync(specification, filter, cancellationToken))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            yield return item;
-        }
+        return identifierReader.FindManyByIdAsync(userContext, identifiers, cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> GetManyByIdAsync(
@@ -58,56 +34,25 @@ where TEntity : class, IEntity<TIdentifier>
         CancellationToken cancellationToken
     )
     {
-        var identifiersCollection = identifiers.AsCollection();
-
-        var result = await FindManyByIdAsync(userContext, identifiersCollection, cancellationToken)
-            .ToDictionaryAsync(e => e.Identifier, cancellationToken: cancellationToken);
-
-        if (result.Count != identifiersCollection.Count)
-            throw new EntityNotFoundException<TIdentifier, TEntity>(identifiersCollection.Except(result.Keys));
-
-        return result;
+        return await identifierReader.GetManyByIdAsync(userContext, identifiers, cancellationToken);
     }
 
-    public async IAsyncEnumerable<TEntity> GetAllAsync(UserContext userContext, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public IAsyncEnumerable<TEntity> GetAllAsync(UserContext userContext, CancellationToken cancellationToken)
     {
-        var filter = await accessValidator.GetReadExpression(userContext);
-
-        var specification = Specification.For<TEntity>().Specification;
-
-        var enumerable = repository.FindManyAsync(specification, filter, cancellationToken);
-
-        await foreach (var item in enumerable)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            yield return item;
-        }
+        return allEntityReader.GetAllAsync(userContext, cancellationToken);
     }
 
     public async Task<TEntity?> FindAsync(UserContext userContext, Specification<TEntity> specification, CancellationToken cancellationToken)
     {
-        var filter = await accessValidator.GetReadExpression(userContext);
-
-        var result = await repository.FindAsync(specification, filter, cancellationToken);
-
-        return result;
+        return await specificationReader.FindAsync(userContext, specification, cancellationToken);
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyAsync(
+    public IAsyncEnumerable<TEntity> FindManyAsync(
         UserContext userContext,
         Specification<TEntity> specification,
-        [EnumeratorCancellation] CancellationToken cancellationToken
+        CancellationToken cancellationToken
     )
     {
-        var filter = await accessValidator.GetReadExpression(userContext);
-        var result = repository.FindManyAsync(specification, filter, cancellationToken);
-
-        await foreach (var item in result)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            yield return item;
-        }
+        return specificationReader.FindManyAsync(userContext, specification, cancellationToken);
     }
 }

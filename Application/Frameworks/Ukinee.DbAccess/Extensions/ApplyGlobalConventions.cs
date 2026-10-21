@@ -8,8 +8,6 @@ public static class EntityConfigurationExtensions
 {
     public static void ApplyGlobalConventions(this ModelConfigurationBuilder builder)
     {
-        builder.ApplyIdentifierConverters();
-        
         builder
             .Properties<JsonObject>()
             .HaveConversion<JsonObjectToStringConverter>();

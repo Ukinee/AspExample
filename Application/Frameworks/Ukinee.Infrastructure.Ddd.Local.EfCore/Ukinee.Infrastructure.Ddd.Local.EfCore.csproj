@@ -18,4 +18,8 @@
       <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Synchronization\Ukinee.Infrastructure.Ddd.Synchronization.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Options\" />
+    </ItemGroup>
+
 </Project>

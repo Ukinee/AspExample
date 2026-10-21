@@ -38,4 +38,8 @@
         <ProjectReference Include="..\Ukinee.Infrastructure.Ddd.Tests.Domain\Ukinee.Infrastructure.Ddd.Tests.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Services\Repositories\" />
+    </ItemGroup>
+
 </Project>

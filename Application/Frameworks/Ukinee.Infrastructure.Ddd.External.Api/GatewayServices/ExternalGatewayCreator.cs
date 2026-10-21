@@ -21,7 +21,7 @@ where TEntity : class, IEntity<TIdentifier>
         CancellationToken cancellationToken
     )
     {
-        var requestUri = RelationalPathUtils.CreateMany<TEntity>();
+        var requestUri = RelationalPathUtils.CreateMany<TEntity, TPayload>();
         using var request = CreateJsonRequest(userContext, HttpMethod.Post, requestUri, payloads);
 
         return await ReadJsonAsync<List<TResponse>>(request, false, cancellationToken) ?? throw new InvalidOperationException("No response returned.");

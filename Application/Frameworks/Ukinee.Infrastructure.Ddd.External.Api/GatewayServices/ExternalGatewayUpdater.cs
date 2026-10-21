@@ -22,7 +22,7 @@ where TEntity : class, IEntity<TIdentifier>
         CancellationToken cancellationToken
     )
     {
-        var requestUri = RelationalPathUtils.Update<TEntity, TPayload>(identifier.Path);
+        var requestUri = RelationalPathUtils.Update<TEntity, TPayload>(identifier.GetPath());
         using var request = CreateJsonRequest(userContext, HttpMethod.Put, requestUri, updatePayload);
 
         return await ReadJsonAsync<TResponse>(request, true, cancellationToken);

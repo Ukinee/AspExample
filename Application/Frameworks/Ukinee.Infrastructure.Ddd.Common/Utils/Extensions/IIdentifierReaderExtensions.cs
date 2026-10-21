@@ -21,30 +21,10 @@ public static class IIdentifierReaderExtensions
         {
             var result = await reader.FindByIdAsync(userContext, identifier, cancellationToken);
 
-            if (result is null or IEntityWithSoftDelete<TEntity> { IsDeleted: true })
+            if (result is null)
                 throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
 
             return result;
-        }
-
-        public async Task<Dictionary<TIdentifier, TEntity>> FindManyByIdStrictAsync(
-            UserContext userContext,
-            IReadOnlyCollection<TIdentifier> identifiers,
-            CancellationToken cancellationToken
-        )
-        {
-            var response = await reader
-                .FindManyByIdAsync(userContext, identifiers, cancellationToken)
-                .ToDictionaryAsync(e => e.Identifier, cancellationToken: cancellationToken);
-
-            if (response.Count != identifiers.Count)
-            {
-                var missingIds = identifiers.Except(response.Keys).AsCollection();
-
-                throw new EntityNotFoundException<TIdentifier, TEntity>(missingIds);
-            }
-
-            return response;
         }
     }
 }

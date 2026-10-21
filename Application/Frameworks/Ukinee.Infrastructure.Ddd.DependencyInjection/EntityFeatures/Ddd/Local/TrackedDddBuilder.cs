@@ -8,6 +8,7 @@ using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 using Ukinee.Infrastructure.Ddd.Local;
 using Ukinee.Infrastructure.Ddd.Local.AccessValidation.Contracts;
+using Ukinee.Infrastructure.Ddd.Local.PayloadValidation;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
 using Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
@@ -79,8 +80,16 @@ where TIdentifier : struct
 
         return this;
     }
+    
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddAsyncCreateUseCase<TCreatePayload, TFactory>()
+    where TFactory : class, IEntityAsyncCreateFactory<TCreatePayload, TEntity>
+    {
+        AddAsyncCreateUseCase<TCreatePayload, PassingPayloadValidator<TCreatePayload>, TFactory>();
 
-    public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAsyncCreateUseCase<TCreatePayload, TValidator, TFactory>()
+        return this;
+    }
+
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddAsyncCreateUseCase<TCreatePayload, TValidator, TFactory>()
     where TValidator : class, IValidator<IEnumerable<TCreatePayload>>
     where TFactory : class, IEntityAsyncCreateFactory<TCreatePayload, TEntity>
     {
@@ -90,7 +99,7 @@ where TIdentifier : struct
         ];
 
         _builder
-            .SetEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
+            .AddEntityCreateFeature<AsyncFactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
                 _serviceLifetime,
                 extensions,
                 _throwOnTransaction
@@ -99,7 +108,7 @@ where TIdentifier : struct
         return this;
     }
 
-    public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetCreateUseCase<TCreatePayload, TValidator, TFactory>()
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddCreateUseCase<TCreatePayload, TValidator, TFactory>()
     where TValidator : class, IValidator<IEnumerable<TCreatePayload>>
     where TFactory : class, ICreateEntityFactory<TCreatePayload, TEntity>
     {
@@ -108,11 +117,19 @@ where TIdentifier : struct
             ..PayloadHelper.Service<IValidator<IEnumerable<TCreatePayload>>, TValidator>(_serviceLifetime),
         ];
 
-        _builder.SetEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
+        _builder.AddEntityCreateFeature<FactoryTrackedEntityCreator<TIdentifier, TEntity, TCreatePayload>, TCreatePayload, CreateEntityUseCase<TEntity, TCreatePayload>>(
             _serviceLifetime,
             extensions,
             _throwOnTransaction
         );
+
+        return this;
+    }
+
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddCreateUseCase<TCreatePayload, TFactory>()
+    where TFactory : class, ICreateEntityFactory<TCreatePayload, TEntity>
+    {
+        AddCreateUseCase<TCreatePayload, PassingPayloadValidator<TCreatePayload>, TFactory>();
 
         return this;
     }
@@ -129,6 +146,14 @@ where TIdentifier : struct
         _builder
             .AddPayloadEntityUpdateFeature<TrackedEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, TUpdatePayload,
                 UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(_serviceLifetime, extensions, _throwOnTransaction);
+
+        return this;
+    }
+
+    public TrackedDddBuilder<TTag, TIdentifier, TEntity> AddUpdateUseCase<TUpdatePayload, TFactory>()
+    where TFactory : class, IUpdateEntityFactory<TUpdatePayload, TEntity>
+    {
+        AddUpdateUseCase<TUpdatePayload, PassingPayloadValidator<TUpdatePayload>, TFactory>();
 
         return this;
     }
@@ -161,7 +186,7 @@ where TIdentifier : struct
 
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAccessExpressionProvider<TImplementation>(Func<IServiceProvider, TImplementation> factory)
     where TImplementation : class, IEntityAccessExpressionProvider<TIdentifier, TEntity>;
-    
+
     public TrackedDddBuilder<TTag, TIdentifier, TEntity> SetAccessExpressionProvider<TImplementation>()
     where TImplementation : class, IEntityAccessExpressionProvider<TIdentifier, TEntity>;
 }

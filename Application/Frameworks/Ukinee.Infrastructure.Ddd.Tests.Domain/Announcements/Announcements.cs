@@ -23,12 +23,10 @@ public class AnnouncementResponse
     public required string Contents { get; init; }
 }
 
-public class AnnouncementSignalRRequest
-{
-}
+public class AnnouncementSignalRRequest { }
 
-[Identifier(nameof(Guid), nameof(UserGuid))]
 [ApiIdentifier]
+[Identifier(nameof(UserGuid), nameof(Guid))]
 public readonly partial record struct AnnouncementIdentifier
 {
     public required Guid UserGuid { get; init; }
@@ -53,11 +51,15 @@ public partial record Announcement : IEntity<AnnouncementIdentifier>, IEntityWit
 
     public Announcement OpenPublicRead()
     {
-        throw new NotImplementedException();
+        return this with {
+            IsAvailableForPublicRead = true,
+        };
     }
 
     public Announcement ClosePublicRead()
     {
-        throw new NotImplementedException();
+        return this with {
+            IsAvailableForPublicRead = false,
+        };
     }
 }

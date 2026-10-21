@@ -92,17 +92,17 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
         return this;
     }
 
-    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> SetCreateUseCase<TCreatePayload>()
+    public RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> AddCreateUseCase<TCreatePayload>()
     {
         IEnumerable<ServiceDescriptor> extensions = [
             ..PayloadHelper.Service<
                 IExternalGatewayCreator<TIdentifier, TCreatePayload, TResponse>,
-                ExternalGatewayCreator<TTag, TIdentifier, TCreatePayload, TEntity, TResponse> // тут колдунство регистрации
+                ExternalGatewayCreator<TTag, TIdentifier, TCreatePayload, TEntity, TResponse>
             >(ServiceLifetime.Singleton),
         ];
 
         _builder
-            .SetEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
+            .AddEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
                 CreateEntityUseCase<TEntity, TCreatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
         if (_cachingVariant == CachingVariant.UpdateInvalidates)

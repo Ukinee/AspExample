@@ -11,10 +11,7 @@ public static class IdentifierExtensions
     where TEntity : class, IEntity<TIdentifier>
     where TIdentifier : struct, ISpanParsable<TIdentifier>, IComplexIdentifier<TIdentifier>
     {
-        var keyProperties = typeof(TIdentifier)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Select(p => p.Name)
-            .ToArray();
+        var keyProperties = GetKeyProperties<TIdentifier>();
 
         if (keyProperties.Length > 0)
         {
@@ -32,11 +29,21 @@ public static class IdentifierExtensions
     {
         if (typeof(TIdentifier).IsAssignableTo(typeof(IComplexIdentifier<TIdentifier>)))
         {
-            throw new InvalidOperationException($"{nameof(ConfigureIdentifierKey)} cannot be used with {typeof(IComplexIdentifier<TIdentifier>)}. Use {nameof(ConfigureComplexIdentifierKey)} instead.");
+            throw new InvalidOperationException(
+                $"{nameof(ConfigureIdentifierKey)} cannot be used with {typeof(IComplexIdentifier<TIdentifier>)}. Use {nameof(ConfigureComplexIdentifierKey)} instead."
+            );
         }
 
         builder.HasKey(p => p.Identifier);
 
         return builder;
+    }
+
+    private static string[] GetKeyProperties<TIdentifier>()
+    where TIdentifier : struct, ISpanParsable<TIdentifier>, IComplexIdentifier<TIdentifier>
+    {
+        var attribute = typeof(TIdentifier).GetCustomAttribute<IdentifierAttribute>();
+
+        return attribute?.Order ?? throw new InvalidOperationException($"{typeof(TIdentifier).FullName} has no {nameof(IdentifierAttribute)}");
     }
 }

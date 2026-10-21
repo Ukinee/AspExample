@@ -1,7 +1,7 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 
-namespace Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
+namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 
 public enum InMemoryEntityState
 {

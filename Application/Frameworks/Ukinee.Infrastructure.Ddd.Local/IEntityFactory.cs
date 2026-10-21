@@ -21,9 +21,3 @@ where TEntity : class, IEntity
 {
     public TEntity Update(UserContext userContext, TEntity old, TUpdatePayload payload);
 }
-
-public interface IEntityAsyncUpdateFactory<in TUpdatePayload, TEntity>
-where TEntity : class, IEntity
-{
-    public ValueTask<TEntity> Update(UserContext userContext, TEntity old, TUpdatePayload payload);
-}

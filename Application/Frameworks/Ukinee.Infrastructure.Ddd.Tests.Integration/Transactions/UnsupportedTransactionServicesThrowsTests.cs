@@ -53,7 +53,7 @@ public class UnsupportedTransactionServicesThrowsTests : TestBase
             .LocalContexts.AddInMemoryContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                 .Ddd.RegisterAsInMemoryState(dddConfigurator => dddConfigurator
                     .SetAccessPolicy(eventPolicy)
-                    .SetCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
+                    .AddCreateUseCase<CreateAnnouncementRequest, CreateAnnouncementRequestValidator, AnnouncementFactory>()
                     .AddUpdateUseCase<UpdateAnnouncementContentsRequest, UpdateAnnouncementContentsRequestValidator, AnnouncementFactory>()
                 )
             )
@@ -61,7 +61,7 @@ public class UnsupportedTransactionServicesThrowsTests : TestBase
                 .Ddd.Register<BorderResponse>(dddConfigurator => dddConfigurator
                     .WithCache(CachingVariant.UpdateInvalidates)
                     .WithMapsterResponseToEntityMap()
-                    .SetCreateUseCase<CreateBorderRequest>()
+                    .AddCreateUseCase<CreateBorderRequest>()
                     .AddUpdateUseCase<UpdateBorderRequest>()
                 )
             )

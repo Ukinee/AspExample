@@ -33,12 +33,12 @@ where TIdentifier : struct
     public IAsyncEnumerable<TEntity> ExecuteSoft(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken) =>
         IdentifierReader.FindManyByIdAsync(userContext, identifiers, cancellationToken);
 
-    public async Task<Dictionary<TIdentifier, TEntity>> ExecuteStrict(
+    public async Task<IReadOnlyDictionary<TIdentifier, TEntity>> ExecuteStrict(
         UserContext userContext,
         IReadOnlyCollection<TIdentifier> identifiers,
         CancellationToken ct
     )
     {
-        return await IdentifierReader.FindManyByIdStrictAsync(userContext, identifiers, ct);
+        return await IdentifierReader.GetManyByIdAsync(userContext, identifiers, ct);
     }
 }

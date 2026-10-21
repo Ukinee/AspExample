@@ -11,7 +11,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
-public sealed class TrackedEntityDeltaUpdater<TIdentifier, TEntity>(
+public class TrackedEntityDeltaUpdater<TIdentifier, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityUpdateAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher

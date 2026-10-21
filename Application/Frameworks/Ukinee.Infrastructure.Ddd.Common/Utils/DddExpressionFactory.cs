@@ -42,9 +42,6 @@ public static class DddExpressionFactory
     public static Expression<Func<TEntity, bool>> UserGuidInIdentifierExpression<TEntity>(string guidPropertyName, UserContext userContext) =>
         UserIdentifierRule<TEntity>(ExpressionParameterName, guidPropertyName, userContext);
 
-    public static Expression<Func<TEntity, bool>> AdminExpression<TEntity>(UserContext userContext) =>
-        _ => userContext.IsAdmin && userContext.IsAuthenticated;
-
     public static Expression<Func<TEntity, bool>> LoggedInExpression<TEntity>(UserContext userContext) =>
         _ => userContext.IsAuthenticated;
 

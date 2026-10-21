@@ -123,7 +123,7 @@ namespace Ukinee.Common.Identifiers.SourceGenerators.Identifiers
 
             var path = string.Join("/", info.Properties.Select(p => $"{{{p.Name}}}"));
 
-            sb.AppendLine($"        public string Path => $\"{path}\";");
+            sb.AppendLine($"        public string GetPath() => $\"{path}\";");
 
             sb.AppendLine();
 

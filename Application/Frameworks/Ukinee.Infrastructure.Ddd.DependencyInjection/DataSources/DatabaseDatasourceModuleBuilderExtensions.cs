@@ -1,26 +1,24 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
-using Ukinee.Infrastructure.Ddd.Local.EfCore.Options;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
 
 namespace Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources;
 
 public class DatabaseModuleDatasourceBuilder<TTag>(ModuleBuilder<TTag> module)
 {
-    public ModuleBuilder<TTag> Register<TContext>(Action<DbOptions<TTag>, DbContextOptionsBuilder> configuration)
+    public ModuleBuilder<TTag> Register<TContext>(Action<DbContextOptionsBuilder> configuration)
     where TContext : TaggedDbContext<TTag>
     {
+        if (typeof(TContext).IsAbstract)
+        {
+            throw new ArgumentException("Cannot register abstract class.", nameof(TContext));
+        }
+        
         module.AddAction(collection => collection
             .AddScoped<TaggedDbContext<TTag>>(sp => sp.GetRequiredService<TContext>())
             .AddSingleton<IDbContextFactory<TaggedDbContext<TTag>>>(sp => new TaggedDbContextFactoryWrapper<TContext>(sp.GetRequiredService<IDbContextFactory<TContext>>()))
-            .AddSingleton<DbOptions<TTag>>()
-            .AddDbContextFactory<TContext>((serviceProvider, builder) =>
-                {
-                    var dbOptions = serviceProvider.GetRequiredService<DbOptions<TTag>>();
-                    configuration.Invoke(dbOptions, builder);
-                }
-            )
+            .AddDbContextFactory<TContext>(configuration.Invoke)
         );
 
         return module;

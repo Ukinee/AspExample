@@ -35,11 +35,11 @@ public static class EntityExtensions
         }
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>
     {
-        public ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
+        public ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
         {
             definition.Services.Add(action);
 
@@ -47,11 +47,11 @@ public static class EntityExtensions
         }
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
     {
-        public ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
+        public ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
         {
             definition.Services.Add(action);
 

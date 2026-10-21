@@ -21,6 +21,7 @@ public class DddFeature<TIdentifier, TEntity> : IBuildable
     public List<ServiceDescriptor> IdentifierReader { get; } = [];
     public List<ServiceDescriptor> EntityReader { get; } = [];
     public List<ServiceDescriptor> SpecificationReader { get; } = [];
+    public List<ServiceDescriptor> TrackedReader { get; } = [];
     public List<ServiceDescriptor> GetOrCreate { get; } = [];
     public List<ServiceDescriptor> PayloadEntityUpdaters { get; } = [];
     public List<ServiceDescriptor> CustomRequestHandlers { get; } = [];
@@ -33,6 +34,7 @@ public class DddFeature<TIdentifier, TEntity> : IBuildable
         PayloadHelper.AddFiltered(serviceCollection, policy, DeltaEntityUpdater);
         PayloadHelper.AddFiltered(serviceCollection, policy, EntityRemover);
         PayloadHelper.AddFiltered(serviceCollection, policy, IdentifierReader);
+        PayloadHelper.AddFiltered(serviceCollection, policy, TrackedReader);
         PayloadHelper.AddFiltered(serviceCollection, policy, EntityReader);
         PayloadHelper.AddFiltered(serviceCollection, policy, SpecificationReader);
         PayloadHelper.AddFiltered(serviceCollection, policy, GetOrCreate);

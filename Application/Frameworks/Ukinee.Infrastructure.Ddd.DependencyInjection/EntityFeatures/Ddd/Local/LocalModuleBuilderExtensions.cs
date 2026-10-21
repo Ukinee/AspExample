@@ -17,10 +17,10 @@ public class LocalModuleDefinitionBuilder<TTag>(ModuleBuilder<TTag> builder)
         return builder;
     }
 
-    public ModuleBuilder<TTag> AddSoftDeletionDatabaseContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity>> contextConfigurator)
+    public ModuleBuilder<TTag> AddSoftDeletionDatabaseContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> contextConfigurator)
     where TEntity : IEntityWithSoftDelete<TEntity>
     {
-        var definition = new ModuleDefinition<TTag>.SoftDeletionEntityDefinition<TIdentifier, TEntity> {
+        var definition = new ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> {
             Features = [],
         };
 
@@ -30,12 +30,12 @@ public class LocalModuleDefinitionBuilder<TTag>(ModuleBuilder<TTag> builder)
         return builder;
     }
 
-    public ModuleBuilder<TTag> AddHonestDeletionDatabaseContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity>> contextConfigurator)
+    public ModuleBuilder<TTag> AddHonestDeletionDatabaseContext<TIdentifier, TEntity>(Action<ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> contextConfigurator)
     {
         if (typeof(TEntity).IsAssignableTo(typeof(IEntityWithSoftDelete<TEntity>)))
             throw new InvalidOperationException($"Cannot add HonestDeletionEntityDefinition to {typeof(TEntity).Name}. Use {nameof(AddSoftDeletionDatabaseContext)} instead.");
 
-        var definition = new ModuleDefinition<TTag>.HonestDeletionEntityDefinition<TIdentifier, TEntity> {
+        var definition = new ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> {
             Features = [],
         };
 

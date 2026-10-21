@@ -3,8 +3,8 @@ using NUnit.Framework;
 using Ukinee.DbAccess.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Extensions;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
+using Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
 using Ukinee.Infrastructure.Ddd.Local.Repositories;
-using Ukinee.Infrastructure.Ddd.Tests.Common.Services.Repositories;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.Mocks;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Utils.TestBases;
 using Ukinee.Infrastructure.Ddd.Tests.Domain;
@@ -17,7 +17,7 @@ public class ExpressionsTests : BorderTestBase
     protected override void ConfigureTestServices(IServiceCollection services)
     {
         services.AddSingleton<InMemoryStore<BorderIdentifier, Border>>();
-        services.AddSingleton<IEditableTrackedRepository<BorderIdentifier, Border>, TransactedInMemoryRepository<BorderIdentifier, Border, TestingTag>>();
+        services.AddSingleton<IEditableTrackedRepository<BorderIdentifier, Border>, TransactedInMemoryRepository<TestingTag, BorderIdentifier, Border>>();
 
         services.AddSingleton<UnitOfWorkFactoryMock>();
         services.AddSingleton<IUnitOfWorkProvider>(sp => sp.GetRequiredService<UnitOfWorkFactoryMock>());

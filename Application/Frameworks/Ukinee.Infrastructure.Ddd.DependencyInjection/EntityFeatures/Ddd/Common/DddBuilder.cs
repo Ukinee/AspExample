@@ -25,7 +25,7 @@ where TIdentifier : struct
         Feature = feature;
     }
 
-    internal DddBuilder<TTag, TIdentifier, TEntity> SetRepository<TImplementation>(ServiceLifetime serviceLifetime)
+    internal DddBuilder<TTag, TIdentifier, TEntity> SetRepository<TImplementation>(ServiceLifetime serviceLifetime, params IEnumerable<ServiceDescriptor> extensions)
     where TImplementation : class, IEditableTrackedRepository<TIdentifier, TEntity>
     {
         Feature.Repository.Clear();
@@ -33,6 +33,7 @@ where TIdentifier : struct
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IEditableTrackedRepository<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
             ..PayloadHelper.Service<ITrackedRepository<TIdentifier, TEntity>, TImplementation>(serviceLifetime),
+            ..extensions,
         ];
 
         Feature.Repository.AddRange(descriptors);
@@ -40,7 +41,7 @@ where TIdentifier : struct
         return this;
     }
 
-    internal DddBuilder<TTag, TIdentifier, TEntity> SetEntityCreateFeature<TImplementation, TPayload, TUseCase>(
+    internal DddBuilder<TTag, TIdentifier, TEntity> AddEntityCreateFeature<TImplementation, TPayload, TUseCase>(
         ServiceLifetime serviceLifetime,
         IEnumerable<ServiceDescriptor> extensions,
         bool throwOnTransaction
@@ -48,7 +49,6 @@ where TIdentifier : struct
     where TImplementation : class, IEntityCreator<TEntity, TPayload>
     where TUseCase : class, ICreateEntityUseCase<TEntity, TPayload>
     {
-        Feature.EntityCreator.Clear();
 
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IEntityCreator<TEntity, TPayload>, TImplementation>(serviceLifetime),
@@ -56,7 +56,6 @@ where TIdentifier : struct
             ..extensions,
         ];
 
-        Feature.EntityCreator.AddRange(descriptors);
 
         if (throwOnTransaction)
         {
@@ -137,13 +136,16 @@ where TIdentifier : struct
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IEntityDeltaUpdater<TIdentifier, TEntity>, TransactionThrowingEntityDeltaUpdaterDecorator<TIdentifier, TEntity>>(Feature.DeltaEntityUpdater);
+            ServiceDescriptorDecorators.Decorate<IEntityDeltaUpdater<TIdentifier, TEntity>, TransactionThrowingEntityDeltaUpdaterDecorator<TIdentifier, TEntity>>(
+                Feature.DeltaEntityUpdater
+            );
         }
         else
         {
-            ServiceDescriptorDecorators.Decorate<IDeltaUpdateEntityUseCase<TIdentifier, TEntity>, TransactionDeltaUpdateEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
-                Feature.DeltaEntityUpdater
-            );
+            ServiceDescriptorDecorators
+                .Decorate<IDeltaUpdateEntityUseCase<TIdentifier, TEntity>, TransactionDeltaUpdateEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
+                    Feature.DeltaEntityUpdater
+                );
         }
 
         return this;
@@ -165,11 +167,17 @@ where TIdentifier : struct
 
         if (throwOnTransaction)
         {
-            ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemoverDecorator<TIdentifier, TEntity>>(Feature.EntityRemover);
+            ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, TransactionThrowingEntityRemoverDecorator<TIdentifier, TEntity>>(
+                Feature.EntityRemover
+            );
         }
         else
         {
             ServiceDescriptorDecorators.Decorate<IRemoveEntityUseCase<TEntity>, TransactionRemoveEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
+                Feature.EntityRemover
+            );
+
+            ServiceDescriptorDecorators.Decorate<IRemoveEntityUseCase<TIdentifier, TEntity>, TransactionRemoveEntityUseCaseDecorator<TTag, TIdentifier, TEntity>>(
                 Feature.EntityRemover
             );
         }
@@ -219,6 +227,16 @@ where TIdentifier : struct
         Feature.SpecificationReader.AddRange(descriptors);
 
         return this;
+    }
+
+    internal void SetTrackedReader<T>(ServiceLifetime serviceLifetime)
+    where T : class, ITrackedReader<TIdentifier, TEntity>
+    {
+        Feature.TrackedReader.Clear();
+
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Service<ITrackedReader<TIdentifier, TEntity>, T>(serviceLifetime),];
+
+        Feature.TrackedReader.AddRange(descriptors);
     }
 
     internal DddBuilder<TTag, TIdentifier, TEntity> AddGetOrCreateFeature<TImplementation, TCreatePayload, TUseCase>(

@@ -23,7 +23,7 @@ where TResponse : class
         CancellationToken cancellationToken
     )
     {
-        var requestUri = RelationalPathUtils.Find<TEntity>(identifier.Path);
+        var requestUri = RelationalPathUtils.Find<TEntity>(identifier.GetPath());
         using var request = CreateRequest(userContext, HttpMethod.Get, requestUri);
 
         return await ReadJsonAsync<TResponse>(request, true, cancellationToken);

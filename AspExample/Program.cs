@@ -1,4 +1,5 @@
 using Scalar.AspNetCore;
+using Serilog;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
@@ -14,44 +15,52 @@ namespace AspExample;
 
 public static class Program
 {
-    private const string DatabaseOptionsSectionName = "DatabaseOptions";
-    private const string SecretOptionsPath = "SecretOptions/supersecretoptions.json";
-
     public static void Main(string[] args)
     {
-        var registrationPolicy = CreateRegistrationPolicy();
-
         var builder = WebApplication.CreateBuilder(args);
 
         ConfigureAppBuilder(builder);
-        ConfigureAppServices(builder, registrationPolicy);
+        ConfigureAppServices(builder);
 
         var app = builder.Build();
 
         ConfigureApp(app);
 
-        app.Run($"https://localhost:{ServerInMemoryConfig.Port}");
+        app.Run($"https://localhost:{ServerConfig.Port}");
     }
 
     private static void ConfigureAppBuilder(WebApplicationBuilder builder)
     {
-        builder.Services.AddOpenApi(options =>
+      
+        builder.Host.UseSerilog((context, dServices, loggerConfiguration) =>
             {
-                JsonOpenApiConfigurator.FixFlagEnums(options); //requires JsonStringFlagsEnumConverterFactory registered in middleware pipeline
+                loggerConfiguration
+                    .ReadFrom.Configuration(builder.Configuration)
+                    .ReadFrom.Services(dServices)
+                    .Enrich.FromLogContext();
             }
         );
 
-        builder
-            .SetupLogging()
-            .SetupDevelopmentMiddlewares()
-            .SetupRouting();
-
-        builder.Services.AddExceptionHandler<DddExceptionsHandler>();
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddProblemDetails();
+        }
+        
+        builder.Host.UseDefaultServiceProvider(options =>
+        {
+            options.ValidateOnBuild = true; 
+            options.ValidateScopes = true;  
+        });
     }
 
     private static void ConfigureApp(WebApplication app)
     {
-        app.RegisterEndpoints();
+        var definitions = app.Services.GetServices<ApiServerDefinition>();
+        
+        foreach (var def in definitions)
+        {
+            def.RegistrationAction(app);
+        }
 
         if (app.Environment.IsDevelopment())
         {
@@ -67,8 +76,8 @@ public static class Program
                 }
             );
         }
-        
-        app.UseExceptionHandler(); 
+
+        app.UseExceptionHandler();
 
         app.UseHttpsRedirection();
         app.UseCors();
@@ -79,42 +88,22 @@ public static class Program
         app.MapControllers();
     }
 
-    private static void ConfigureAppServices(WebApplicationBuilder builder, RegistrationPolicy registrationPolicy)
+    private static void ConfigureAppServices(WebApplicationBuilder builder)
     {
-        var mediatrOptions = new MediatRConfig {
-            AssembliesToScanHandlers = [typeof(Program).Assembly]
-        };
-
-        var serverOptions = new ServerExampleConfig {
+        var serverOptions = new ServerConfig {
             DatabaseName = "Example.Database",
-            DatabaseOptionsSectionName = DatabaseOptionsSectionName,
-            DatabaseOptionsFilePath = SecretOptionsPath,
             ApiBaseRoute = "api/v1",
+            ConntectionStringPath = "SecretOptions/supersecretoptions.json",
         };
 
-        var userOwnerConfig = new UserConfig {
-            DatabaseName = "Example.Database",
-            DatabaseOptionsSectionName = DatabaseOptionsSectionName,
-            DatabaseOptionsFilePath = SecretOptionsPath,
-            TokenOptionsSectionName = nameof(TokenOptions),
-            TokenOptionsFilePath = SecretOptionsPath,
-        };
+        builder.Services.AddExceptionHandler<DddExceptionsHandler>();
+        builder.Services.AddControllers();
+        builder.Services.AddOpenApi();
 
         builder
             .Services
-            .SetupCommonServices(mediatrOptions)
-            .SetupUsers(builder.Configuration, userOwnerConfig)
-            .SetupInMemoryServer<ExampleServerHub>(registrationPolicy, serverOptions)
-            .SetupUnitOfWork();
-    }
-
-    private static RegistrationPolicy CreateRegistrationPolicy()
-    {
-        var registrationPolicy = new RegistrationPolicy();
-
-        registrationPolicy.Ignore<IDisposable>();
-        registrationPolicy.AllowMultiple<ApiServerDefinition>();
-
-        return registrationPolicy;
+            .SetupServer(builder.Configuration, serverOptions)
+            .SetupTestingServer<ExampleServerHub>(builder.Configuration, serverOptions)
+            ;
     }
 }

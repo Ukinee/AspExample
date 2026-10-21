@@ -37,16 +37,16 @@ public static class RelationalPathUtils
         return $"{typeof(TEntity).Name}";
     }
 
-    public static string Create<TEntity>()
+    public static string Create<TEntity, TPayload>()
     where TEntity : IEntity
     {
-        return $"{typeof(TEntity).Name}";
+        return $"{typeof(TEntity).Name}/createWith{typeof(TPayload).Name}";
     }
 
-    public static string CreateMany<TEntity>()
+    public static string CreateMany<TEntity, TPayload>()
     where TEntity : IEntity
     {
-        return $"{typeof(TEntity).Name}/createMany";
+        return $"{typeof(TEntity).Name}/createManyWith{typeof(TPayload).Name}";
     }
 
     public static string EnsureExists<TEntity>(string template)

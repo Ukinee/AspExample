@@ -27,9 +27,6 @@ where TEntity : IEntity<TIdentifier>
     public static Expression<Func<TEntity, bool>> UserGuidInIdentifierExpression(string guidPropertyName, UserContext userContext) =>
         DddAccessExpressionUtils.UserGuidInIdentifierExpression<TEntity>(guidPropertyName, userContext);
 
-    public static Expression<Func<TEntity, bool>> AdminExpression(UserContext userContext) =>
-        DddExpressionFactory.AdminExpression<TEntity>(userContext);
-
     public static Expression<Func<TEntity, bool>> LoggedInExpression(UserContext userContext) =>
         DddExpressionFactory.LoggedInExpression<TEntity>(userContext);
 

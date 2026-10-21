@@ -1,11 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Options;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.SignalRClient;
 using Ukinee.Infrastructure.Ddd.External.Api.Services;
+using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
 using Ukinee.Infrastructure.Ddd.Tests.Domain;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
@@ -29,7 +33,7 @@ public static class SetupClientExtensions
         public IServiceCollection SetupClient<THub>(IConfigurationManager configuration, ClientConfig config, RegistrationPolicy registrationPolicy)
         {
             serviceCollection.AddTransient<UserTokenCredentialsHttpInterceptor>();
-            
+
             serviceCollection.ConfigureJson<CachingOptions>(configuration, config.CacheOptionsSectionName, config.CacheOptionsFilePath);
 
             serviceCollection
@@ -52,7 +56,7 @@ public static class SetupClientExtensions
                     .Ddd.Register<AnnouncementResponse>(dddConfigurator => dddConfigurator
                         .WithCache(CachingVariant.UpdateInvalidates)
                         .WithMapper<AnnouncementMapService>()
-                        .SetCreateUseCase<CreateAnnouncementRequest>()
+                        .AddCreateUseCase<CreateAnnouncementRequest>()
                         .AddUpdateUseCase<UpdateAnnouncementContentsRequest>()
                     )
                     .SignalRClient.Register<THub, AnnouncementSignalRRequest, AnnouncementResponse>(signalRConfigurator => signalRConfigurator
@@ -63,7 +67,7 @@ public static class SetupClientExtensions
                     .Ddd.Register<BorderResponse>(dddConfigurator => dddConfigurator
                         .WithCache(CachingVariant.UpdateInvalidates)
                         .WithMapper<BorderMapService>()
-                        .SetCreateUseCase<CreateBorderRequest>()
+                        .AddCreateUseCase<CreateBorderRequest>()
                         .AddUpdateUseCase<UpdateBorderRequest>()
                     )
                     .SignalRClient.Register<THub, BorderSignalRRequest, BorderResponse>(signalRConfigurator => signalRConfigurator
@@ -74,7 +78,7 @@ public static class SetupClientExtensions
                     .Ddd.Register<CookieResponse>(dddConfigurator => dddConfigurator
                         .WithCache(CachingVariant.UpdateInvalidates)
                         .WithMapper<CookieMapService>()
-                        .SetCreateUseCase<CreateCookieRequest>()
+                        .AddCreateUseCase<CreateCookieRequest>()
                         .AddUpdateUseCase<UpdateCookieRequest>()
                     )
                     .SignalRClient.Register<THub, BorderSignalRRequest, BorderResponse>(signalRConfigurator => signalRConfigurator
