@@ -4,9 +4,11 @@ using MediatR;
 using MediatR.NotificationPublishers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures;
 using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
@@ -30,7 +32,8 @@ public static class SetupMinimalServerExample
 {
     extension(IServiceCollection serviceCollection)
     {
-        public IServiceCollection SetupServer(IConfigurationManager configuration, ServerConfig config)
+        public IServiceCollection SetupServer<THub>(IConfigurationManager configuration, ServerConfig config)
+        where THub : Hub
         {
             var policy = RegistrationPolicy.Server;
 
@@ -59,7 +62,7 @@ public static class SetupMinimalServerExample
 
             serviceCollection
                 .RegisterModule<ServerTag>()
-                .DatabaseDatasource.Register<ServerDbContext>((DbContextOptionsBuilder builder) =>
+                .DatabaseDatasource.Register<ServerDbContext>(builder =>
                     {
                         var connectionString = configuration.GetConnectionString(config.DatabaseName);
 
@@ -78,6 +81,10 @@ public static class SetupMinimalServerExample
                         apiServerConfigurator => apiServerConfigurator
                             .RegisterCrud<CreateAnnouncementRequest, UpdateAnnouncementContentsRequest>()
                             .AddGroupConfiguration(builder => builder.AllowAnonymous())
+                    )
+                    .SignalRServer.Register<THub, AnnouncementSignalRRequest, AnnouncementResponse>(signalRConfigurator => signalRConfigurator
+                        .SetGroupResolver<AnnouncementSignalRRouteResolver>()
+                        .SetAccessValidationService<AnnouncementSignalRAccessValidator>()
                     )
                 )
                 .Build(policy);

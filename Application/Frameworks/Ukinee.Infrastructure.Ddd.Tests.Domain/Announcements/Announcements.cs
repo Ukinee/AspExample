@@ -23,7 +23,10 @@ public class AnnouncementResponse
     public required string Contents { get; init; }
 }
 
-public class AnnouncementSignalRRequest { }
+public class AnnouncementSignalRRequest
+{
+    public required Guid UserGuid { get; init; }
+}
 
 [ApiIdentifier]
 [Identifier(nameof(UserGuid), nameof(Guid))]

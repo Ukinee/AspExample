@@ -48,7 +48,7 @@ where TEntity : class, IEntity<TIdentifier>
         if (removed.Count != identifiers.Count)
             throw new EntityNotFoundException<TIdentifier, TEntity>(identifiers);
 
-        await publisher.PublishRemovedEvent<TIdentifier, TEntity>(userContext, identifiers, cancellationToken);
+        await publisher.PublishRemovedEvent<TIdentifier, TEntity>(userContext, removed, cancellationToken);
     }
 }
 
@@ -96,6 +96,6 @@ where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
         if (removed.Count != identifiers.Count)
             throw new EntityNotFoundException<TIdentifier, TEntity>(identifiers);
 
-        await publisher.PublishRemovedEvent<TIdentifier, TEntity>(userContext, identifiers, cancellationToken);
+        await publisher.PublishRemovedEvent<TIdentifier, TEntity>(userContext, removed.Select(e => e.Updated).ToList(), cancellationToken);
     }
 }

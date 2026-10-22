@@ -28,7 +28,7 @@ where TEntity : IEntity<TIdentifier>
 public record DeletedDomainEvent<TIdentifier, TEntity> : DomainEvent<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
-    public required IReadOnlyCollection<TIdentifier> Identifiers { get; init; }
+    public required IReadOnlyCollection<TEntity> Entities { get; init; }
 }
 
 public static class DomainEvent
@@ -57,11 +57,11 @@ public static class DomainEvent
             Updates = updates,
         };
 
-    public static DomainEvent<TIdentifier, TEntity> Removed<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<TIdentifier> identifiers)
+    public static DomainEvent<TIdentifier, TEntity> Removed<TIdentifier, TEntity>(UserContext context, IReadOnlyCollection<TEntity> entities)
     where TEntity : IEntity<TIdentifier> =>
         new DeletedDomainEvent<TIdentifier, TEntity> {
             UserContext = context,
             OccurredAt = DateTimeOffset.UtcNow,
-            Identifiers = identifiers,
+            Entities = entities,
         };
 }

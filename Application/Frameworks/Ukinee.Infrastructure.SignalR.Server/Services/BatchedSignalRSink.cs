@@ -54,12 +54,12 @@ where TIdentifier : notnull
         return Task.CompletedTask;
     }
 
-    public async Task NotifyRemoval(IReadOnlyCollection<TIdentifier> identifiers)
+    public async Task NotifyRemoval(IReadOnlyCollection<TEntity> identifiers)
     {
         var method = SignalRMethodNamesUtils.Removed<TEntity>();
 
         var groupsMap = identifiers.ToLookupMany(
-            identifier => _routeResolver.GetGroupsForIdentifier(identifier, EntityEventType.Removed),
+            identifier => _routeResolver.GetGroupsForEntities(identifier, EntityEventType.Removed),
             identifier => identifier
         );
 
@@ -111,7 +111,7 @@ where TIdentifier : notnull
         var method = SignalRMethodNamesUtils.Upsert<TEntity>();
 
         var groupsMap = entities.ToLookupMany(
-            entity => _routeResolver.GetGroupsForIdentifier(entity.Identifier, EntityEventType.Updated),
+            entity => _routeResolver.GetGroupsForEntities(entity, EntityEventType.Updated),
             entity => _mapper.Map<TViewModel>(entity)
         );
 

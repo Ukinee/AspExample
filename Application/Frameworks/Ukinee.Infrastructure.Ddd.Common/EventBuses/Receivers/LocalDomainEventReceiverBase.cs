@@ -4,7 +4,7 @@ using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 
 namespace Ukinee.Infrastructure.Ddd.Common.EventBuses.Receivers;
 
-public abstract class DomainEventReceiverBase<TIdentifier, TEntity> :
+public abstract class LocalDomainEventReceiverBase<TIdentifier, TEntity> :
     INotificationHandler<CreatedDomainEvent<TIdentifier, TEntity>>,
     INotificationHandler<UpdatedDomainEvent<TIdentifier, TEntity>>,
     INotificationHandler<DeletedDomainEvent<TIdentifier, TEntity>>
@@ -22,12 +22,12 @@ where TEntity : IEntity<TIdentifier>
 
     public async Task Handle(DeletedDomainEvent<TIdentifier, TEntity> notification, CancellationToken cancellationToken)
     {
-        await OnRemoved(notification.Identifiers, cancellationToken);
+        await OnRemoved(notification.Entities, cancellationToken);
     }
 
     protected abstract Task OnCreated(IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken);
     protected abstract Task OnUpdated(IReadOnlyCollection<UpdateResult<TEntity>> updateInfos, CancellationToken cancellationToken);
-    protected abstract Task OnRemoved(IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken);
+    protected abstract Task OnRemoved(IReadOnlyCollection<TEntity> identifiers, CancellationToken cancellationToken);
 }
 
 public abstract class ClientDomainEventReceiverBase<TIdentifier, TEntity> :

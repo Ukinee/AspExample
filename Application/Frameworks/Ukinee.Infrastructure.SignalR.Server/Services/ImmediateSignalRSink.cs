@@ -27,12 +27,12 @@ where THub : Hub
         await NotifyGroups(entities, EntityEventType.Updated, SignalRMethodNamesUtils.Updated<TEntity>());
     }
 
-    public async Task NotifyRemoval(IReadOnlyCollection<TIdentifier> identifiers)
+    public async Task NotifyRemoval(IReadOnlyCollection<TEntity> entities)
     {
         var method = SignalRMethodNamesUtils.Removed<TEntity>();
 
-        var groupsMap = identifiers.ToLookupMany(
-            identifier => routeResolver.GetGroupsForIdentifier(identifier, EntityEventType.Removed),
+        var groupsMap = entities.ToLookupMany(
+            identifier => routeResolver.GetGroupsForEntities(identifier, EntityEventType.Removed),
             identifier => identifier
         );
 
@@ -43,7 +43,7 @@ where THub : Hub
     private async Task NotifyGroups(IReadOnlyCollection<TEntity> entities, EntityEventType eventType, string method)
     {
         var groupsMap = entities.ToLookupMany(
-            entity => routeResolver.GetGroupsForIdentifier(entity.Identifier, eventType),
+            entity => routeResolver.GetGroupsForEntities(entity, eventType),
             entity => mapper.Map<TViewModel>(entity)
         );
 

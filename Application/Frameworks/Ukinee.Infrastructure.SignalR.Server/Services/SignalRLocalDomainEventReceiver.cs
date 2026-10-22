@@ -5,7 +5,7 @@ using Ukinee.Infrastructure.SignalR.Server.Contracts;
 
 namespace Ukinee.Infrastructure.SignalR.Server.Services;
 
-public class SignalRDomainEventReceiver<TIdentifier, TEntity>(ISignalRSink<TIdentifier, TEntity> sink) : DomainEventReceiverBase<TIdentifier, TEntity>
+public class SignalRLocalDomainEventReceiver<TIdentifier, TEntity>(ISignalRSink<TIdentifier, TEntity> sink) : LocalDomainEventReceiverBase<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     protected override Task OnCreated(IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken) =>
@@ -14,6 +14,6 @@ where TEntity : IEntity<TIdentifier>
     protected override Task OnUpdated(IReadOnlyCollection<UpdateResult<TEntity>> updates, CancellationToken cancellationToken) =>
         sink.NotifyUpdate(updates.Select(d => d.Updated).ToList());
 
-    protected override Task OnRemoved(IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellationToken) =>
-        sink.NotifyRemoval(identifiers);
+    protected override Task OnRemoved(IReadOnlyCollection<TEntity> entities, CancellationToken cancellationToken) =>
+        sink.NotifyRemoval(entities);
 }

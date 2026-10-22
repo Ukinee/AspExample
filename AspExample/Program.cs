@@ -102,8 +102,8 @@ public static class Program
 
         builder
             .Services
-            .SetupServer(builder.Configuration, serverOptions)
-            .SetupTestingServer<ExampleServerHub>(builder.Configuration, serverOptions)
+            .SetupServer<ExampleServerHub>(builder.Configuration, serverOptions)
+            // .SetupTestingServer<ExampleServerHub>(builder.Configuration, serverOptions)
             ;
     }
 }

@@ -22,9 +22,9 @@ where THub : Hub
         Feature = feature;
 
         Feature.AddServices(sc => sc.AddSingleton<IHubService<TRequest>, HubService<TIdentifier, TEntity, TRequest>>());
-        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<CreatedDomainEvent<TIdentifier, TEntity>>, SignalRDomainEventReceiver<TIdentifier, TEntity>>());
-        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<UpdatedDomainEvent<TIdentifier, TEntity>>, SignalRDomainEventReceiver<TIdentifier, TEntity>>());
-        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<DeletedDomainEvent<TIdentifier, TEntity>>, SignalRDomainEventReceiver<TIdentifier, TEntity>>());
+        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<CreatedDomainEvent<TIdentifier, TEntity>>, SignalRLocalDomainEventReceiver<TIdentifier, TEntity>>());
+        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<UpdatedDomainEvent<TIdentifier, TEntity>>, SignalRLocalDomainEventReceiver<TIdentifier, TEntity>>());
+        Feature.AddServices(sc => sc.AddSingleton<INotificationHandler<DeletedDomainEvent<TIdentifier, TEntity>>, SignalRLocalDomainEventReceiver<TIdentifier, TEntity>>());
     }
 
     IAccessValidationServiceRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>

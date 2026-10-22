@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Ukinee.Users;
 using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.SignalR.Server.Contracts;

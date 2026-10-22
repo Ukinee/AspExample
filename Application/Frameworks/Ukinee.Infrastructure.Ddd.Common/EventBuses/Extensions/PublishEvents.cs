@@ -16,10 +16,10 @@ public static class EventBusExtensions
             return bus.Publish(DomainEvent.Created<TIdentifier, TEntity>(userContext, entities), cancellation);
         }
 
-        public Task PublishRemovedEvent<TIdentifier, TEntity>(UserContext userContext, IReadOnlyCollection<TIdentifier> identifiers, CancellationToken cancellation)
+        public Task PublishRemovedEvent<TIdentifier, TEntity>(UserContext userContext, IReadOnlyCollection<TEntity> entities, CancellationToken cancellation)
         where TEntity : IEntity<TIdentifier>
         {
-            return bus.Publish(DomainEvent.Removed<TIdentifier, TEntity>(userContext, identifiers), cancellation);
+            return bus.Publish(DomainEvent.Removed<TIdentifier, TEntity>(userContext, entities), cancellation);
         }
 
         public Task PublishUpdatedEvent<TIdentifier, TEntity>(UserContext userContext, TEntity current, TEntity previous, CancellationToken cancellation)

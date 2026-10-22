@@ -56,7 +56,15 @@ public class AnnouncementMapService : IMapService<AnnouncementResponse, Announce
 
 public class CreateAnnouncementRequestValidator : AbstractValidator<IEnumerable<CreateAnnouncementRequest>> { }
 public class UpdateAnnouncementContentsRequestValidator : AbstractValidator<IEnumerable<UpdateAnnouncementContentsRequest>> { }
-public class AnnouncementSignalRRouteResolver : RouteResolverBase<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>;
+
+public class AnnouncementSignalRRouteResolver : RouteResolverBase<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>
+{
+    public AnnouncementSignalRRouteResolver()
+    {
+        EntityRule(identifier => Key(identifier.UserGuid.ToString()));
+        RequestRule(request => Key(request.UserGuid.ToString()));
+    }
+}
 
 public class AnnouncementSignalRAccessValidator : ISignalRAccessValidator<AnnouncementSignalRRequest>
 {

@@ -7,5 +7,5 @@ where TEntity : IEntity<TIdentifier>
 {
     public Task NotifyCreation(IReadOnlyCollection<TEntity> entities);
     public Task NotifyUpdate(IReadOnlyCollection<TEntity> entities);
-    public Task NotifyRemoval(IReadOnlyCollection<TIdentifier> identifiers);
+    public Task NotifyRemoval(IReadOnlyCollection<TEntity> entities);
 }
