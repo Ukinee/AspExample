@@ -7,16 +7,66 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 
+public abstract record AccessTag
+{
+    public sealed record Public() : AccessTag
+    {
+        public override string ToGroupKey(string prefix)
+        {
+            return $"{prefix}.Public";
+        }
+    }
+
+    public sealed record LoggedIn() : AccessTag
+    {
+        public override string ToGroupKey(string prefix)
+        {
+            return $"{prefix}.LoggedIn";
+        }
+    }
+
+    public sealed record Owner(Guid OwnerGuid) : AccessTag
+    {
+        public override string ToGroupKey(string prefix)
+        {
+            return $"{prefix}.Owner.{OwnerGuid}";
+        }
+    }
+
+    public sealed record Shared(Guid UserGuid) : AccessTag
+    {
+        public override string ToGroupKey(string prefix)
+        {
+            return $"{prefix}.Shared.{UserGuid}";
+        }
+    }
+
+    public sealed record Roles(string CanonicalRolesKey) : AccessTag
+    {
+        public override string ToGroupKey(string prefix)
+        {
+            return $"{prefix}.Roles.{CanonicalRolesKey}";
+        }
+    }
+
+    public abstract string ToGroupKey(string prefix);
+}
+
 public sealed record AuthorizationPolicy<TIdentifier, TEntity>
 where TEntity : IEntity<TIdentifier>
 {
     public required Expression<Func<TEntity, bool>> ExistsExpression { get; init; }
     public required string? OwnerUserIdentifierPropertyName { get; init; }
 
+    public required Func<TIdentifier, Guid>? OwnerUserIdentifierAccessor { get; init; }
+
     public required Func<UserContext, Expression<Func<TEntity, bool>>> ReadFactory { get; init; }
     public required Func<UserContext, Expression<Func<TEntity, bool>>> CreateFactory { get; init; }
     public required Func<UserContext, Expression<Func<TEntity, bool>>> UpdateFactory { get; init; }
     public required Func<UserContext, Expression<Func<TEntity, bool>>> DeleteFactory { get; init; }
+
+    public required Func<TEntity, IReadOnlyCollection<AccessTag>> EntityTagsFactory { get; init; }
+    public required Func<UserContext, SubscribeAccessModes, IEnumerable<AccessTag>> UserTagsFactory { get; init; }
 }
 
 public static class AuthorizationPolicy
@@ -30,15 +80,63 @@ public static class AuthorizationPolicy
             ? DddExpressionUtils.GetPropertyName(definition.OwnerIdentifierAccessor)
             : null;
 
-        var exists = DddExpressionFactory.Exists<TEntity>();
+        var exists = DddExpressionFactory.NotSoftDeleted<TEntity>();
+
+        var ownerUserIdentifierAccessor = definition.OwnerIdentifierAccessor?.Compile();
 
         return new AuthorizationPolicy<TIdentifier, TEntity> {
             ExistsExpression = exists,
             OwnerUserIdentifierPropertyName = ownerPropertyName,
+            OwnerUserIdentifierAccessor = ownerUserIdentifierAccessor,
             ReadFactory = BuildReadFactory(definition.ReadRules, ownerPropertyName, exists),
             CreateFactory = BuildCreateFactory<TEntity>(definition.CreateRules),
             UpdateFactory = BuildMutateFactory(definition.UpdateRules, ownerPropertyName, exists),
             DeleteFactory = BuildMutateFactory(definition.DeleteRules, ownerPropertyName, exists),
+            EntityTagsFactory = BuildEntityTagsFactory<TIdentifier, TEntity>(definition.ReadRules, ownerUserIdentifierAccessor),
+            UserTagsFactory = BuildUserTagsFactory(definition),
+        };
+    }
+
+    private static Func<UserContext, SubscribeAccessModes, IEnumerable<AccessTag>> BuildUserTagsFactory<TIdentifier, TEntity>(AuthorizationPolicyDefinition<TIdentifier, TEntity> definition)
+    where TEntity : IEntity<TIdentifier>
+    {
+        return (userContext, modes) => AuthUtils.ToTags(userContext, modes, definition.ReadRules);
+    }
+
+    private static Func<TEntity, IReadOnlyCollection<AccessTag>> BuildEntityTagsFactory<TIdentifier, TEntity>(
+        ImmutableArray<ReadAccessRule> definitionReadRules,
+        Func<TIdentifier, Guid>? ownerUserIdentifierAccessor
+    )
+    where TEntity : IEntity<TIdentifier>
+    {
+        return entity =>
+        {
+            var tags = new List<AccessTag>();
+
+            var loggedInEntity = entity as IEntityWithPublicRead<TEntity>;
+            var sharedAccessEntity = entity as IEntityWithSharedAccess<TEntity>;
+
+            foreach (var rule in definitionReadRules)
+            {
+                var rolesKey = AuthUtils.Canonicalize(rule.RequiredRoles);
+
+                switch (rule.Mode)
+                {
+                    case ReadAccessMode.Guest or ReadAccessMode.LoggedIn:
+                        if (loggedInEntity!.IsAvailableForPublicRead)
+                            tags.Add(new AccessTag.Public());
+
+                        break;
+
+                    case ReadAccessMode.OwnerOnly: tags.Add(new AccessTag.Owner(ownerUserIdentifierAccessor!(entity.Identifier))); break;
+                    case ReadAccessMode.SharedUsers: tags.AddRange(sharedAccessEntity!.SharedUserGuids.Select(guid => new AccessTag.Shared(guid))); break;
+                    case ReadAccessMode.Roles: tags.Add(new AccessTag.Roles(rolesKey!)); break;
+
+                    default: throw new ArgumentOutOfRangeException(nameof(rule.Mode));
+                }
+            }
+
+            return tags;
         };
     }
 
@@ -55,7 +153,7 @@ public static class AuthorizationPolicy
 
             foreach (var rule in rules)
             {
-                if (!HasAllRoles(userContext, rule.RequiredRoles))
+                if (!AuthUtils.HasAllRoles(userContext, rule.RequiredRoles))
                     continue;
 
                 var expr = rule.Mode switch {
@@ -85,7 +183,7 @@ public static class AuthorizationPolicy
         return ctx =>
         {
             var hasAccess = rules
-                .Where(rule => HasAllRoles(ctx, rule.RequiredRoles))
+                .Where(rule => AuthUtils.HasAllRoles(ctx, rule.RequiredRoles))
                 .Any(rule => rule.Mode switch {
                         CreateAccessMode.LoggedIn => ctx.IsAuthenticated,
                         CreateAccessMode.Roles => ctx.IsAuthenticated,
@@ -112,7 +210,7 @@ public static class AuthorizationPolicy
 
             foreach (var rule in rules)
             {
-                if (!HasAllRoles(ctx, rule.RequiredRoles))
+                if (!AuthUtils.HasAllRoles(ctx, rule.RequiredRoles))
                     continue;
 
                 var expr = rule.Mode switch {
@@ -130,9 +228,6 @@ public static class AuthorizationPolicy
             return DddExpressionUtils.And(combined, exists);
         };
     }
-
-    private static bool HasAllRoles(UserContext ctx, ImmutableArray<string> required) =>
-        required.IsDefaultOrEmpty || Enumerable.All(required, role => ctx.Roles.Contains(role));
 
     private static void Validate<TIdentifier, TEntity>(AuthorizationPolicyDefinition<TIdentifier, TEntity> def)
     where TEntity : IEntity<TIdentifier>
@@ -152,14 +247,18 @@ public static class AuthorizationPolicy
         var needsPublicRead = def.ReadRules.Any(r => r.Mode is ReadAccessMode.Guest or ReadAccessMode.LoggedIn);
 
         if (needsPublicRead && !DddExpressionFactory.IsPublicRead<TEntity>())
-            throw new InvalidOperationException($"{typeof(TEntity)} does not implement {nameof(IEntityWithPublicRead<>)} (required by {ReadAccessMode.Guest}/{ReadAccessMode.LoggedIn} read rules).");
+            throw new InvalidOperationException(
+                $"{typeof(TEntity)} does not implement {nameof(IEntityWithPublicRead<>)} (required by {ReadAccessMode.Guest}/{ReadAccessMode.LoggedIn} read rules)."
+            );
 
         var needsShared = def.ReadRules.Any(r => r.Mode == ReadAccessMode.SharedUsers) ||
                           def.UpdateRules.Any(r => r.Mode == ModifyAccessMode.SharedUsers) ||
                           def.DeleteRules.Any(r => r.Mode == ModifyAccessMode.SharedUsers);
 
         if (needsShared && !DddExpressionFactory.HasSharedAccess<TEntity>())
-            throw new InvalidOperationException($"{typeof(TEntity)} does not implement {nameof(IEntityWithSharedAccess<>)} (required by {ReadAccessMode.SharedUsers} rules).");
+            throw new InvalidOperationException(
+                $"{typeof(TEntity)} does not implement {nameof(IEntityWithSharedAccess<>)} (required by {ReadAccessMode.SharedUsers} rules)."
+            );
 
         var needsOwner = def.ReadRules.Any(r => r.Mode == ReadAccessMode.OwnerOnly) ||
                          def.UpdateRules.Any(r => r.Mode == ModifyAccessMode.OwnerOnly) ||

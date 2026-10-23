@@ -1,4 +1,5 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Users.Common.ValueObjects;
@@ -23,9 +24,9 @@ public class AnnouncementResponse
     public required string Contents { get; init; }
 }
 
-public class AnnouncementSignalRRequest
+public class AnnouncementSignalRRequest : ISignalRSubscribeRequest
 {
-    public required Guid UserGuid { get; init; }
+    public SubscribeAccessModes AccessModes { get; init; }
 }
 
 [ApiIdentifier]

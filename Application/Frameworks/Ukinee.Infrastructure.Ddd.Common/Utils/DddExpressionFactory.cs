@@ -45,9 +45,6 @@ public static class DddExpressionFactory
     public static Expression<Func<TEntity, bool>> LoggedInExpression<TEntity>(UserContext userContext) =>
         _ => userContext.IsAuthenticated;
 
-    public static Expression<Func<TEntity, bool>> GuestExpression<TEntity>(UserContext userContext) =>
-        _ => true;
-
     public static Expression<Func<TEntity, bool>> True<TEntity>() =>
         _ => true;
 
@@ -63,7 +60,7 @@ public static class DddExpressionFactory
     public static bool IsSoftDelete<TEntity>() =>
         SoftDeleteFilter<TEntity>.Applies;
 
-    public static Expression<Func<TEntity, bool>> Exists<TEntity>() =>
+    public static Expression<Func<TEntity, bool>> NotSoftDeleted<TEntity>() =>
         SoftDeleteFilter<TEntity>.Filter;
 
     public static Expression<Func<TEntity, bool>> SharedWithUserExpression<TEntity>(UserContext userContext)

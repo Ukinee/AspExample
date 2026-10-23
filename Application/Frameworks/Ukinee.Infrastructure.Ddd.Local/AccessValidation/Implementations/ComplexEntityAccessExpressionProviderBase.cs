@@ -29,8 +29,5 @@ where TEntity : IEntity<TIdentifier>
 
     public static Expression<Func<TEntity, bool>> LoggedInExpression(UserContext userContext) =>
         DddExpressionFactory.LoggedInExpression<TEntity>(userContext);
-
-    public static Expression<Func<TEntity, bool>> GuestExpression(UserContext userContext) =>
-        DddExpressionFactory.GuestExpression<TEntity>(userContext);
 #endregion
 }

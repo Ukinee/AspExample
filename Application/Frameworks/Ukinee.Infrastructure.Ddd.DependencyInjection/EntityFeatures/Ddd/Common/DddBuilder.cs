@@ -49,13 +49,13 @@ where TIdentifier : struct
     where TImplementation : class, IEntityCreator<TEntity, TPayload>
     where TUseCase : class, ICreateEntityUseCase<TEntity, TPayload>
     {
-
         IEnumerable<ServiceDescriptor> descriptors = [
             ..PayloadHelper.Service<IEntityCreator<TEntity, TPayload>, TImplementation>(serviceLifetime),
             ..PayloadHelper.Service<ICreateEntityUseCase<TEntity, TPayload>, TUseCase>(serviceLifetime),
             ..extensions,
         ];
 
+        Feature.EntityCreator.AddRange(descriptors);
 
         if (throwOnTransaction)
         {

@@ -21,9 +21,9 @@ public static class SpecificationExtensions
             return predicate == null ? specification : specification.Where(predicate);
         }
 
-        public ISpecificationBuilder<TEntity> Exists()
+        public ISpecificationBuilder<TEntity> NotSoftDeleted()
         {
-            return specification.Where(DddExpressionFactory.Exists<TEntity>());
+            return specification.Where(DddExpressionFactory.NotSoftDeleted<TEntity>());
         }
     }
 }

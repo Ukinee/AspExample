@@ -21,5 +21,5 @@ public class DddAccessExpressionUtils
         DddExpressionFactory.PublicRead<TEntity>();
 
     public static Expression<Func<TEntity, bool>> Exists<TEntity>() =>
-        DddExpressionFactory.Exists<TEntity>();
+        DddExpressionFactory.NotSoftDeleted<TEntity>();
 }

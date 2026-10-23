@@ -14,5 +14,5 @@ public interface IRouteResolver<in TIdentifier, in TEntity, in TRequest>
 where TEntity : IEntity<TIdentifier>
 {
     public IEnumerable<string> GetGroupsForRequest(TRequest request, UserContext userContext);
-    public IEnumerable<string> GetGroupsForEntities(TEntity identifier, EntityEventType eventType);
+    public IEnumerable<string> GetGroupsForEntities(TEntity entity, EntityEventType eventType);
 }

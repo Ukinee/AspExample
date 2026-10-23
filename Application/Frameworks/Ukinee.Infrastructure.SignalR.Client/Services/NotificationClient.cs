@@ -15,13 +15,13 @@ public class NotificationClient<THubTag>(
 
     public HubConnectionState State => _connection.State;
 
-    public async Task RegisterHandlerAsync()
+    public void RegisterHandlerAsync()
     {
         foreach (var registerer in registerers)
             registerer.Register(_connection);
     }
 
-    public async Task UnregisterHandlerAsync()
+    public void UnregisterHandlerAsync()
     {
         foreach (var registerer in registerers)
              registerer.Unregister(_connection);

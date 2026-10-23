@@ -1,4 +1,7 @@
-﻿using FluentValidation;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
+using FluentValidation;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Local;
 using Ukinee.Infrastructure.Ddd.Synchronization.Contracts;
 using Ukinee.Infrastructure.SignalR.Server.Contracts;
@@ -57,12 +60,11 @@ public class AnnouncementMapService : IMapService<AnnouncementResponse, Announce
 public class CreateAnnouncementRequestValidator : AbstractValidator<IEnumerable<CreateAnnouncementRequest>> { }
 public class UpdateAnnouncementContentsRequestValidator : AbstractValidator<IEnumerable<UpdateAnnouncementContentsRequest>> { }
 
-public class AnnouncementSignalRRouteResolver : RouteResolverBase<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>
+public class AnnouncementSignalRRouteResolver : DefaultRouteResolver<TestingTag, AnnouncementIdentifier, Announcement, AnnouncementSignalRRequest>
 {
-    public AnnouncementSignalRRouteResolver()
+    public AnnouncementSignalRRouteResolver(AuthorizationPolicy<AnnouncementIdentifier, Announcement> authorizationPolicy) : base(authorizationPolicy)
     {
-        EntityRule(identifier => Key(identifier.UserGuid.ToString()));
-        RequestRule(request => Key(request.UserGuid.ToString()));
+        
     }
 }
 

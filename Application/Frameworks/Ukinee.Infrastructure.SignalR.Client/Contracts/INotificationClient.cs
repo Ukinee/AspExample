@@ -6,8 +6,8 @@ public interface INotificationClient<THubTag>
 {
     public HubConnectionState State { get; }
 
-    public Task RegisterHandlerAsync(); // to connect?
-    public Task UnregisterHandlerAsync();
+    public void RegisterHandlerAsync(); // to connect?
+    public void UnregisterHandlerAsync();
 
     public Task SubscribeAsync<TEntity, TPayload>(TPayload payload);
     public Task UnsubscribeAsync<TEntity, TPayload>(TPayload payload);

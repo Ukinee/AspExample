@@ -13,6 +13,8 @@ public static class AuthorizationHelperDi
     {
         var policy = AuthorizationPolicy.Compile(policyDefinition);
 
+        yield return ServiceDescriptor.Singleton(policyDefinition);
+
         yield return ServiceDescriptor.Singleton(policy);
 
         yield return ServiceDescriptor.Singleton<IEntityReadAccessExpressionProvider<TIdentifier, TEntity>,

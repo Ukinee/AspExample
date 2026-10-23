@@ -5,6 +5,29 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 
+public interface ISignalRSubscribeRequest
+{
+    public SubscribeAccessModes AccessModes { get; init; }
+}
+
+[Flags]
+public enum SubscribeAccessModes
+{
+    Guest = 1,
+    LoggedIn = 2,
+    OwnerOnly = 4,
+    SharedUsers = 8,
+    Roles = 16,
+}
+
+public static class SubscribeAccessModesExtensions
+{
+    public static bool HasFlagFast(this SubscribeAccessModes value, SubscribeAccessModes flag)
+    {
+        return (value & flag) != 0;
+    }
+}
+
 public enum ReadAccessMode
 {
     Guest,
@@ -84,6 +107,8 @@ where TEntity : IEntity<TIdentifier>
     public required ImmutableArray<ModifyAccessRule> DeleteRules { get; init; }
 
     public Expression<Func<TIdentifier, Guid>>? OwnerIdentifierAccessor { get; init; }
+
+    public Func<TIdentifier, Guid>? OwnerIdentifierAccessorFunc => field ??= OwnerIdentifierAccessor?.Compile();
 }
 
 public static class AuthorizationPolicyDefinition
