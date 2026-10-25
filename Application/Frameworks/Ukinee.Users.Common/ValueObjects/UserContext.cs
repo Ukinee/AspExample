@@ -22,6 +22,35 @@ public readonly record struct UserContext
 
     public required string? Name { get; init; }
 
+    public bool Equals(UserContext other)
+    {
+        if (Guid != other.Guid)
+            return false;
+
+        if (IsAuthenticated != other.IsAuthenticated)
+            return false;
+
+        if (Name != other.Name)
+            return false;
+
+        if (Roles.Length != other.Roles.Length)
+            return false;
+
+        var a = Roles.ToHashSet(StringComparer.Ordinal);
+        var b = other.Roles.ToHashSet(StringComparer.Ordinal);
+
+        return a.SetEquals(b);
+    }
+
+    public override int GetHashCode()
+    {
+        var rolesHash = Roles
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Aggregate(17, HashCode.Combine);
+
+        return HashCode.Combine(Guid, IsAuthenticated, Name, rolesHash);
+    }
+
     public static UserContext Test => new UserContext {
         Guid = Guid.Parse("5c0f1cdb-7694-4edb-b45c-b7ce78aeb400"),
         Roles = [],

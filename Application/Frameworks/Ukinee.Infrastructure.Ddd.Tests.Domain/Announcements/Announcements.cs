@@ -26,6 +26,7 @@ public class AnnouncementResponse
 
 public class AnnouncementSignalRRequest : ISignalRSubscribeRequest
 {
+    public Guid Identifier { get; init; }
     public SubscribeAccessModes AccessModes { get; init; }
 }
 

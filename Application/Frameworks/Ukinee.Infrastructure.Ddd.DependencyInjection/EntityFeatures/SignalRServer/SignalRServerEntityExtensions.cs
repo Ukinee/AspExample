@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.SignalRServer;
+using Ukinee.Infrastructure.SignalR.Server.Services;
 
 // ReSharper disable once CheckNamespace
 namespace Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures;
@@ -13,9 +15,11 @@ where TDefinition : ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity
 where TIdentifier : notnull
 {
     public ModuleDefinition<TTag>.EntityDefinition<TIdentifier, TEntity> Register<THub, TRequest, TViewModel>(
-        Func<IGroupRoutingResolverRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>, SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>> factory
+        Func<IGroupRoutingResolverRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>,
+            SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>> factory
     )
-    where THub : Hub
+    where TRequest : ISignalRSubscribeRequest
+    where THub : HubBase
     {
         var feature = new SignalRServerDefinition<THub, TRequest, TViewModel>();
 

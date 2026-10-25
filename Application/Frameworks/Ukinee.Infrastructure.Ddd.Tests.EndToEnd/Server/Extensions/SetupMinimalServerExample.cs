@@ -26,6 +26,8 @@ using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.Services;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Services;
 using Ukinee.Infrastructure.Options.Extensions;
+using Ukinee.Infrastructure.SignalR.Server.Services;
+using Ukinee.Infrastructure.SignalR.Server.Startup;
 using Ukinee.Users.Common.ValueObjects;
 using Ukinee.Users.Domain.Contracts;
 
@@ -36,7 +38,7 @@ public static class SetupMinimalServerExample
     extension(IServiceCollection serviceCollection)
     {
         public IServiceCollection SetupServer<THub>(IConfigurationManager configuration, ServerConfig config)
-        where THub : Hub
+        where THub : HubBase
         {
             var policy = RegistrationPolicy.Server;
 
@@ -47,7 +49,8 @@ public static class SetupMinimalServerExample
             SetupMapper(serviceCollection);
             SetupMediatR(serviceCollection, mediatRConfig);
             SetupAuthorization(serviceCollection);
-            serviceCollection.AddSignalR();
+            
+            serviceCollection.RegisterLocalSignalRServer<THub>();
 
             serviceCollection.AddSingleton<TimeProvider>(_ => TimeProvider.System);
 

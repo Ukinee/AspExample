@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.SignalR.Server.Services;
 
@@ -8,7 +9,8 @@ public static class SignalRServerBuilderExtensions
 {
     extension<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>(SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel> definition)
     where TEntity : class, IEntity<TIdentifier>
-    where THub : Hub
+    where TRequest : ISignalRSubscribeRequest
+    where THub : HubBase
     where TIdentifier : notnull
     {
         public SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel> WithBatchedSink()

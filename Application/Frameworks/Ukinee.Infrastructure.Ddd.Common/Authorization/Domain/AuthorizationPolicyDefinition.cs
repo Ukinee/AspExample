@@ -7,6 +7,7 @@ namespace Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 
 public interface ISignalRSubscribeRequest
 {
+    public Guid Identifier { get; init; }
     public SubscribeAccessModes AccessModes { get; init; }
 }
 

@@ -18,6 +18,7 @@ using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Cookies;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Services;
+using Ukinee.Infrastructure.SignalR.Server.Services;
 using Ukinee.Users.Domain.Contracts;
 using Ukinee.Users.Startup;
 
@@ -40,7 +41,7 @@ public static class SetupServerServices
     extension(IServiceCollection serviceCollection)
     {
         public IServiceCollection SetupTestingServer<THub>(IConfigurationManager configuration, ServerConfig config)
-        where THub : Hub
+        where THub : HubBase
         {
             var mediatrOptions = new MediatRConfig {
                 AssembliesToScanHandlers = [typeof(SetupServerServices).Assembly]

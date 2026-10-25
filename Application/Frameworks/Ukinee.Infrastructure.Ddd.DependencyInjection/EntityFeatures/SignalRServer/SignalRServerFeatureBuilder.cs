@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
@@ -13,7 +14,8 @@ public class SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequ
     IGroupRoutingResolverRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>,
     IAccessValidationServiceRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>
 where TEntity : class, IEntity<TIdentifier>
-where THub : Hub
+where THub : HubBase
+where TRequest : ISignalRSubscribeRequest
 {
     internal readonly SignalRServerDefinition<THub, TRequest, TViewModel> Feature;
 
@@ -64,7 +66,8 @@ where THub : Hub
 
 public interface IGroupRoutingResolverRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>
 where TEntity : class, IEntity<TIdentifier>
-where THub : Hub
+where TRequest : ISignalRSubscribeRequest
+where THub : HubBase
 {
     public IAccessValidationServiceRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel> SetGroupResolver<TRouter>()
     where TRouter : class, IRouteResolver<TIdentifier, TEntity, TRequest>;
@@ -72,7 +75,8 @@ where THub : Hub
 
 public interface IAccessValidationServiceRegisterer<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel>
 where TEntity : class, IEntity<TIdentifier>
-where THub : Hub
+where TRequest : ISignalRSubscribeRequest
+where THub : HubBase
 {
     public SignalRServerFeatureBuilder<THub, TTag, TIdentifier, TEntity, TRequest, TViewModel> SetAccessValidationService<THubService>()
     where THubService : class, ISignalRAccessValidator<TRequest>;

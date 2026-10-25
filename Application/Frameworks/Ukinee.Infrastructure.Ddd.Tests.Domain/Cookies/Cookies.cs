@@ -1,4 +1,5 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Users.Common.ValueObjects;
@@ -37,7 +38,7 @@ public record CookieResponse
     public required bool IsAvailableForPublicRead { get; init; }
 }
 
-public record CookieSignalRRequest { }
+public record CookieSignalRRequest(Guid Identifier, SubscribeAccessModes AccessModes) : ISignalRSubscribeRequest { }
 
 [HasIdentifier(typeof(CookieIdentifier))]
 public partial record Cookie : IEntity<CookieIdentifier>, IEntityWithPublicRead<Cookie>

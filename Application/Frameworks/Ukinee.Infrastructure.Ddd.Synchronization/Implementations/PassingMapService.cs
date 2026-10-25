@@ -9,5 +9,5 @@ public class PassingMapService<TEntity> : IMapService<TEntity, TEntity>
         ValueTask.FromResult(externalEntity);
 
     public async ValueTask<IReadOnlyCollection<TEntity>> Map(IReadOnlyCollection<TEntity> externalEntities) =>
-        await Task.FromResult(externalEntities);
+        await ValueTask.FromResult(externalEntities);
 }

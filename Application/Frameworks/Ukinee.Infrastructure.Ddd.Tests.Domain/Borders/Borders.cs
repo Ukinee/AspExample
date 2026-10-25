@@ -1,4 +1,5 @@
 ﻿using Ukinee.Common.Identifiers.Attributes;
+using Ukinee.Infrastructure.Ddd.Common.Authorization.Domain;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
 using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 
@@ -28,7 +29,7 @@ public record BorderResponse
     public required bool IsAvailableForPublicRead { get; init; }
 }
 
-public record BorderSignalRRequest { }
+public record BorderSignalRRequest(Guid Identifier, SubscribeAccessModes AccessModes) : ISignalRSubscribeRequest { }
 
 [HasIdentifier(typeof(BorderIdentifier))]
 public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<Border>

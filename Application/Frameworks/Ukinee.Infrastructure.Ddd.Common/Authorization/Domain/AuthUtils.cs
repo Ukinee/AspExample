@@ -15,16 +15,16 @@ public static class AuthUtils
     {
         foreach (var rule in rules)
         {
-            if (!HasAllRoles(userContext, rule.RequiredRoles))
-                continue;
-            
             if (!MatchesFlag(rule.Mode, modes))
                 continue;
 
-            var rolesKey = Canonicalize(rule.RequiredRoles);
-
             if (rule.Mode is not ReadAccessMode.Guest && !userContext.IsAuthenticated)
                 continue;
+
+            if (!HasAllRoles(userContext, rule.RequiredRoles))
+                continue;
+
+            var rolesKey = Canonicalize(rule.RequiredRoles);
 
             yield return rule.Mode switch {
                 ReadAccessMode.Guest or ReadAccessMode.LoggedIn => new AccessTag.Public(),

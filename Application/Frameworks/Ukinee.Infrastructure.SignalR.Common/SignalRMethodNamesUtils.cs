@@ -31,4 +31,9 @@ public static class SignalRMethodNamesUtils
     {
         return $"Unsubscribe{typeof(T).Name}";
     }
+
+    public static string GracefulReconnect()
+    {
+        return "GracefulReconnect";
+    }
 }
