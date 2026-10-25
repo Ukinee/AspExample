@@ -28,12 +28,11 @@ public class SaveChangesVersionInterceptor<TTag>(IVersionStrategy<TTag> versionS
 
         long nextVersion = await versionStrategy.GetNextVersionAsync(context, cancellationToken);
 
-        string versionName = nameof(IEntityWithVersion.RowVersion);
+        string versionName = nameof(IEntityWithVersion.GlobalVersion);
 
         foreach (var entry in versionedEntries)
         {
             entry.Property(versionName).CurrentValue = nextVersion;
-            entry.Property(versionName).OriginalValue = nextVersion;
         }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);

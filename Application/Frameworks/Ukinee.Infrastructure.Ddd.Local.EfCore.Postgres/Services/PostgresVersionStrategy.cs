@@ -15,14 +15,8 @@ public class PostgresVersionStrategy<TTag> : IVersionStrategy<TTag>
         if (provider != "Npgsql.EntityFrameworkCore.PostgreSQL")
             throw new InvalidOperationException($"Cannot use {nameof(PostgresVersionStrategy<>)} with {provider}");
 
-        var connection = context.Database.GetDbConnection();
-
-        if (connection.State != ConnectionState.Open)
-        {
-            await connection.OpenAsync(cancellationToken);
-        }
-
-        await using var command = connection.CreateCommand();
+        await context.Database.OpenConnectionAsync(cancellationToken);
+        await using var command = context.Database.GetDbConnection().CreateCommand();
         command.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
 
         command.CommandText = $"""

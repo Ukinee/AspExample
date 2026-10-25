@@ -41,9 +41,27 @@ where TContext : TaggedDbContext<TContext, TTag>
             {
                 modelBuilder
                     .Entity(entityType.ClrType)
-                    .Property(nameof(IEntityWithVersion.RowVersion))
+                    .Property(nameof(IEntityWithVersion.GlobalVersion))
                     .IsConcurrencyToken();
             }
         }
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        if (Database.CurrentTransaction != null)
+            return await base.SaveChangesAsync(ct);
+
+        var strategy = Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+            {
+                await using var tx = await Database.BeginTransactionAsync(ct);
+                var result = await base.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                return result;
+            }
+        );
     }
 }
