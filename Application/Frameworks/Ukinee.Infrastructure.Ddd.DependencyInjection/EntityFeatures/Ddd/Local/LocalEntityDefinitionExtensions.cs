@@ -116,11 +116,11 @@ where TEntity : class, IEntity<TIdentifier>
     }
 }
 
-public class HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
+public class HardDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
 where TIdentifier : struct, IEquatable<TIdentifier>
 where TEntity : class, IEntity<TIdentifier>
 {
-    public ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
+    public ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> Register(
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
@@ -153,7 +153,7 @@ public class DeletableDddBuilderProxy<TTag, TIdentifier, TEntity>(ModuleDefiniti
 where TIdentifier : struct, IEquatable<TIdentifier>
 where TEntity : class, IEntity<TIdentifier>, IEntityWithSoftDelete<TEntity>
 {
-    public ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> RegisterWithDatabaseRepository(
+    public ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> Register(
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
@@ -193,11 +193,11 @@ public static class LocalEntityDefinitionExtensions
         public InMemoryDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new InMemoryDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>
     {
-        public HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new HonestDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);
+        public HardDeletionDddBuilderProxy<TTag, TIdentifier, TEntity> Ddd => new HardDeletionDddBuilderProxy<TTag, TIdentifier, TEntity>(definition);
     }
 
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)

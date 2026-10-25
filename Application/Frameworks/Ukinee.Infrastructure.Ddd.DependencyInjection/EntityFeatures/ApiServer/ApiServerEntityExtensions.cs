@@ -63,12 +63,12 @@ public static class ApiEndpointEntityExtensions
             new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.InMemoryEntityDefinition<TIdentifier, TEntity>>(definition);
     }
     
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
     where TEntity : class, IEntity<TIdentifier>
     {
-        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> ApiServer =>
-            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity>>(definition);
+        public ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity>> ApiServer =>
+            new ApiServerFeatureBuilderProxy<TTag, TIdentifier, TEntity, ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity>>(definition);
     }
     
     extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.SoftDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)

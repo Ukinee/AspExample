@@ -35,11 +35,11 @@ public static class EntityExtensions
         }
     }
 
-    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
+    extension<TTag, TIdentifier, TEntity>(ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> definition)
     where TIdentifier : struct, IEquatable<TIdentifier>
     where TEntity : class, IEntity<TIdentifier>
     {
-        public ModuleDefinition<TTag>.HonestDeletionDatabaseEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
+        public ModuleDefinition<TTag>.HardDeletionDatabaseEntityDefinition<TIdentifier, TEntity> WithServices(Action<IServiceCollection> action)
         {
             definition.Services.Add(action);
 

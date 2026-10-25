@@ -49,7 +49,7 @@ public static class SetupMinimalServerExample
             SetupMapper(serviceCollection);
             SetupMediatR(serviceCollection, mediatRConfig);
             SetupAuthorization(serviceCollection);
-            
+
             serviceCollection.RegisterLocalSignalRServer<THub>();
 
             serviceCollection.AddSingleton<TimeProvider>(_ => TimeProvider.System);
@@ -61,10 +61,10 @@ public static class SetupMinimalServerExample
 
             configuration.AddJsonFile(config.ConntectionStringPath, optional: false, reloadOnChange: true);
 
-            serviceCollection
-                .AddScoped<IUserContextProvider, TestingUserContextProvider>(_ => new TestingUserContextProvider(UserContext.Test));
+            serviceCollection.AddScoped<IUserContextProvider, TestingUserContextProvider>(_ => new TestingUserContextProvider(UserContext.Test));
 
             var announcementPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<AnnouncementIdentifier, Announcement>(identifier => identifier.UserGuid);
+
             serviceCollection
                 .RegisterModule<ServerTag>()
                 .DatabaseDatasource.Register<ServerDbContext>(databaseConfigurator => databaseConfigurator
@@ -75,8 +75,8 @@ public static class SetupMinimalServerExample
                         }
                     )
                 )
-                .LocalContexts.AddHonestDeletionDatabaseContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
-                    .Ddd.RegisterWithDatabaseRepository(dddConfigurator => dddConfigurator
+                .LocalContexts.AddHardDeletionDatabaseContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
+                    .Ddd.Register(dddConfigurator => dddConfigurator
                         .SetAccessPolicy(announcementPolicy)
                         .AddCreateUseCase<CreateAnnouncementRequest, AnnouncementFactory>()
                         .AddUpdateUseCase<UpdateAnnouncementContentsRequest, AnnouncementFactory>()

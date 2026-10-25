@@ -2,5 +2,5 @@
 
 public interface IEntityWithVersion
 {
-    public long RowVersion { get; }
+    public long GlobalVersion { get; }
 }
