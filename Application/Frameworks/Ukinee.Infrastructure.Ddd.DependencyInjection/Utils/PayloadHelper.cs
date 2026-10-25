@@ -72,4 +72,10 @@ public static class PayloadHelper
         yield return ServiceDescriptor.Describe(typeof(TImplementation), typeof(TImplementation), serviceLifetime);
         yield return ServiceDescriptor.Describe(typeof(TInterface), sp => sp.GetRequiredService<TImplementation>(), serviceLifetime);
     }
+    
+    public static IEnumerable<ServiceDescriptor> Service<TImplementation>(ServiceLifetime serviceLifetime)
+    where TImplementation : class
+    {
+        yield return ServiceDescriptor.Describe(typeof(TImplementation), typeof(TImplementation), serviceLifetime);
+    }
 }

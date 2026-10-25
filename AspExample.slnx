@@ -16,6 +16,7 @@
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External.Api.Domain/Ukinee.Infrastructure.Ddd.External.Api.Domain.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External.Api/Ukinee.Infrastructure.Ddd.External.Api.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.External/Ukinee.Infrastructure.Ddd.External.csproj" />
+    <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.EfCore.Postgres/Ukinee.Infrastructure.Ddd.Local.EfCore.Postgres.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.EfCore/Ukinee.Infrastructure.Ddd.Local.EfCore.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local.InMemory/Ukinee.Infrastructure.Ddd.Local.InMemory.csproj" />
     <Project Path="Application/Frameworks/Ukinee.Infrastructure.Ddd.Local/Ukinee.Infrastructure.Ddd.Local.csproj" />

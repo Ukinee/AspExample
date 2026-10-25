@@ -13,6 +13,12 @@ public class ModuleBuilder<TTag>(IServiceCollection serviceCollection)
         Definition.Contents.Add(new ActionBuildable(action));
     }
 
+    public void AddBuildable(IBuildable buildable)
+    {
+        Definition.Contents.Add(buildable);
+    }
+
+    
     public void Build(RegistrationPolicy policy)
     {
         Definition.Build(policy, serviceCollection);

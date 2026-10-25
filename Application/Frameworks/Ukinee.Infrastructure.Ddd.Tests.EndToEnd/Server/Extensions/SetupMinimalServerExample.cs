@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ukinee.AspNetCore.ModuleRegisterer.Refactor.EntityFeatures;
@@ -14,9 +15,11 @@ using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Contacts;
 using Ukinee.Infrastructure.Ddd.Common.UnitOfWork.Implementations;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Core;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.DataSources.Database;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.DependenciesStartup;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.ApiServer;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Local;
+using Ukinee.Infrastructure.Ddd.Local.EfCore.Postgres.DependencyInjection;
 using Ukinee.Infrastructure.Ddd.Local.EfCore.Services;
 using Ukinee.Infrastructure.Ddd.Local.MediatR;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
@@ -59,15 +62,15 @@ public static class SetupMinimalServerExample
                 .AddScoped<IUserContextProvider, TestingUserContextProvider>(_ => new TestingUserContextProvider(UserContext.Test));
 
             var announcementPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<AnnouncementIdentifier, Announcement>(identifier => identifier.UserGuid);
-
             serviceCollection
                 .RegisterModule<ServerTag>()
-                .DatabaseDatasource.Register<ServerDbContext>(builder =>
-                    {
-                        var connectionString = configuration.GetConnectionString(config.DatabaseName);
-
-                        builder.UseNpgsql(connectionString);
-                    }
+                .DatabaseDatasource.Register<ServerDbContext>(databaseConfigurator => databaseConfigurator
+                    .RegisterPostgresVersioning()
+                    .ConfigureContext((_, builder) =>
+                        {
+                            builder.UseNpgsql(configuration.GetConnectionString(config.DatabaseName));
+                        }
+                    )
                 )
                 .LocalContexts.AddHonestDeletionDatabaseContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                     .Ddd.RegisterWithDatabaseRepository(dddConfigurator => dddConfigurator
