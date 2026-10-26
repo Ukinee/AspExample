@@ -176,7 +176,7 @@ public class InMemoryTransactionsTests : AnnouncementTestBase
             await uow.CommitAsync(CancellationToken);
         }
 
-        Assert.That(store.Collection[Identifier1].IsAvailableForPublicRead, Is.EqualTo(targetValue));
+        Assert.That(store.Collection[Identifier1].Entity.IsAvailableForPublicRead, Is.EqualTo(targetValue));
     }
 
     [Test]
@@ -203,7 +203,7 @@ public class InMemoryTransactionsTests : AnnouncementTestBase
         }
 
         Assert.That(
-            store.Collection[Identifier1].IsAvailableForPublicRead,
+            store.Collection[Identifier1].Entity.IsAvailableForPublicRead,
             Is.EqualTo(Example1.IsAvailableForPublicRead)
         );
     }
@@ -260,7 +260,7 @@ public class InMemoryTransactionsTests : AnnouncementTestBase
         {
             Assert.That(store.Collection, Has.Count.EqualTo(2));
             Assert.That(store.Collection.ContainsKey(Identifier2), Is.True);
-            Assert.That(store.Collection[Identifier1].IsAvailableForPublicRead, Is.EqualTo(targetValue));
+            Assert.That(store.Collection[Identifier1].Entity.IsAvailableForPublicRead, Is.EqualTo(targetValue));
         }
     }
 
@@ -294,7 +294,7 @@ public class InMemoryTransactionsTests : AnnouncementTestBase
         {
             Assert.That(store.Collection, Has.Count.EqualTo(2));
             Assert.That(store.Collection.ContainsKey(Identifier2), Is.False);
-            Assert.That(store.Collection[Identifier1], Is.EqualTo(Example1));
+            Assert.That(store.Collection[Identifier1].Entity, Is.EqualTo(Example1));
             Assert.That(store.Collection.ContainsKey(Identifier3), Is.True);
         }
     }

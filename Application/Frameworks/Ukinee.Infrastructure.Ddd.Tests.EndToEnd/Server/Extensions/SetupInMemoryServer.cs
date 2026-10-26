@@ -19,6 +19,7 @@ using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Cookies;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Server.Services;
 using Ukinee.Infrastructure.SignalR.Server.Services;
+using Ukinee.Infrastructure.SignalR.Server.Startup;
 using Ukinee.Users.Domain.Contracts;
 using Ukinee.Users.Startup;
 
@@ -62,7 +63,7 @@ public static class SetupServerServices
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
                 .AddScoped<IUserContextProvider, HttpUserContextProvider>();
 
-            RegisterGeneral(serviceCollection);
+            serviceCollection.RegisterLocalSignalRServer<THub>();
 
             var announcementPolicy = AuthorizationPolicyDefinition.GuestReadAndOwnerEdit<AnnouncementIdentifier, Announcement>(identifier => identifier.UserGuid);
             var borderPolicy = AuthorizationPolicyDefinition.AdministratorOnly<BorderIdentifier, Border>();
@@ -125,10 +126,5 @@ public static class SetupServerServices
 
             return serviceCollection;
         }
-    }
-
-    private static void RegisterGeneral(IServiceCollection serviceCollection)
-    {
-        serviceCollection.AddSignalR();
     }
 }

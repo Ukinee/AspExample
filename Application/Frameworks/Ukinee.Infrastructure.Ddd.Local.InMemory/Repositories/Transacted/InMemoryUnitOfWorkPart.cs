@@ -14,12 +14,16 @@ where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
     private bool _isCompleted;
+    private List<SnapshotEntry>? _snapshot;
 
-    private List<(TIdentifier Identifier, TEntity? Original)>? _snapshot;
+    private readonly record struct SnapshotEntry(
+        TIdentifier Identifier,
+        TEntity? Original,
+        long OriginalVersion
+    );
 
     public Type OwnerType => ownerType;
-
-    public bool IsImportant => false;
+    public bool CanRollbackPartialCommit => true;
 
     public ValueTask PrepareToCommitAsync(CancellationToken cancellationToken)
     {
@@ -31,7 +35,7 @@ where TIdentifier : notnull
             {
                 case InMemoryEntityState.Modified:
                 case InMemoryEntityState.Deleted:
-                    if (store.Exists(entry.Identifier) == false)
+                    if (!store.Exists(entry.Identifier))
                         throw new EntityNotFoundException<TIdentifier, TEntity>(entry.Identifier);
 
                     break;
@@ -43,6 +47,7 @@ where TIdentifier : notnull
                     break;
 
                 case InMemoryEntityState.Detached: break;
+
                 default: throw new ArgumentOutOfRangeException();
             }
         }
@@ -50,48 +55,67 @@ where TIdentifier : notnull
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask CommitAsync(CancellationToken cancellationToken)
+    public async ValueTask CommitAsync(CancellationToken cancellationToken)
     {
         if (_isCompleted)
-            return ValueTask.CompletedTask;
-
-        var snapshot = new List<(TIdentifier, TEntity?)>();
+            return;
 
         var all = changeTracker.GetAll().ToList();
-        
-        foreach (var entry in all)
-        {
-            var original = store.FindById(entry.Identifier, _ => true);
-            snapshot.Add((entry.Identifier, original));
-        }
 
-        _snapshot = snapshot;
+        await store.WriteAsync(
+            session =>
+            {
+                var snapshot = new List<SnapshotEntry>(all.Count);
+
+                foreach (var entry in all)
+                {
+                    var original = session.FindById(entry.Identifier);
+                    var version = session.GetExistingVersionOrZero(entry.Identifier);
+                    snapshot.Add(new SnapshotEntry(entry.Identifier, original, version));
+                }
+
+                _snapshot = snapshot;
+
+                foreach (var entry in all)
+                {
+                    switch (entry.EntityState)
+                    {
+                        case InMemoryEntityState.Modified:
+                        case InMemoryEntityState.Deleted: {
+                            var currentVersion = session.GetVersion(entry.Identifier);
+
+                            if (currentVersion != entry.OriginalVersion)
+                                throw new ConcurrencyException(entry.Identifier, entry.OriginalVersion, currentVersion);
+
+                            break;
+                        }
+
+                        case InMemoryEntityState.Added:
+                            if (session.Exists(entry.Identifier))
+                                throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entry.Identifier);
+
+                            break;
+
+                        case InMemoryEntityState.Detached: break;
+                        default: throw new ArgumentOutOfRangeException();
+                    }
+                }
+
+                foreach (var entry in all)
+                {
+                    switch (entry.EntityState)
+                    {
+                        case InMemoryEntityState.Added: session.UpsertNew(entry.Entity!); break;
+                        case InMemoryEntityState.Modified: session.UpsertIfVersion(entry.Entity!, entry.OriginalVersion); break;
+                        case InMemoryEntityState.Deleted: session.RemoveIfVersion(entry.Identifier, entry.OriginalVersion); break;
+                    }
+                }
+            },
+            cancellationToken
+        );
 
         _isCompleted = true;
-
-        var added = all
-            .Where(e => e.EntityState == InMemoryEntityState.Added)
-            .Select(e => e.Entity!)
-            .ToList();
-
-        var modified = all
-            .Where(e => e.EntityState == InMemoryEntityState.Modified)
-            .Select(e => e.Entity!)
-            .ToList();
-
-        var deleted = all
-            .Where(e => e.EntityState == InMemoryEntityState.Deleted)
-            .Select(e => e.Identifier)
-            .ToList();
-
-        store.RemoveRange(deleted, _ => true);
-
-        store.Upsert(added);
-        store.Upsert(modified);
-
         onComplete.Invoke();
-
-        return ValueTask.CompletedTask;
     }
 
     public ValueTask RollbackAsync(CancellationToken cancellationToken)
@@ -100,45 +124,41 @@ where TIdentifier : notnull
             return ValueTask.CompletedTask;
 
         _isCompleted = true;
+        _snapshot = null;
         onComplete.Invoke();
 
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask<bool> TryRollbackPartialCommitAsync(CancellationToken cancellationToken)
+    public async ValueTask<bool> TryRollbackPartialCommitAsync(CancellationToken cancellationToken)
     {
         if (!_isCompleted || _snapshot is null)
-            return ValueTask.FromResult(false);
+            return false;
 
         var snapshot = _snapshot;
         _snapshot = null;
 
-        var toRemove = new List<TIdentifier>();
-        var toRestore = new List<TEntity>();
+        await store.WriteAsync(
+            session =>
+            {
+                foreach (var entry in snapshot)
+                {
+                    if (entry.Original is null)
+                        session.ForceRemove(entry.Identifier);
+                    else
+                        session.ForceUpsert(entry.Original, entry.OriginalVersion);
+                }
+            },
+            cancellationToken
+        );
 
-        foreach (var (identifier, original) in snapshot)
-        {
-            if (original is null)
-                toRemove.Add(identifier);
-            else
-                toRestore.Add(original);
-        }
-
-        if (toRemove.Count > 0)
-            store.RemoveRange(toRemove, _ => true);
-
-        if (toRestore.Count > 0)
-            store.Upsert(toRestore);
-
-        return ValueTask.FromResult(true);
+        return true;
     }
 
     public async ValueTask DisposeAsync()
     {
         if (_isCompleted)
             return;
-
-        _isCompleted = true;
 
         await RollbackAsync(CancellationToken.None);
     }

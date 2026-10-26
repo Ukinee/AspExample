@@ -1,4 +1,5 @@
 ﻿using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 
 namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
@@ -28,7 +29,7 @@ public enum InMemoryEntityState
     Added = 3,
 }
 
-public record InMemoryEntry<TIdentifier, TEntity>(TIdentifier Identifier, TEntity? Entity, InMemoryEntityState EntityState)
+public record InMemoryEntry<TIdentifier, TEntity>(TIdentifier Identifier, TEntity? Entity, InMemoryEntityState EntityState, long OriginalVersion)
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull;
 
@@ -85,7 +86,7 @@ where TIdentifier : notnull
     private InMemoryEntry<TIdentifier, TEntity> EntryCore(TIdentifier identifier) =>
         _entries.TryGetValue(identifier, out var entry)
             ? entry
-            : new InMemoryEntry<TIdentifier, TEntity>(identifier, null, InMemoryEntityState.Detached);
+            : new InMemoryEntry<TIdentifier, TEntity>(identifier, null, InMemoryEntityState.Detached, 0);
 
     public InMemoryEntry<TIdentifier, TEntity> Entry(TEntity entity)
     {
@@ -98,7 +99,7 @@ where TIdentifier : notnull
                 return entry;
             }
 
-            return new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, InMemoryEntityState.Detached);
+            return new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, InMemoryEntityState.Detached, GetVersionOrZero(entity));
         }
         finally
         {
@@ -126,7 +127,7 @@ where TIdentifier : notnull
                 if (inMemoryEntry.EntityState == InMemoryEntityState.Deleted)
                     throw new InvalidOperationException($"Cannot add entity with id {entity.Identifier} back.");
 
-                var entry = new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, InMemoryEntityState.Added);
+                var entry = new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, InMemoryEntityState.Added, GetVersionOrZero(entity));
 
                 _entries[entity.Identifier] = entry;
             }
@@ -147,7 +148,7 @@ where TIdentifier : notnull
         {
             foreach (var identifier in identifiers)
             {
-                _entries[identifier] = new InMemoryEntry<TIdentifier, TEntity>(identifier, null, InMemoryEntityState.Deleted);
+                _entries[identifier] = new InMemoryEntry<TIdentifier, TEntity>(identifier, null, InMemoryEntityState.Deleted, 0);
             }
         }
         finally
@@ -175,13 +176,21 @@ where TIdentifier : notnull
                     ? InMemoryEntityState.Added
                     : InMemoryEntityState.Modified;
 
-                _entries[entity.Identifier] = new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, newState);
+                _entries[entity.Identifier] = new InMemoryEntry<TIdentifier, TEntity>(entity.Identifier, entity, newState, GetVersionOrZero(entity));
             }
         }
         finally
         {
             _locker.ExitWriteLock();
         }
+    }
+
+    private long GetVersionOrZero(TEntity entity)
+    {
+        if (entity is not IEntityWithVersion<TEntity> versioned)
+            return 0;
+
+        return versioned.GlobalVersion;
     }
 
     private void ThrowIfFrozen()

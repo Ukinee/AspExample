@@ -49,7 +49,7 @@ where TEntity : class, IEntity<TIdentifier>
             throwOnTransaction
         );
 
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+        builder.SetEntityRemover<HardTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
@@ -63,7 +63,7 @@ where TEntity : class, IEntity<TIdentifier>
         Func<ITrackedDddIdentifierAccessValidatorBuilder<TTag, TIdentifier, TEntity>, TrackedDddBuilder<TTag, TIdentifier, TEntity>> dddConfigurator
     )
     {
-        var serviceLifetime = ServiceLifetime.Singleton;
+        var serviceLifetime = ServiceLifetime.Scoped;
         var throwOnTransaction = false;
 
         var feature = DddFeature<TIdentifier, TEntity>.Empty;
@@ -71,7 +71,7 @@ where TEntity : class, IEntity<TIdentifier>
         
         var store = ServiceDescriptor.Singleton<InMemoryStore<TIdentifier, TEntity>, InMemoryStore<TIdentifier, TEntity>>();
 
-        builder.SetRepository<TransactedInMemoryRepository<TTag, TIdentifier, TEntity>>(ServiceLifetime.Singleton, store);
+        builder.SetRepository<TransactedInMemoryRepository<TTag, TIdentifier, TEntity>>(ServiceLifetime.Scoped, store);
 
         ProxyHelper.RegisterTrackedReaders(builder, serviceLifetime);
 
@@ -80,7 +80,7 @@ where TEntity : class, IEntity<TIdentifier>
             throwOnTransaction
         );
 
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+        builder.SetEntityRemover<HardTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 
@@ -138,7 +138,7 @@ where TEntity : class, IEntity<TIdentifier>
             throwOnTransaction
         );
 
-        builder.SetEntityRemover<HonestTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
+        builder.SetEntityRemover<HardTrackedRemover<TIdentifier, TEntity>, RemoveEntityUseCase<TIdentifier, TEntity>>(serviceLifetime, throwOnTransaction);
 
         var tackedBuilder = new TrackedDddBuilder<TTag, TIdentifier, TEntity>(builder, serviceLifetime, throwOnTransaction);
 

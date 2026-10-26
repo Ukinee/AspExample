@@ -33,7 +33,7 @@ public interface IUnitOfWorkPart : IAsyncDisposable
 {
     public Type OwnerType { get; }
 
-    public bool IsImportant { get; }
+    public bool CanRollbackPartialCommit { get; }
 
     public ValueTask PrepareToCommitAsync(CancellationToken cancellationToken);
     public ValueTask CommitAsync(CancellationToken cancellationToken);

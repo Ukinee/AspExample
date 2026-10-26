@@ -36,7 +36,7 @@ public sealed class FakeUnitOfWorkPart : IUnitOfWorkPart
 
     public FakeUnitOfWorkPart(
         Type ownerType,
-        bool isImportant,
+        bool canRollbackPartial,
         List<string> log,
         bool failOnCommit = false,
         bool failOnPrepare = false,
@@ -45,7 +45,7 @@ public sealed class FakeUnitOfWorkPart : IUnitOfWorkPart
     )
     {
         OwnerType = ownerType;
-        IsImportant = isImportant;
+        CanRollbackPartialCommit = canRollbackPartial;
         _log = log;
         _failOnCommit = failOnCommit;
         _failOnPrepare = failOnPrepare;
@@ -54,7 +54,7 @@ public sealed class FakeUnitOfWorkPart : IUnitOfWorkPart
     }
 
     public Type OwnerType { get; }
-    public bool IsImportant { get; }
+    public bool CanRollbackPartialCommit { get; }
 
     public bool Committed { get; private set; }
     public bool PartialRollbackCalled { get; private set; }

@@ -25,29 +25,25 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider) : IUnitOfWorkFa
 
     private async Task Commit(AmbientUnitOfWork unitOfWork, CancellationToken cancellationToken)
     {
+        if (unitOfWork.Parts.Count(p => !p.CanRollbackPartialCommit) > 1)
+            throw new InvalidOperationException("UnitOfWork contains more than one non-rollbackable part. Atomic commit cannot be guaranteed.");
+
         try
         {
             foreach (var part in unitOfWork.Parts)
                 await part.PrepareToCommitAsync(cancellationToken);
 
-            foreach (var part in unitOfWork.Parts.OrderBy(p => p.IsImportant))
+            foreach (var part in unitOfWork.Parts.OrderByDescending(p => p.CanRollbackPartialCommit))
                 await part.CommitAsync(cancellationToken);
         }
         catch
         {
-            foreach (var part in unitOfWork.Parts.OrderByDescending(p => p.IsImportant))
+            foreach (var part in unitOfWork.Parts.OrderBy(p => p.CanRollbackPartialCommit))
             {
                 try
                 {
-                    await part.TryRollbackPartialCommitAsync(cancellationToken);
-                }
-                catch
-                { /* log */
-                }
-
-                try
-                {
-                    await part.RollbackAsync(cancellationToken);
+                    if (!await part.TryRollbackPartialCommitAsync(cancellationToken))
+                        await part.RollbackAsync(cancellationToken);
                 }
                 catch
                 { /* log */
@@ -85,7 +81,7 @@ public class UnitOfWorkFactory(IServiceProvider serviceProvider) : IUnitOfWorkFa
                 await mediator.Publish(notification, cancellationToken);
             }
             catch (Exception ex)
-            { 
+            {
                 // _logger.LogError(ex, "Deferred notification handler failed: {Notification}", n.GetType().Name);
                 failures.Add(ex);
             }

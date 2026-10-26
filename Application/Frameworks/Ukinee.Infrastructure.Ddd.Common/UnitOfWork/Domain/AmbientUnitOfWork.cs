@@ -98,7 +98,7 @@ internal sealed class AmbientUnitOfWork : IEditableUnitOfWork
         if (_isCompleted)
             throw new InvalidOperationException($"{nameof(AmbientUnitOfWork)} is completed and cannot accept parts.)");
 
-        if (part.IsImportant && _parts.Any(d => d.IsImportant))
+        if (part.CanRollbackPartialCommit == false && _parts.Any(d => d.CanRollbackPartialCommit == false))
             throw new InvalidOperationException($"{nameof(AmbientUnitOfWork)} cannot accept more than one important part.)");
 
         _parts.Add(part);

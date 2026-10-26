@@ -25,25 +25,18 @@ where TIdentifier : notnull
     {
         EnsureUnitOfWork();
 
-        if (ChangeTracker == null)
-        {
-            store.AddRange(entities);
-
-            return;
-        }
-
         foreach (var entity in entities)
         {
             if (store.Exists(entity.Identifier))
                 throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
 
-            var entry = ChangeTracker.Entry(entity);
+            var entry = ChangeTracker!.Entry(entity);
 
             if (entry.EntityState is not (InMemoryEntityState.Detached or InMemoryEntityState.Deleted))
                 throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
         }
 
-        ChangeTracker.AddRange(entities);
+        ChangeTracker!.AddRange(entities);
     }
 
     public async Task<UpdateResult<TEntity>> UpdateByIdAsync(
@@ -57,14 +50,11 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-            return store.UpdateById(identifier, compliedFilter, update);
-
         var entity = GetEntity(compliedFilter, identifier);
 
         var updated = update(entity);
 
-        ChangeTracker.UpdateRange([updated]);
+        ChangeTracker!.UpdateRange([updated]);
 
         return new UpdateResult<TEntity>(updated, entity);
     }
@@ -80,9 +70,6 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-            return store.UpdateManyById(identifiers, compliedFilter, update);
-
         var result = new List<UpdateResult<TEntity>>();
 
         foreach (var identifier in identifiers)
@@ -93,7 +80,7 @@ where TIdentifier : notnull
             result.Add(new UpdateResult<TEntity>(updated, entity));
         }
 
-        ChangeTracker.UpdateRange(result.Select(e => e.Updated));
+        ChangeTracker!.UpdateRange(result.Select(e => e.Updated));
 
         return result;
     }
@@ -108,12 +95,9 @@ where TIdentifier : notnull
 
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-            return store.RemoveRange(identifiers, compliedFilter);
-
         var result = identifiers.Select(identifier => GetEntity(compliedFilter, identifier)).ToList();
 
-        ChangeTracker.RemoveRange(result.Select(e => e.Identifier));
+        ChangeTracker!.RemoveRange(result.Select(e => e.Identifier));
 
         return result;
     }
@@ -123,10 +107,7 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-            return store.FindById(identifier, compliedFilter);
-
-        var entry = ChangeTracker.Entry(identifier);
+        var entry = ChangeTracker!.Entry(identifier);
 
         if (entry.EntityState is InMemoryEntityState.Deleted)
             return null;
@@ -139,11 +120,6 @@ where TIdentifier : notnull
 
     public async Task<TEntity?> FindAsync(Specification<TEntity> specification, Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken)
     {
-        var compliedFilter = filter.Compile();
-
-        if (ChangeTracker == null)
-            return store.Find(specification, compliedFilter);
-
         return await FindManyAsync(specification, filter, cancellationToken).FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -155,15 +131,7 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-        {
-            await foreach (var entity in store.FindMany(specification, compliedFilter).WithCancellation(cancellationToken))
-                yield return entity;
-
-            yield break;
-        }
-
-        var trackedEntities = ChangeTracker
+        var trackedEntities = ChangeTracker!
             .GetExisting()
             .Select(entry => entry.Entity!)
             .Where(compliedFilter)
@@ -187,19 +155,9 @@ where TIdentifier : notnull
     {
         var compliedFilter = filter.Compile();
 
-        if (ChangeTracker == null)
-        {
-            await foreach (var entity in store.FindManyById(identifiers, compliedFilter).WithCancellation(cancellationToken))
-            {
-                yield return entity;
-            }
-
-            yield break;
-        }
-
         foreach (var identifier in identifiers)
         {
-            var entry = ChangeTracker.Entry(identifier);
+            var entry = ChangeTracker!.Entry(identifier);
 
             switch (entry.EntityState)
             {
@@ -249,7 +207,8 @@ where TIdentifier : notnull
         {
             Debug.Assert(ChangeTracker == null, "_changeTracker != null", $"Must be null because {nameof(unitOfWorkProvider)} does not contain transaction.");
 
-            return;
+            throw new InvalidOperationException($"{nameof(TransactedInMemoryRepository<,,>)} for entity {typeof(TEntity).Name} cannot be used without transaction.");
+            //return;
         }
 
         uow.ThrowIfNotAffiliatedWith<TTag>();

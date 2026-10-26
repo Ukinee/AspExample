@@ -16,8 +16,8 @@ namespace Ukinee.Infrastructure.Ddd.Tests.Features.Repositories;
 
 public class UnitOfWorkTests : AnnouncementTestBase
 {
-    private static Border Review1 => ExampleBorderFactory.Example1;
-    private static Border Review2 => ExampleBorderFactory.Example2;
+    private static Border Border1 => ExampleBorderFactory.Example1;
+    private static Border Border2 => ExampleBorderFactory.Example2;
 
     protected override void ConfigureTestServices(IServiceCollection services)
     {
@@ -26,7 +26,10 @@ public class UnitOfWorkTests : AnnouncementTestBase
         };
 
         services.AddSingleton<InMemoryStore<AnnouncementIdentifier, Announcement>>();
-        services.AddScoped<IEditableTrackedRepository<AnnouncementIdentifier, Announcement>, TransactedInMemoryRepository<TestingTag, AnnouncementIdentifier, Announcement>>();
+
+        services
+            .AddScoped<IEditableTrackedRepository<AnnouncementIdentifier, Announcement>,
+                TransactedInMemoryRepository<TestingTag, AnnouncementIdentifier, Announcement>>();
 
         services.AddSingleton<InMemoryStore<BorderIdentifier, Border>>();
         services.AddScoped<IEditableTrackedRepository<BorderIdentifier, Border>, TransactedInMemoryRepository<TestingTag, BorderIdentifier, Border>>();
@@ -93,8 +96,8 @@ public class UnitOfWorkTests : AnnouncementTestBase
     public async Task Commit_PreparesAllThenCommitsInOrder()
     {
         var log = new List<string>();
-        var a = new FakeUnitOfWorkPart(typeof(RepoA), isImportant: true, log);
-        var b = new FakeUnitOfWorkPart(typeof(RepoB), isImportant: false, log);
+        var a = new FakeUnitOfWorkPart(typeof(RepoA), canRollbackPartial: true, log);
+        var b = new FakeUnitOfWorkPart(typeof(RepoB), canRollbackPartial: false, log);
 
         var factory = GetService<IUnitOfWorkFactory>();
         var uow = (IEditableUnitOfWork)factory.Create<TestingTag>();
@@ -110,7 +113,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 Is.EqualTo(
                     new[] {
                         RepoA.Prepare, RepoB.Prepare,
-                        RepoB.Commit, RepoA.Commit,
+                        RepoA.Commit, RepoB.Commit,
                         RepoA.Dispose, RepoB.Dispose,
                     }
                 )
@@ -155,8 +158,8 @@ public class UnitOfWorkTests : AnnouncementTestBase
     {
         var log = new List<string>();
 
-        var b = new FakeUnitOfWorkPart(typeof(RepoB), isImportant: false, log);
-        var a = new FakeUnitOfWorkPart(typeof(RepoA), isImportant: true, log, failOnCommit: true);
+        var b = new FakeUnitOfWorkPart(typeof(RepoB), canRollbackPartial: true, log);
+        var a = new FakeUnitOfWorkPart(typeof(RepoA), canRollbackPartial: false, log, failOnCommit: true);
 
         var factory = GetService<IUnitOfWorkFactory>();
         var uow = (IEditableUnitOfWork)factory.Create<TestingTag>();
@@ -186,8 +189,23 @@ public class UnitOfWorkTests : AnnouncementTestBase
         var locationStore = GetService<InMemoryStore<AnnouncementIdentifier, Announcement>>();
         var reviewStore = GetService<InMemoryStore<BorderIdentifier, Border>>();
 
-        await locationRepo.AddRange([Example1], CancellationToken); // initial state
-        await reviewRepo.AddRange([Review1], CancellationToken);
+        await locationStore.WriteAsync(
+            (session) =>
+            {
+                session.UpsertNew(Example1);
+            },
+            CancellationToken
+        );
+
+        await reviewStore.WriteAsync(
+            (session) =>
+            {
+                session.UpsertNew(Border1);
+            },
+            CancellationToken
+        );
+
+        var review1 = reviewStore.Collection[Border1.Identifier].Entity;
 
         var factory = GetService<IUnitOfWorkFactory>();
         var uow = factory.Create<TestingTag>();
@@ -208,7 +226,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 CancellationToken
             );
 
-            await reviewRepo.AddRange([Review2], CancellationToken);
+            await reviewRepo.AddRange([Border2], CancellationToken);
 
             Assert.ThrowsAsync<InvalidOperationException>(() => uow.CommitAsync(CancellationToken));
 
@@ -217,13 +235,13 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 Assert.That(locationStore.Collection, Has.Count.EqualTo(1));
 
                 Assert.That(
-                    locationStore.Collection[Example1.Identifier].IsAvailableForPublicRead,
+                    locationStore.Collection[Example1.Identifier].Entity.IsAvailableForPublicRead,
                     Is.EqualTo(Example1.IsAvailableForPublicRead),
                     "Location should be restored from snapshot"
                 );
 
                 Assert.That(
-                    reviewStore.Collection.ContainsKey(Review2.Identifier),
+                    reviewStore.Collection.ContainsKey(Border2.Identifier),
                     Is.False,
                     "Review2 should be missing due to partial rollback"
                 );
@@ -231,8 +249,8 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 Assert.That(reviewStore.Collection, Has.Count.EqualTo(1));
 
                 Assert.That(
-                    reviewStore.Collection[Review1.Identifier],
-                    Is.EqualTo(Review1),
+                    reviewStore.Collection[Border1.Identifier].Entity,
+                    Is.EqualTo(review1),
                     "Review1 must remain as is"
                 );
 
@@ -247,7 +265,14 @@ public class UnitOfWorkTests : AnnouncementTestBase
         var reviewRepo = GetService<IEditableTrackedRepository<BorderIdentifier, Border>>();
         var reviewStore = GetService<InMemoryStore<BorderIdentifier, Border>>();
 
-        await reviewRepo.AddRange([Review1, Review2], CancellationToken);
+        await reviewStore.WriteAsync(
+            session =>
+            {
+                session.UpsertNew(Border1);
+                session.UpsertNew(Border2);
+            },
+            CancellationToken
+        );
 
         var factory = GetService<IUnitOfWorkFactory>();
         var uow = factory.Create<TestingTag>();
@@ -257,16 +282,51 @@ public class UnitOfWorkTests : AnnouncementTestBase
             var editable = (IEditableUnitOfWork)uow;
             editable.RegisterPart(new FailingUnitOfWorkPart(typeof(object)));
 
-            await reviewRepo.RemoveRange([Review1.Identifier], _ => true, CancellationToken);
+            await reviewRepo.RemoveRange([Border1.Identifier], _ => true, CancellationToken);
 
             Assert.ThrowsAsync<InvalidOperationException>(() => uow.CommitAsync(CancellationToken));
 
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(reviewStore.Collection, Has.Count.EqualTo(2));
-                Assert.That(reviewStore.Collection.ContainsKey(Review1.Identifier), Is.True);
-                Assert.That(reviewStore.Collection.ContainsKey(Review2.Identifier), Is.True);
+                Assert.That(reviewStore.Collection.ContainsKey(Border1.Identifier), Is.True);
+                Assert.That(reviewStore.Collection.ContainsKey(Border2.Identifier), Is.True);
             }
         }
+    }
+
+    [Test]
+    public async Task Commit_ModifiedAfterLoad_ThrowsConcurrencyException()
+    {
+        var scopeFactory = GetService<IServiceScopeFactory>();
+
+        var store = GetService<InMemoryStore<BorderIdentifier, Border>>();
+
+        var scope1 = scopeFactory.CreateScope();
+        var repoScope1 = scope1.ServiceProvider.GetRequiredService<IEditableTrackedRepository<BorderIdentifier, Border>>();
+        var factoryScope1 = scope1.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+
+        var scope2 = scopeFactory.CreateScope();
+        var repoScope2 = scope2.ServiceProvider.GetRequiredService<IEditableTrackedRepository<BorderIdentifier, Border>>();
+        var factoryScope2 = scope2.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+
+        await store.WriteAsync(s => s.UpsertNew(Border1), CancellationToken);
+
+        // 1. Загружаем сущность в change tracker (OriginalVersion = 1)
+        await using var uow1 = factoryScope1.Create<TestingTag>();
+        var loaded = store.Collection[Border1.Identifier].Entity;
+        await repoScope1.UpdateByIdAsync(loaded.Identifier, (_) => true, old => old with { Size = 2 }, CancellationToken);
+
+        // 2. Другой writer коммитит изменение (store.version = 2)
+        await using (var uow2 = factoryScope2.Create<TestingTag>())
+        {
+            await repoScope2.UpdateByIdAsync(loaded.Identifier, (_) => true, old => old with { Size = 3 }, CancellationToken);
+            await uow2.CommitAsync(CancellationToken);
+        }
+
+        // 3. Первый UoW пытается коммитить с устаревшей версией
+        var ex = Assert.ThrowsAsync<ConcurrencyException>(() => uow1.CommitAsync(CancellationToken));
+        Assert.That(ex!.ExpectedVersion, Is.EqualTo(1));
+        Assert.That(ex!.CurrentVersion, Is.EqualTo(2));
     }
 }

@@ -8,7 +8,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.UnitOfWork;
 public class DatabaseUnitOfWorkPart<TTag>(IDbContextTransaction transaction, TaggedDbContext<TTag> context, Type ownerType) : IUnitOfWorkPart
 {
     public Type OwnerType => ownerType;
-    public bool IsImportant => true;
+    public bool CanRollbackPartialCommit => false;
 
     public async ValueTask DisposeAsync()
     {

@@ -12,7 +12,7 @@ public sealed class FailingUnitOfWorkPart : IUnitOfWorkPart
 
     public Type OwnerType { get; }
 
-    public bool IsImportant => true;
+    public bool CanRollbackPartialCommit => true;
 
     public string Message { get; }
 

@@ -160,7 +160,7 @@ namespace Ukinee.Infrastructure.Ddd.Local.EfCore.Repositories
                     $"Must be null because {nameof(unitOfWorkProvider)} does not contain transaction."
                 );
 
-                return;
+                throw new InvalidOperationException($"{nameof(DbService<,,>)} for entity {typeof(TEntity).Name} cannot be used without transaction.");
             }
 
             uow.ThrowIfNotAffiliatedWith<TTag>();

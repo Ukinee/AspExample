@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Ardalis.Specification;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
+using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 
@@ -10,149 +11,21 @@ public class InMemoryStore<TIdentifier, TEntity>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull
 {
-    public readonly ConcurrentDictionary<TIdentifier, TEntity> Collection = new();
+    public readonly record struct StoredEntry(TEntity Entity, long Version);
 
-#region Edit
-    public UpdateResult<TEntity> UpdateById(
-        TIdentifier identifier,
-        Func<TEntity, bool> filter,
-        Func<TEntity, TEntity> updateFactory
-    )
+    public readonly ConcurrentDictionary<TIdentifier, StoredEntry> Collection = new();
+
+    private readonly SemaphoreSlim _writeLock = new(1, 1);
+    private long _nextVersion;
+
+    public TEntity? FindById(TIdentifier identifier, Func<TEntity, bool> predicate)
     {
-        TEntity? previous = null;
-
-        var current = Collection.AddOrUpdate(
-            identifier,
-            _ => throw new EntityNotFoundException<TIdentifier, TEntity>(identifier),
-            (_, old) =>
-            {
-                if (!filter(old))
-                    throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
-
-                previous = old;
-
-                return updateFactory(old);
-            }
-        );
-
-        return new UpdateResult<TEntity>(current, previous!);
+        return Collection.TryGetValue(identifier, out var e) && predicate(e.Entity)
+            ? Materialize(e.Entity, e.Version)
+            : null;
     }
 
-    public IReadOnlyList<UpdateResult<TEntity>> UpdateManyById(
-        IReadOnlyCollection<TIdentifier> identifiers,
-        Func<TEntity, bool> filter,
-        Func<TIdentifier, TEntity, TEntity> update
-    )
-    {
-        var idList = identifiers as IReadOnlyList<TIdentifier> ?? identifiers.ToArray();
-
-        var previous = new TEntity[idList.Count];
-
-        for (var i = 0; i < idList.Count; i++)
-        {
-            if (!Collection.TryGetValue(idList[i], out var entity) || !filter(entity))
-                throw new EntityNotFoundException<TIdentifier, TEntity>(idList[i]);
-
-            previous[i] = entity;
-        }
-
-        var current = new TEntity[idList.Count];
-
-        for (var i = 0; i < idList.Count; i++)
-            current[i] = update(idList[i], previous[i]);
-
-        var results = new List<UpdateResult<TEntity>>(idList.Count);
-
-        for (var i = 0; i < idList.Count; i++)
-        {
-            if (!Collection.TryUpdate(idList[i], current[i], previous[i]))
-                throw new EntityNotFoundException<TIdentifier, TEntity>(idList[i]);
-
-            results.Add(new UpdateResult<TEntity>(current[i], previous[i]));
-        }
-
-        return results;
-    }
-
-    public void AddRange(IReadOnlyCollection<TEntity> entities)
-    {
-        foreach (var entity in entities)
-        {
-            if (!Collection.TryAdd(entity.Identifier, entity))
-                throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
-        }
-    }
-
-    public IReadOnlyCollection<TEntity> RemoveRange(
-        IReadOnlyCollection<TIdentifier> identifiers,
-        Func<TEntity, bool> filter
-    )
-    {
-        foreach (var identifier in identifiers)
-        {
-            if (!Collection.TryGetValue(identifier, out var entity) || !filter(entity))
-                throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
-        }
-
-        var result = new List<TEntity>(identifiers.Count);
-
-        foreach (var identifier in identifiers)
-        {
-            if (!Collection.TryRemove(identifier, out var entity))
-                throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
-
-            result.Add(entity);
-        }
-
-        return result;
-    }
-
-    public void Upsert(IReadOnlyCollection<TEntity> entities)
-    {
-        foreach (var entity in entities)
-        {
-            Collection.AddOrUpdate(entity.Identifier, entity, (_, _) => entity);
-        }
-    }
-#endregion
-
-#region Read
-    public bool Exists(TIdentifier identifier)
-    {
-        return Collection.ContainsKey(identifier);
-    }
-
-    public TEntity? FindById(
-        TIdentifier identifier,
-        Func<TEntity, bool> filter
-    )
-    {
-        if (!Collection.TryGetValue(identifier, out var entity))
-            return null;
-
-        return filter(entity) ? entity : null;
-    }
-
-    public TEntity? Find(
-        Specification<TEntity> specification,
-        Func<TEntity, bool> filter
-    )
-    {
-        foreach (var pair in Collection)
-        {
-            var value = pair.Value;
-
-            if (filter(value) && specification.IsSatisfiedBy(value))
-                return value;
-        }
-
-        return null;
-    }
-
-    public IAsyncEnumerable<TEntity> FindMany(
-        Specification<TEntity> specification,
-        Func<TEntity, bool> filter
-    )
+    public IAsyncEnumerable<TEntity> FindMany(Specification<TEntity> specification, Func<TEntity, bool> filter)
     {
         var result = specification.Evaluate(ToFilteredValuesNonAlloc());
 
@@ -164,22 +37,131 @@ where TIdentifier : notnull
             {
                 var value = pair.Value;
 
-                if (filter(value))
-                    yield return value;
+                if (filter(value.Entity))
+                    yield return Materialize(value.Entity, value.Version);
             }
         }
     }
 
-    public async IAsyncEnumerable<TEntity> FindManyById(
-        IEnumerable<TIdentifier> identifiers,
-        Func<TEntity, bool> filter
-    )
+    public bool Exists(TIdentifier identifier) =>
+        Collection.ContainsKey(identifier);
+
+    public async Task WriteAsync(Action<WriteSession> action, CancellationToken cancellationToken)
     {
-        foreach (var identifier in identifiers)
+        await _writeLock.WaitAsync(cancellationToken);
+
+        try
         {
-            if (Collection.TryGetValue(identifier, out var entity) && filter(entity))
-                yield return entity;
+            action(new WriteSession(this));
+        }
+        finally
+        {
+            _writeLock.Release();
         }
     }
-#endregion
+
+    private long GetVersion(TIdentifier identifier)
+    {
+        if (!Collection.TryGetValue(identifier, out var entry))
+            throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
+
+        if (entry.Entity is not IEntityWithVersion<TEntity>)
+            return 0;
+
+        return entry.Version;
+    }
+
+    private static TEntity Materialize(TEntity entity, long version)
+    {
+        if (entity is not IEntityWithVersion<TEntity> versioned)
+            return entity;
+
+        if (versioned.GlobalVersion == version)
+            return entity;
+
+        return versioned.WithVersion(version);
+    }
+
+    public sealed class WriteSession
+    {
+        private readonly InMemoryStore<TIdentifier, TEntity> _store;
+
+        internal WriteSession(InMemoryStore<TIdentifier, TEntity> store) =>
+            _store = store;
+
+        public long GetVersion(TIdentifier identifier) =>
+            _store.GetVersion(identifier);
+
+        public void UpsertNew(TEntity entity)
+        {
+            var identifier = entity.Identifier;
+
+            if (_store.Collection.ContainsKey(identifier))
+                throw new EntityAlreadyExistsException<TIdentifier, TEntity>(identifier);
+
+            var version = Interlocked.Increment(ref _store._nextVersion);
+            _store.Collection[identifier] = new StoredEntry(Materialize(entity, version), version);
+        }
+
+        public void UpsertIfVersion(TEntity entity, long expectedVersion)
+        {
+            var identifier = entity.Identifier;
+
+            var currentVersion = GetVersion(identifier);
+
+            if (currentVersion != expectedVersion)
+                throw new ConcurrencyException(identifier, expectedVersion, currentVersion);
+
+            var version = Interlocked.Increment(ref _store._nextVersion);
+            _store.Collection[identifier] = new StoredEntry(Materialize(entity, version), version);
+        }
+
+        public void RemoveIfVersion(TIdentifier identifier, long expectedVersion)
+        {
+            var currentVersion = GetVersion(identifier);
+
+            if (currentVersion != expectedVersion)
+                throw new ConcurrencyException(identifier, expectedVersion, currentVersion);
+
+            _store.Collection.Remove(identifier, out _);
+        }
+
+        internal void ForceUpsert(TEntity entity, long version) =>
+            _store.Collection[entity.Identifier] = new StoredEntry(Materialize(entity, version), version);
+
+        internal void ForceRemove(TIdentifier id) =>
+            _store.Collection.Remove(id, out _);
+
+        public bool Exists(TIdentifier identifier) =>
+            _store.Collection.TryGetValue(identifier, out var e);
+
+        public TEntity FindById(TIdentifier identifier)
+        {
+            _store.Collection.TryGetValue(identifier, out var e);
+
+            return e.Entity;
+        }
+
+        public long GetExistingVersionOrZero(TIdentifier identifier)
+        {
+            if (_store.Collection.TryGetValue(identifier, out var e))
+                return GetVersion(identifier);
+
+            return 0;
+        }
+    }
+}
+
+public class ConcurrencyException : Exception
+{
+    public long ExpectedVersion { get; }
+    public long CurrentVersion { get; }
+
+    public ConcurrencyException(object identifier, long expectedVersion, long currentVersion) : base(
+        $"Entity with identifier {identifier} was changed. Expected version {expectedVersion}, current version {currentVersion}"
+    )
+    {
+        ExpectedVersion = expectedVersion;
+        CurrentVersion = currentVersion;
+    }
 }

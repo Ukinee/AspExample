@@ -32,9 +32,11 @@ public record BorderResponse
 public record BorderSignalRRequest(Guid Identifier, SubscribeAccessModes AccessModes) : ISignalRSubscribeRequest { }
 
 [HasIdentifier(typeof(BorderIdentifier))]
-public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<Border>
+public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<Border>, IEntityWithVersion<Border>
 {
     public required partial BorderIdentifier Identifier { get; init; }
+    
+    public long GlobalVersion { get; init; }
 
     public required int Size { get; init; }
     public required bool IsAvailableForPublicRead { get; init; }
@@ -47,5 +49,12 @@ public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<
     public Border ClosePublicRead()
     {
         throw new NotImplementedException();
+    }
+
+    public Border WithVersion(long version)
+    {
+        return this with {
+            GlobalVersion = version,
+        };
     }
 }

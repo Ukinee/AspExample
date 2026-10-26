@@ -28,7 +28,7 @@ public class SaveChangesVersionInterceptor<TTag>(IVersionStrategy<TTag> versionS
 
         long nextVersion = await versionStrategy.GetNextVersionAsync(context, cancellationToken);
 
-        string versionName = nameof(IEntityWithVersion.GlobalVersion);
+        string versionName = nameof(IEntityWithVersion<>.GlobalVersion);
 
         foreach (var entry in versionedEntries)
         {

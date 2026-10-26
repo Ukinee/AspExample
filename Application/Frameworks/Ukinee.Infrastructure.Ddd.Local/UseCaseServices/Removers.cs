@@ -11,7 +11,7 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Local.UseCaseServices;
 
-public class HonestTrackedRemover<TIdentifier, TEntity>(
+public class HardTrackedRemover<TIdentifier, TEntity>(
     IEditableTrackedRepository<TIdentifier, TEntity> repository,
     IEntityDeleteAccessExpressionProvider<TIdentifier, TEntity> accessProvider,
     IPublisher publisher
