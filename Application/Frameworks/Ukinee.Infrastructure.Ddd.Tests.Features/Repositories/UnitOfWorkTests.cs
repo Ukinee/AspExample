@@ -17,7 +17,7 @@ namespace Ukinee.Infrastructure.Ddd.Tests.Features.Repositories;
 public class UnitOfWorkTests : AnnouncementTestBase
 {
     private static Border Border1 => ExampleBorderFactory.Example1;
-    private static Border Border2 => ExampleBorderFactory.Example2;
+    private static Border Review2 => ExampleBorderFactory.Example2;
 
     protected override void ConfigureTestServices(IServiceCollection services)
     {
@@ -226,7 +226,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 CancellationToken
             );
 
-            await reviewRepo.AddRange([Border2], CancellationToken);
+            await reviewRepo.AddRange([Review2], CancellationToken);
 
             Assert.ThrowsAsync<InvalidOperationException>(() => uow.CommitAsync(CancellationToken));
 
@@ -241,7 +241,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
                 );
 
                 Assert.That(
-                    reviewStore.Collection.ContainsKey(Border2.Identifier),
+                    reviewStore.Collection.ContainsKey(Review2.Identifier),
                     Is.False,
                     "Review2 should be missing due to partial rollback"
                 );
@@ -269,7 +269,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
             session =>
             {
                 session.UpsertNew(Border1);
-                session.UpsertNew(Border2);
+                session.UpsertNew(Review2);
             },
             CancellationToken
         );
@@ -290,7 +290,7 @@ public class UnitOfWorkTests : AnnouncementTestBase
             {
                 Assert.That(reviewStore.Collection, Has.Count.EqualTo(2));
                 Assert.That(reviewStore.Collection.ContainsKey(Border1.Identifier), Is.True);
-                Assert.That(reviewStore.Collection.ContainsKey(Border2.Identifier), Is.True);
+                Assert.That(reviewStore.Collection.ContainsKey(Review2.Identifier), Is.True);
             }
         }
     }
@@ -312,19 +312,16 @@ public class UnitOfWorkTests : AnnouncementTestBase
 
         await store.WriteAsync(s => s.UpsertNew(Border1), CancellationToken);
 
-        // 1. Загружаем сущность в change tracker (OriginalVersion = 1)
         await using var uow1 = factoryScope1.Create<TestingTag>();
         var loaded = store.Collection[Border1.Identifier].Entity;
         await repoScope1.UpdateByIdAsync(loaded.Identifier, (_) => true, old => old with { Size = 2 }, CancellationToken);
 
-        // 2. Другой writer коммитит изменение (store.version = 2)
         await using (var uow2 = factoryScope2.Create<TestingTag>())
         {
             await repoScope2.UpdateByIdAsync(loaded.Identifier, (_) => true, old => old with { Size = 3 }, CancellationToken);
             await uow2.CommitAsync(CancellationToken);
         }
 
-        // 3. Первый UoW пытается коммитить с устаревшей версией
         var ex = Assert.ThrowsAsync<ConcurrencyException>(() => uow1.CommitAsync(CancellationToken));
         Assert.That(ex!.ExpectedVersion, Is.EqualTo(1));
         Assert.That(ex!.CurrentVersion, Is.EqualTo(2));

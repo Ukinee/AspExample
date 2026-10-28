@@ -96,47 +96,22 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\maloy\.nuget\packages\fluentvalidation\12.1.1\lib\net8.0\FluentValidation.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=01306d1f_002Ddb0b_002D492c_002Db0b6_002D6011892d0d2a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="UnitOfWorkTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Or&gt;&#xD;
-    &lt;TestAncestor&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::02482FED-8F21-3240-DB64-29EA69BE9F77::net10.0::Ukinee.Infrastructure.Ddd.Tests.Features.Repositories.UnitOfWorkTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::254AE490-A0D8-C88C-B24B-4503D0AFCBDB::net10.0::Ukinee.Infrastructure.Ddd.Tests.Integration.CrudOperations.CrudCreationServiceTests&lt;/TestId&gt;&#xD;
-    &lt;/TestAncestor&gt;&#xD;
-    &lt;Project Location="F:\Files\Rider\AspExample\Application\Frameworks\Ukinee.Infrastructure.Ddd.Tests.EndToEnd" Presentation="&amp;lt;Application&amp;gt;\&amp;lt;Frameworks&amp;gt;\&amp;lt;Ddd&amp;gt;\&amp;lt;Tests&amp;gt;\&amp;lt;Ukinee.Infrastructure.Ddd.Tests.EndToEnd&amp;gt;" /&gt;&#xD;
-  &lt;/Or&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=029d3d9b_002D60b8_002D4c16_002D9d9c_002D94418b1a3804/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetDuringUpdate_ShouldNotPoisonCache #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Or&gt;&#xD;
-    &lt;Project Location="F:\Files\Rider\AspExample\Application\Frameworks\Ukinee.Infrastructure.Ddd.Tests.EndToEnd" Presentation="&amp;lt;Application&amp;gt;\&amp;lt;Frameworks&amp;gt;\&amp;lt;Ddd&amp;gt;\&amp;lt;Tests&amp;gt;\&amp;lt;Ukinee.Infrastructure.Ddd.Tests.EndToEnd&amp;gt;" /&gt;&#xD;
-    &lt;Project Location="F:\Files\Rider\AspExample\Application\Frameworks\Ukinee.Infrastructure.Ddd.Tests.Features" Presentation="&amp;lt;Application&amp;gt;\&amp;lt;Frameworks&amp;gt;\&amp;lt;Ddd&amp;gt;\&amp;lt;Tests&amp;gt;\&amp;lt;Ukinee.Infrastructure.Ddd.Tests.Features&amp;gt;" /&gt;&#xD;
-    &lt;Project Location="F:\Files\Rider\AspExample\Application\Frameworks\Ukinee.Infrastructure.Ddd.Tests.Integration" Presentation="&amp;lt;Application&amp;gt;\&amp;lt;Frameworks&amp;gt;\&amp;lt;Ddd&amp;gt;\&amp;lt;Tests&amp;gt;\&amp;lt;Ukinee.Infrastructure.Ddd.Tests.Integration&amp;gt;" /&gt;&#xD;
-  &lt;/Or&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=155098cf_002D2c80_002D468e_002D8b0f_002D4e8d6ef86c31/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetDuringUpdate_ShouldNotPoisonCache" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	
+	
+	
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b1cf4a34_002D30fc_002D4722_002Da11e_002Df7c7a7d9a163/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetDuringUpdate_ShouldNotPoisonCache" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientReadOperationsTests.GetDuringUpdate_ShouldNotPoisonCache&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.Cache.CacheEdgeCaseTests.GetDuringUpdate_ShouldNotPoisonCache&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	
+	
+	
 	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=debdcbb7_002De09b_002D4a5e_002Da4f3_002Dd6ad73b777a4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from Solution" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;Solution /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ecc2d6d4_002Dc010_002D44e6_002Dbb56_002Dc18853e03cd9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateUseCase_LoggedIn_ShouldCreateAvailableToGetEntityOnBacked" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Or&gt;&#xD;
-    &lt;TestAncestor&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientCreateOperationsTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientUpdateOperationsTests.UpdateUseCase_Group_AllGroupShouldHaveAccess&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientUpdateOperationsTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::254AE490-A0D8-C88C-B24B-4503D0AFCBDB::net10.0::Ukinee.Infrastructure.Ddd.Tests.Integration.CrudOperations.CrudCreationServiceTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::254AE490-A0D8-C88C-B24B-4503D0AFCBDB::net10.0::Ukinee.Infrastructure.Ddd.Tests.Integration.MediatRUnitOfWork.MediatRUnitOfWorkTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::254AE490-A0D8-C88C-B24B-4503D0AFCBDB::net10.0::Ukinee.Infrastructure.Ddd.Tests.Integration.Transactions.UnsupportedTransactionServicesThrowsTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientReadOperationsTests.GetDuringUpdate_ShouldNotPoisonCache&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.CrudOperations.ClientReadOperationsTests&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;NUnit3x::E8D37E5C-3173-18F7-570A-4E933510F1A8::net10.0::Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.Cache.CacheTests&lt;/TestId&gt;&#xD;
-    &lt;/TestAncestor&gt;&#xD;
-    &lt;Project Location="F:\Files\Rider\AspExample\Application\Frameworks\Ukinee.Infrastructure.Ddd.Tests.Features" Presentation="&amp;lt;Application&amp;gt;\&amp;lt;Frameworks&amp;gt;\&amp;lt;Ddd&amp;gt;\&amp;lt;Tests&amp;gt;\&amp;lt;Ukinee.Infrastructure.Ddd.Tests.Features&amp;gt;" /&gt;&#xD;
-  &lt;/Or&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
 	
 	
 	

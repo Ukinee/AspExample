@@ -5,7 +5,6 @@ using Ukinee.Users.Common.ValueObjects;
 
 namespace Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 
-
 public class CacheInvalidatingEntityCreatorDecorator<TIdentifier, TEntity, TCreatePayload>(
     IEntityCreator<TEntity, TCreatePayload> inner,
     IEntityCache<TIdentifier, TEntity> cache
@@ -85,5 +84,35 @@ where TIdentifier : struct
         await inner.RemoveAsync(userContext, identifiers, cancellationToken);
 
         cache.Invalidate(identifiers);
+    }
+}
+
+public class CacheInvalidatingGetOrCreateDecorator<TIdentifier, TEntity, TPayload>(
+    IEntityEnsureExistsCreator<TIdentifier, TEntity, TPayload> inner,
+    IEntityCache<TIdentifier, TEntity> cache
+) : IEntityEnsureExistsCreator<TIdentifier, TEntity, TPayload>
+where TEntity : class, IEntity<TIdentifier>
+where TIdentifier : struct
+{
+    public async Task<TEntity> GetOrCreateAsync(UserContext userContext, TIdentifier identifier, TPayload payload, CancellationToken cancellationToken)
+    {
+        var result = await inner.GetOrCreateAsync(userContext, identifier, payload, cancellationToken);
+
+        cache.Invalidate(result.Identifier);
+
+        return result;
+    }
+
+    public async Task<IReadOnlyCollection<TEntity>> GetOrCreateAsync(
+        UserContext userContext,
+        IReadOnlyCollection<GetOrCreateRequest<TIdentifier, TPayload>> payloads,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await inner.GetOrCreateAsync(userContext, payloads, cancellationToken);
+
+        cache.Invalidate(result.Select(e => e.Identifier));
+
+        return result;
     }
 }

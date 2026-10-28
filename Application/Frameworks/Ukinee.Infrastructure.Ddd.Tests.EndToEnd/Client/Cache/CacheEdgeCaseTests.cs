@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Ukinee.Infrastructure.Ddd.Common.LocalCache.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCases.Contracts;
 using Ukinee.Infrastructure.Ddd.Tests.Common.Services;
-using Ukinee.Infrastructure.Ddd.Tests.Domain.Announcements;
+using Ukinee.Infrastructure.Ddd.Tests.Domain.Borders;
 using Ukinee.Infrastructure.Ddd.Tests.Domain.Users;
 using Ukinee.Infrastructure.Ddd.Tests.EndToEnd.Client.Extensions;
 
@@ -15,27 +15,29 @@ public class CacheEdgeCaseTests : ClientTestBase
     {
         base.ConfigureTestServices(services);
 
-        services.Decorate<IEntityCache<AnnouncementIdentifier, Announcement>, PausingEntityCache<AnnouncementIdentifier, Announcement>>();
+        services.Decorate<IEntityCache<BorderIdentifier, Border>, PausingEntityCache<BorderIdentifier, Border>>();
     }
 
     [Test]
     public async Task GetDuringUpdate_ShouldNotPoisonCache()
     {
-        var createUseCase = GetService<ICreateEntityUseCase<Announcement, CreateAnnouncementRequest>>();
-        var updateUseCase = GetService<IUpdateEntityUseCase<AnnouncementIdentifier, Announcement, UpdateAnnouncementContentsRequest>>();
-        var getUseCase = GetService<IGetEntityUseCase<AnnouncementIdentifier, Announcement>>();
-        var pause = (PausingEntityCache<AnnouncementIdentifier, Announcement>)GetService<IEntityCache<AnnouncementIdentifier, Announcement>>();
+        var createUseCase = GetService<ICreateEntityUseCase<Border, CreateBorderRequest>>();
+        var updateUseCase = GetService<IUpdateEntityUseCase<BorderIdentifier, Border, UpdateBorderRequest>>();
+        var getUseCase = GetService<IGetEntityUseCase<BorderIdentifier, Border>>();
+        var pause = (PausingEntityCache<BorderIdentifier, Border>)GetService<IEntityCache<BorderIdentifier, Border>>();
 
-        var actor = ExampleUserFactory.User1;
+        var actor = ExampleUserFactory.UserAdmin1;
         await EnsureToken(actor);
 
-        var createRequest = ExampleAnnouncementFactory.CreateRequest1;
-        var updateRequest = ExampleAnnouncementFactory.UpdateRequest1;
+        var createRequest = ExampleBorderFactory.CreateRequest1;
+        var updateRequest = ExampleBorderFactory.UpdateRequest1;
 
         var createResult = await createUseCase.Execute(actor, createRequest, CancellationToken.None);
         var id = createResult.Identifier;
 
         pause.ArmBeforeUpsert(id);
+        
+        pause.Invalidate(id); // remove if createUseCase cached it's results so read reads from source and upserts
 
         var staleRead = Task.Run(() => getUseCase.Execute(actor, id, CancellationToken.None)); // T0: Read request with enabled caching
 
@@ -50,11 +52,11 @@ public class CacheEdgeCaseTests : ClientTestBase
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(updateResult.Contents, Is.EqualTo(updateRequest.Contents));
+            Assert.That(updateResult.Size, Is.EqualTo(updateRequest.Size));
 
             Assert.That(
-                fresh.Contents,
-                Is.EqualTo(updateRequest.Contents),
+                fresh.Size,
+                Is.EqualTo(updateRequest.Size),
                 "Stale read must not poison the cache after a concurrent update."
             );
         }

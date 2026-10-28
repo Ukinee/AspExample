@@ -59,7 +59,7 @@ public class UnsupportedTransactionServicesThrowsTests : TestBase
             )
             .ApiClientContexts.AddRemoteContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
                 .Ddd.Register<BorderResponse>(dddConfigurator => dddConfigurator
-                    .WithCache(CachingVariant.UpdateInvalidates)
+                    .WithReadCacheAndEditingInvalidation()
                     .WithMapsterResponseToEntityMap()
                     .AddCreateUseCase<CreateBorderRequest>()
                     .AddUpdateUseCase<UpdateBorderRequest>()

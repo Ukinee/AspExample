@@ -34,7 +34,7 @@ where TRequest : ISignalRSubscribeRequest
     {
         Feature.RouteResolver.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton2<IRouteResolver<TIdentifier, TEntity, TRequest>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<IRouteResolver<TIdentifier, TEntity, TRequest>, TImplementation>(),];
 
         Feature.RouteResolver.AddRange(descriptors);
 
@@ -58,7 +58,7 @@ where TRequest : ISignalRSubscribeRequest
     {
         Feature.Sink.Clear();
 
-        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton2<ISignalRSink<TIdentifier, TEntity>, TImplementation>(),];
+        IEnumerable<ServiceDescriptor> descriptors = [..PayloadHelper.Singleton<ISignalRSink<TIdentifier, TEntity>, TImplementation>(),];
 
         Feature.Sink.AddRange(descriptors);
     }

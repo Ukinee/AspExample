@@ -36,7 +36,7 @@ public partial record Border : IEntity<BorderIdentifier>, IEntityWithPublicRead<
 {
     public required partial BorderIdentifier Identifier { get; init; }
     
-    public long GlobalVersion { get; init; }
+    public long GlobalVersion { get; private init; }
 
     public required int Size { get; init; }
     public required bool IsAvailableForPublicRead { get; init; }

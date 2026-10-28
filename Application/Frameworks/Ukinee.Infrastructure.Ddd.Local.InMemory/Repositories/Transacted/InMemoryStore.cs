@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Ardalis.Specification;
 using Ukinee.Infrastructure.Ddd.Common.Entities;
-using Ukinee.Infrastructure.Ddd.Common.EntityFeatures.Contracts;
-using Ukinee.Infrastructure.Ddd.Common.EventBuses.Events;
 using Ukinee.Infrastructure.Ddd.Common.Exceptions;
 
 namespace Ukinee.Infrastructure.Ddd.Local.InMemory.Repositories.Transacted;
@@ -21,7 +19,7 @@ where TIdentifier : notnull
     public TEntity? FindById(TIdentifier identifier, Func<TEntity, bool> predicate)
     {
         return Collection.TryGetValue(identifier, out var e) && predicate(e.Entity)
-            ? Materialize(e.Entity, e.Version)
+            ? VersionPolicy<TEntity>.Materialize(e.Entity, e.Version)
             : null;
     }
 
@@ -38,7 +36,7 @@ where TIdentifier : notnull
                 var value = pair.Value;
 
                 if (filter(value.Entity))
-                    yield return Materialize(value.Entity, value.Version);
+                    yield return VersionPolicy<TEntity>.Materialize(value.Entity, value.Version);
             }
         }
     }
@@ -65,21 +63,7 @@ where TIdentifier : notnull
         if (!Collection.TryGetValue(identifier, out var entry))
             throw new EntityNotFoundException<TIdentifier, TEntity>(identifier);
 
-        if (entry.Entity is not IEntityWithVersion<TEntity>)
-            return 0;
-
-        return entry.Version;
-    }
-
-    private static TEntity Materialize(TEntity entity, long version)
-    {
-        if (entity is not IEntityWithVersion<TEntity> versioned)
-            return entity;
-
-        if (versioned.GlobalVersion == version)
-            return entity;
-
-        return versioned.WithVersion(version);
+        return VersionPolicy<TEntity>.GetVersionOrDefault(entry.Entity);
     }
 
     public sealed class WriteSession
@@ -100,7 +84,7 @@ where TIdentifier : notnull
                 throw new EntityAlreadyExistsException<TIdentifier, TEntity>(identifier);
 
             var version = Interlocked.Increment(ref _store._nextVersion);
-            _store.Collection[identifier] = new StoredEntry(Materialize(entity, version), version);
+            _store.Collection[identifier] = new StoredEntry(VersionPolicy<TEntity>.Materialize(entity, version), version);
         }
 
         public void UpsertIfVersion(TEntity entity, long expectedVersion)
@@ -113,7 +97,7 @@ where TIdentifier : notnull
                 throw new ConcurrencyException(identifier, expectedVersion, currentVersion);
 
             var version = Interlocked.Increment(ref _store._nextVersion);
-            _store.Collection[identifier] = new StoredEntry(Materialize(entity, version), version);
+            _store.Collection[identifier] = new StoredEntry(VersionPolicy<TEntity>.Materialize(entity, version), version);
         }
 
         public void RemoveIfVersion(TIdentifier identifier, long expectedVersion)
@@ -127,7 +111,7 @@ where TIdentifier : notnull
         }
 
         internal void ForceUpsert(TEntity entity, long version) =>
-            _store.Collection[entity.Identifier] = new StoredEntry(Materialize(entity, version), version);
+            _store.Collection[entity.Identifier] = new StoredEntry(VersionPolicy<TEntity>.Materialize(entity, version), version);
 
         internal void ForceRemove(TIdentifier id) =>
             _store.Collection.Remove(id, out _);

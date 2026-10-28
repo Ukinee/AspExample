@@ -7,6 +7,7 @@ using Ukinee.Infrastructure.Ddd.Common.UseCases;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Contracts;
 using Ukinee.Infrastructure.Ddd.Common.UseCaseServices.Decorators;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.Common;
+using Ukinee.Infrastructure.Ddd.DependencyInjection.EntityFeatures.Ddd.External.Services;
 using Ukinee.Infrastructure.Ddd.DependencyInjection.Utils;
 using Ukinee.Infrastructure.Ddd.External.Api.Domain;
 using Ukinee.Infrastructure.Ddd.External.Api.GatewayServices;
@@ -29,9 +30,9 @@ public class RemoteDddBuilder<TTag, TIdentifier, TEntity, TResponse> :
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 {
+    private ICacheRegisterer<TIdentifier, TEntity>? _cacheRegisterer;
     private DddBuilder<TTag, TIdentifier, TEntity> _builder;
     private readonly bool _isCacheable;
-    private CachingVariant _cachingVariant = CachingVariant.DoNothing;
 
     public RemoteDddBuilder(DddBuilder<TTag, TIdentifier, TEntity> builder, bool isCacheable)
     {
@@ -48,7 +49,7 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
         return this;
     }
 
-    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant)
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(ICacheRegisterer<TIdentifier, TEntity> cacheRegisterer)
     {
         if (!_isCacheable)
             throw new InvalidOperationException(
@@ -57,37 +58,15 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
                 + $"Please, do NOT call {nameof(WithCache)} inside of {nameof(RemoteDddBuilderProxy<,,>.RegisterStartupRemoteSynchronizationToMemoryRepository)}"
             );
 
-        if (cachingVariant == CachingVariant.DoNothing)
-        {
-            _cachingVariant = cachingVariant;
-
-            return this;
-        }
-
-        if (cachingVariant == CachingVariant.UpdateUpserts)
-        {
-            throw new NotImplementedException($"{nameof(CachingVariant)}.{CachingVariant.UpdateUpserts} not implemented due to lack of entity versioning");
-        }
-
-        _cachingVariant = cachingVariant;
-
-        List<ServiceDescriptor> descriptors = [
-            ServiceDescriptor.Singleton<IEntityCache<TIdentifier, TEntity>>(sc => sc.GetRequiredService<EntityCache<TIdentifier, TEntity>>()),
-            ServiceDescriptor.Singleton<EntityCache<TIdentifier, TEntity>, EntityCache<TIdentifier, TEntity>>(),
-        ];
+        List<ServiceDescriptor> descriptors = [..cacheRegisterer.GetCacheDescriptors(),];
 
         Feature.IdentifierReader.AddRange(descriptors);
 
-        ServiceDescriptorDecorators.Decorate<IIdentifierReader<TIdentifier, TEntity>, CachingIdentifierReader<TIdentifier, TEntity>>(Feature.IdentifierReader);
-        ServiceDescriptorDecorators.Decorate<IAllEntityReader<TIdentifier, TEntity>, CachingAllEntityReader<TIdentifier, TEntity>>(Feature.EntityReader);
-        ServiceDescriptorDecorators.Decorate<IEntityRemover<TIdentifier, TEntity>, CacheInvalidatingEntityRemoverDecorator<TIdentifier, TEntity>>(Feature.EntityRemover);
+        cacheRegisterer.DecorateIdentifierReader(Feature.IdentifierReader);
+        cacheRegisterer.DecorateAllEntityReader(Feature.EntityReader);
+        cacheRegisterer.DecorateRemover(Feature.EntityRemover);
 
-        return this;
-    }
-
-    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithNoCache()
-    {
-        _cachingVariant = CachingVariant.DoNothing;
+        _cacheRegisterer = cacheRegisterer;
 
         return this;
     }
@@ -105,12 +84,7 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
             .AddEntityCreateFeature<ExternalGatewayPayloadCreateAdapter<TIdentifier, TCreatePayload, TEntity, TResponse>, TCreatePayload,
                 CreateEntityUseCase<TEntity, TCreatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
-        if (_cachingVariant == CachingVariant.UpdateInvalidates)
-        {
-            ServiceDescriptorDecorators.Decorate<IEntityCreator<TEntity, TCreatePayload>, CacheInvalidatingEntityCreatorDecorator<TIdentifier, TEntity, TCreatePayload>>(
-                _builder.Feature.EntityCreator
-            );
-        }
+        _cacheRegisterer!.DecorateCreator<TCreatePayload>(Feature.EntityCreator);
 
         return this;
     }
@@ -127,13 +101,7 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
             .AddPayloadEntityUpdateFeature<ExternalGatewayEntityPayloadUpdaterAdapter<TIdentifier, TUpdatePayload, TEntity, TResponse>, TUpdatePayload,
                 UpdateEntityUseCase<TIdentifier, TEntity, TUpdatePayload>>(ServiceLifetime.Singleton, extensions, true);
 
-        if (_cachingVariant == CachingVariant.UpdateInvalidates)
-        {
-            ServiceDescriptorDecorators
-                .Decorate<IEntityPayloadUpdater<TIdentifier, TEntity, TUpdatePayload>, CacheInvalidatingUpdaterDecorator<TIdentifier, TEntity, TUpdatePayload>>(
-                    _builder.Feature.PayloadEntityUpdaters
-                );
-        }
+        _cacheRegisterer!.DecorateUpdater<TUpdatePayload>(Feature.PayloadEntityUpdaters);
 
         return this;
     }
@@ -145,6 +113,9 @@ where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
             TCreatePayload,
             GetOrCreateEntityUseCase<TIdentifier, TEntity, TCreatePayload>
         >(ServiceLifetime.Singleton, [], true);
+        
+        _cacheRegisterer!.DecorateGetOrCreate<TCreatePayload>(Feature.GetOrCreate);
+        
 
         return this;
     }
@@ -154,8 +125,7 @@ public interface ICacheRegisterer<TTag, TIdentifier, TEntity, TResponse>
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : struct, IEquatable<TIdentifier>, IRouteParams
 {
-    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(CachingVariant cachingVariant);
-    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithNoCache();
+    public IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse> WithCache(ICacheRegisterer<TIdentifier, TEntity> cacheRegisterer);
 }
 
 public interface IMapServiceRegisterer<TTag, TIdentifier, TEntity, TResponse>

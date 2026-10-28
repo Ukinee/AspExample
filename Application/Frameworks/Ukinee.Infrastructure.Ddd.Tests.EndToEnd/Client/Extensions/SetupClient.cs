@@ -54,35 +54,33 @@ public static class SetupClientExtensions
                 )
                 .ApiClientContexts.AddRemoteContext<AnnouncementIdentifier, Announcement>(contextConfigurator => contextConfigurator
                     .Ddd.Register<AnnouncementResponse>(dddConfigurator => dddConfigurator
-                        .WithCache(CachingVariant.UpdateInvalidates)
+                        .WithReadCacheAndEditingInvalidation()
                         .WithMapper<AnnouncementMapService>()
                         .AddCreateUseCase<CreateAnnouncementRequest>()
                         .AddUpdateUseCase<UpdateAnnouncementContentsRequest>()
                     )
                     .SignalRClient.Register<THub, AnnouncementSignalRRequest, AnnouncementResponse>(signalRConfigurator => signalRConfigurator
-                        .AddLocalCacheInvalidation()
                     )
                 )
                 .ApiClientContexts.AddRemoteContext<BorderIdentifier, Border>(contextConfigurator => contextConfigurator
                     .Ddd.Register<BorderResponse>(dddConfigurator => dddConfigurator
-                        .WithCache(CachingVariant.UpdateInvalidates)
+                        .WithVersionedCaching()
                         .WithMapper<BorderMapService>()
                         .AddCreateUseCase<CreateBorderRequest>()
                         .AddUpdateUseCase<UpdateBorderRequest>()
                     )
                     .SignalRClient.Register<THub, BorderSignalRRequest, BorderResponse>(signalRConfigurator => signalRConfigurator
-                        .AddLocalCacheInvalidation()
+                        .SetVersionAwareCacheHandlers()
                     )
                 )
                 .ApiClientContexts.AddRemoteContext<CookieIdentifier, Cookie>(contextConfigurator => contextConfigurator
                     .Ddd.Register<CookieResponse>(dddConfigurator => dddConfigurator
-                        .WithCache(CachingVariant.UpdateInvalidates)
+                        .WithReadCacheAndEditingInvalidation()
                         .WithMapper<CookieMapService>()
                         .AddCreateUseCase<CreateCookieRequest>()
                         .AddUpdateUseCase<UpdateCookieRequest>()
                     )
                     .SignalRClient.Register<THub, BorderSignalRRequest, BorderResponse>(signalRConfigurator => signalRConfigurator
-                        .AddLocalCacheInvalidation()
                     )
                 )
                 .Build(registrationPolicy);

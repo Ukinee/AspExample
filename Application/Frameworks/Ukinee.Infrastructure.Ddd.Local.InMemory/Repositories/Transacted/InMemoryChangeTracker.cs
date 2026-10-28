@@ -29,7 +29,12 @@ public enum InMemoryEntityState
     Added = 3,
 }
 
-public record InMemoryEntry<TIdentifier, TEntity>(TIdentifier Identifier, TEntity? Entity, InMemoryEntityState EntityState, long OriginalVersion)
+public record InMemoryEntry<TIdentifier, TEntity>(
+    TIdentifier Identifier,
+    TEntity? Entity,
+    InMemoryEntityState EntityState,
+    long OriginalVersion
+)
 where TEntity : class, IEntity<TIdentifier>
 where TIdentifier : notnull;
 
@@ -123,7 +128,7 @@ where TIdentifier : notnull
                 {
                     throw new EntityAlreadyExistsException<TIdentifier, TEntity>(entity.Identifier);
                 }
-                
+
                 if (inMemoryEntry.EntityState == InMemoryEntityState.Deleted)
                     throw new InvalidOperationException($"Cannot add entity with id {entity.Identifier} back.");
 
@@ -187,10 +192,7 @@ where TIdentifier : notnull
 
     private long GetVersionOrZero(TEntity entity)
     {
-        if (entity is not IEntityWithVersion<TEntity> versioned)
-            return 0;
-
-        return versioned.GlobalVersion;
+        return VersionPolicy<TEntity>.GetVersionOrDefault(entity);
     }
 
     private void ThrowIfFrozen()
